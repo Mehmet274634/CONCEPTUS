@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#060709" />
+    <meta
+      name="description"
+      content="CONCEPTUS — Turn a 2-sentence raw app idea into a battle-tested, agent-ready Markdown blueprint pack using your own local AI subscriptions (zero extra API fees)."
+    />
+    <title>CONCEPTUS — Multi-AI Idea Evolution & App Blueprint Studio</title>
+    <link rel="icon" type="image/png" href="./icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient-bg" aria-hidden="true"></div>
+
+    <!-- Top Glass Nav -->
+    <header class="nav">
+      <div class="container nav-inner">
+        <a href="#" class="brand">
+          <img src="./icon.png" alt="CONCEPTUS Logo" class="brand-icon" />
+          <span class="brand-name">CONCEPTUS</span>
+        </a>
+
+        <nav class="nav-links">
+          <a href="#workflow" data-tr="Nasıl Çalışır" data-en="How It Works">Nasıl Çalışır</a>
+          <a href="#features" data-tr="Özellikler" data-en="Features">Özellikler</a>
+          <a href="#security" data-tr="Güvenlik" data-en="Security">Güvenlik</a>
+          <a href="#download" data-tr="İndir" data-en="Download">İndir</a>
+        </nav>
+
+        <div class="nav-actions">
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" class="lang-btn active" data-lang="tr">TR</button>
+            <button type="button" class="lang-btn" data-lang="en">EN</button>
+          </div>
+          <a
+            href="#download"
+            class="btn btn-white btn-sm"
+            data-tr="Ücretsiz İndir"
+            data-en="Download Free"
+          >
+            Ücretsiz İndir
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero -->
+      <section class="hero">
+        <div class="container hero-inner">
+          <div class="pill-badge">
+            <span class="dot"></span>
+            <span
+              data-tr="v4.2 · %100 Yerel Masaüstü Stüdyosu · Sıfır Ek API Ücreti"
+              data-en="v4.2 · 100% Local Desktop Studio · Zero Extra API Fees"
+            >
+              v4.2 · %100 Yerel Masaüstü Stüdyosu · Sıfır Ek API Ücreti
+            </span>
+          </div>
+
+          <h1 class="hero-title">
+            <span data-tr="Ham fikrini masaya koy." data-en="Put your raw idea on the table.">
+              Ham fikrini masaya koy.
+            </span>
+            <br />
+            <span
+              class="hero-muted"
+              data-tr="Yapay zekâlar çarpıştırıp kusursuz uygulama MD'sine çevirsin."
+              data-en="Let multiple AI minds debate and forge agent-ready app blueprints."
+            >
+              Yapay zekâlar çarpıştırıp kusursuz uygulama MD'sine çevirsin.
+            </span>
+          </h1>
+
+          <p
+            class="hero-sub"
+            data-tr="Tek bir modele belirsiz prompt verip yarım uygulama almak yerine; Antigravity, Claude Code, Codex ve Gemini aboneliklerini aynı masada kör analiz, çapraz eleştiri ve İnsan Kararı Kilidi ile çalıştır. 55 saniyede herhangi bir kodlama ajanının sıfır hatayla inşa edeceği 5'li .md paketini al."
+            data-en="Stop feeding vague prompts to a single AI and getting fragile apps. Orchestrate your existing Antigravity, Claude Code, Codex, and Gemini subscriptions in blind analysis, anonymous cross-critique, and Human Decision Gates — outputting a 5-file agent-ready .md blueprint pack in ~55 seconds."
+          >
+            Tek bir modele belirsiz prompt verip yarım uygulama almak yerine; Antigravity, Claude Code, Codex ve Gemini aboneliklerini aynı masada kör analiz, çapraz eleştiri ve İnsan Kararı Kilidi ile çalıştır. 55 saniyede herhangi bir kodlama ajanının sıfır hatayla inşa edeceği 5'li .md paketini al.
+          </p>
+
+          <div class="hero-ctas">
+            <a
+              id="hero-download-btn"
+              href="#download"
+              class="btn btn-white btn-lg"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span data-tr="Windows İçin İndir (.exe)" data-en="Download for Windows (.exe)">
+                Windows İçin İndir (.exe)
+              </span>
+            </a>
+            <a
+              id="github-link"
+              href="https://github.com/Mehmet274634/CONCEPTUS"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-glass btn-lg"
+            >
+              <span data-tr="GitHub'da İncele (MIT)" data-en="View on GitHub (MIT)">
+                GitHub'da İncele (MIT)
+              </span>
+            </a>
+          </div>
+
+          <div class="trust-row">
+            <span data-tr="✓ Kurulumda Node.js gerekmez" data-en="✓ No Node.js required">✓ Kurulumda Node.js gerekmez</span>
+            <span data-tr="✓ Siyah terminal penceresi yok" data-en="✓ Zero terminal window">✓ Siyah terminal penceresi yok</span>
+            <span data-tr="✓ Verilerin %100 cihazında kalır" data-en="✓ 100% local & private">✓ Verilerin %100 cihazında kalır</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4-Step Pipeline -->
+      <section id="workflow" class="section">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow" data-tr="UÇTAN UCA EVRİM AKIŞI" data-en="END-TO-END EVOLUTION PIPELINE">
+              UÇTAN UCA EVRİM AKIŞI
+            </span>
+            <h2
+              data-tr="2 cümlelik düşünceden üretime hazır 5'li mimariye."
+              data-en="From a 2-sentence thought to a production 5-file blueprint."
+            >
+              2 cümlelik düşünceden üretime hazır 5'li mimariye.
+            </h2>
+          </div>
+
+          <div class="steps-grid">
+            <article class="glass-card step-card">
+              <div class="step-num">01</div>
+              <h3 data-tr="Fikri Netleştir & Hedef Kilitle" data-en="Clarify & Lock Design">
+                Fikri Netleştir & Hedef Kilitle
+              </h3>
+              <p
+                data-tr="Ham fikrini yaz. Akıllı Netleştirici 3–4 tıklanabilir soruyla eksikleri kapatır; Platform, Bütçe ve Görsel Tasarım Dilini tek tıkla kilitlersin."
+                data-en="Type your raw thought. The Smart Clarifier fills missing gaps with 3–4 clickable questions while locking Platform, Budget, and Visual Design Language."
+              >
+                Ham fikrini yaz. Akıllı Netleştirici 3–4 tıklanabilir soruyla eksikleri kapatır; Platform, Bütçe ve Görsel Tasarım Dilini tek tıkla kilitlersin.
+              </p>
+            </article>
+
+            <article class="glass-card step-card">
+              <div class="step-num">02</div>
+              <h3 data-tr="Kör Analiz → Anonim Tartışma" data-en="Blind Round → Cross Debate">
+                Kör Analiz → Anonim Tartışma
+              </h3>
+              <p
+                data-tr="Ajanlar önce birbirini görmeden analiz üretir (sürü psikolojisi sıfır); Tur 2'de Ajan A/B/C olarak birbirlerinin kör noktalarını acımasızca eler."
+                data-en="Agents first analyze independently (zero groupthink), then critique each other anonymously as Agent A/B/C in Round 2 to crush blind spots."
+              >
+                Ajanlar önce birbirini görmeden analiz üretir (sürü psikolojisi sıfır); Tur 2'de Ajan A/B/C olarak birbirlerinin kör noktalarını acımasızca eler.
+              </p>
+            </article>
+
+            <article class="glass-card step-card">
+              <div class="step-num">03</div>
+              <h3 data-tr="Evrim Özeti & İnsan Kararı Kilidi" data-en="Evolution Summary & Human Gates">
+                Evrim Özeti & İnsan Kararı Kilidi
+              </h3>
+              <p
+                data-tr="Master Karar tartışmanın neyi iyileştirdiğini özetler ve kalan kritik yol ayrımlarını sana tek tıkla kilitletir — sıfır belirsizlik."
+                data-en="Master Decision highlights what improved and lets you lock final architectural trade-offs with 1-click Decision Gates — zero TBDs."
+              >
+                Master Karar tartışmanın neyi iyileştirdiğini özetler ve kalan kritik yol ayrımlarını sana tek tıkla kilitletir — sıfır belirsizlik.
+              </p>
+            </article>
+
+            <article class="glass-card step-card">
+              <div class="step-num">04</div>
+              <h3 data-tr="5'li Uygulama MD Paketi + QA" data-en="5-File MD Pack + QA Audit">
+                5'li Uygulama MD Paketi + QA
+              </h3>
+              <p
+                data-tr="01..05 standart dosyalar + AGENTS.md köprüsü tek dalgada paralel üretilir; canlı Mermaid diyagramları çizilir ve Çapraz-Ajan QA tutarsızlıkları otomatik yamalar."
+                data-en="Standard 01..05 blueprints + AGENTS.md bridge generate in one parallel wave with live Mermaid diagrams and Cross-Agent QA surgical auto-fix."
+              >
+                01..05 standart dosyalar + AGENTS.md köprüsü tek dalgada paralel üretilir; canlı Mermaid diyagramları çizilir ve Çapraz-Ajan QA tutarsızlıkları otomatik yamalar.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Bento -->
+      <section id="features" class="section">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow" data-tr="PROFESYONEL YETENEKLER" data-en="ENGINEERED FOR QUALITY">
+              PROFESYONEL YETENEKLER
+            </span>
+            <h2
+              data-tr="Normal kullanıcı için sade. Mühendis için tam kontrol."
+              data-en="Effortless for beginners. Surgical control for engineers."
+            >
+              Normal kullanıcı için sade. Mühendis için tam kontrol.
+            </h2>
+          </div>
+
+          <div class="bento-grid">
+            <div class="glass-panel bento-card bento-wide">
+              <span class="tag tag-cyan" data-tr="KALİTE KORUMALI KOTA MOTORU" data-en="QUALITY-GUARDED QUOTA ENGINE">
+                KALİTE KORUMALI KOTA MOTORU
+              </span>
+              <h3 data-tr="Bir modelin kotası bitince işin yarım kalmaz — düşük modele de düşmez." data-en="Never stalls on quota hits — and never silently downgrades quality.">
+                Bir modelin kotası bitince işin yarım kalmaz — düşük modele de düşmez.
+              </h3>
+              <p
+                data-tr="Kota havuzlarını ayrı takip eder (antigravity:claude ≠ antigravity:gemini ≠ codex). Kalite, Özel Ajan veya Bana Sor kuralıyla kontrol tamamen sende."
+                data-en="Tracks quota pools independently (antigravity:claude ≠ antigravity:gemini ≠ codex). Choose Quality-Match, Custom Backup Agent, or Ask Me."
+              >
+                Kota havuzlarını ayrı takip eder (antigravity:claude ≠ antigravity:gemini ≠ codex). Kalite, Özel Ajan veya Bana Sor kuralıyla kontrol tamamen sende.
+              </p>
+            </div>
+
+            <div class="glass-panel bento-card">
+              <span class="tag tag-indigo" data-tr="CANLI MERMAID" data-en="LIVE MERMAID">CANLI MERMAID</span>
+              <h3 data-tr="Mimari ve UX akışını görsel gör." data-en="See UX & Architecture visually.">
+                Mimari ve UX akışını görsel gör.
+              </h3>
+              <p
+                data-tr="02_UX ve 03_ARCHITECTURE içindeki ekran akışları ve ER şemaları karanlık cam arayüzde canlı diyagram olarak çizilir."
+                data-en="Screen flows and ER schemas inside your generated MDs render live as crisp dark-glass Mermaid diagrams."
+              >
+                02_UX ve 03_ARCHITECTURE içindeki ekran akışları ve ER şemaları karanlık cam arayüzde canlı diyagram olarak çizilir.
+              </p>
+            </div>
+
+            <div class="glass-panel bento-card">
+              <span class="tag tag-green" data-tr="SADE & PRO MOD" data-en="SIMPLE & PRO MODE">SADE & PRO MOD</span>
+              <h3 data-tr="Teknik bilmeden de başla." data-en="Zero jargon when you want speed.">
+                Teknik bilmeden de başla.
+              </h3>
+              <p
+                data-tr="Sade modda 3 hazır kalite profiliyle tek tık akış; Pro modda her koltuğun modeli, rolü, eforu ve dosya ataması elinde."
+                data-en="Simple mode gives 3 one-click profiles; Pro mode unlocks per-seat models, custom roles, effort, and per-file routing."
+              >
+                Sade modda 3 hazır kalite profiliyle tek tık akış; Pro modda her koltuğun modeli, rolü, eforu ve dosya ataması elinde.
+              </p>
+            </div>
+
+            <div class="glass-panel bento-card bento-wide">
+              <span class="tag tag-indigo" data-tr="DOĞRUDAN İNŞAYA GEÇ" data-en="INSTANT BUILD HANDOFF">DOĞRUDAN İNŞAYA GEÇ</span>
+              <h3 data-tr="AGENTS.md köprüsü + tek tık Başlatma Promptu." data-en="Auto AGENTS.md bridge + 1-click Build Prompt.">
+                AGENTS.md köprüsü + tek tık Başlatma Promptu.
+              </h3>
+              <p
+                data-tr="Paketi proje klasörüne kaydet, Antigravity, Claude Code, Cursor veya Codex'te aç ve hazır başlatma promptunu yapıştır — ajan Adım 1'den başlayarak uygulamayı inşa etsin."
+                data-en="Save straight to your project folder, open it in Antigravity, Claude Code, Cursor, or Codex, and paste the starter prompt to build Step 1 → N cleanly."
+              >
+                Paketi proje klasörüne kaydet, Antigravity, Claude Code, Cursor veya Codex'te aç ve hazır başlatma promptunu yapıştır — ajan Adım 1'den başlayarak uygulamayı inşa etsin.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Security & Privacy -->
+      <section id="security" class="section">
+        <div class="container">
+          <div class="glass-panel security-box">
+            <div class="section-head left">
+              <span class="eyebrow" data-tr="YEREL ÖNCELİKLİ GÜVENLİK" data-en="LOCAL-FIRST SECURITY">
+                YEREL ÖNCELİKLİ GÜVENLİK
+              </span>
+              <h2
+                data-tr="Fikirlerin, kodun ve aboneliklerin yalnızca senin bilgisayarında."
+                data-en="Your ideas, code, and subscriptions never leave your machine."
+              >
+                Fikirlerin, kodun ve aboneliklerin yalnızca senin bilgisayarında.
+              </h2>
+            </div>
+
+            <div class="sec-grid">
+              <div class="sec-item">
+                <h4 data-tr="127.0.0.1 & 403 Origin Kilidi" data-en="127.0.0.1 & 403 Origin Lock">
+                  127.0.0.1 & 403 Origin Kilidi
+                </h4>
+                <p
+                  data-tr="Gömülü sunucu yalnızca yerel loopback adresinde dinler; harici web sitelerinden gelen tüm API istekleri 403 ile engellenir."
+                  data-en="Embedded server binds strictly to loopback; all cross-origin browser API calls are rejected with 403 Forbidden."
+                >
+                  Gömülü sunucu yalnızca yerel loopback adresinde dinler; harici web sitelerinden gelen tüm API istekleri 403 ile engellenir.
+                </p>
+              </div>
+
+              <div class="sec-item">
+                <h4 data-tr="Secret-Filtreli Salt-Okunur Tarama" data-en="Secret-Filtered Read-Only Scanner">
+                  Secret-Filtreli Salt-Okunur Tarama
+                </h4>
+                <p
+                  data-tr="Mevcut proje klasörünü bağladığında .env, özel anahtarlar, credentials ve .git kesinlikle hariç tutulur (otomatik testle doğrulanmış)."
+                  data-en="When scanning a local repo, .env*, private keys, credentials, and .git are strictly excluded and verified by unit tests."
+                >
+                  Mevcut proje klasörünü bağladığında .env, özel anahtarlar, credentials ve .git kesinlikle hariç tutulur (otomatik testle doğrulanmış).
+                </p>
+              </div>
+
+              <div class="sec-item">
+                <h4 data-tr="Electron Sandbox & CSP Koruması" data-en="Electron Sandbox & Strict CSP">
+                  Electron Sandbox & CSP Koruması
+                </h4>
+                <p
+                  data-tr="Context Isolation, sandbox, katı Content-Security-Policy ve dizin doğrulamalı IPC ile sıfır harici betik riski."
+                  data-en="Context Isolation, OS sandbox, strict Content-Security-Policy, and directory-validated IPC prevent arbitrary execution."
+                >
+                  Context Isolation, sandbox, katı Content-Security-Policy ve dizin doğrulamalı IPC ile sıfır harici betik riski.
+                </p>
+              </div>
+
+              <div class="sec-item">
+                <h4 data-tr="Açık Kaynak & Sıfır Telemetri" data-en="Open Source & Zero Telemetry">
+                  Açık Kaynak & Sıfır Telemetri
+                </h4>
+                <p
+                  data-tr="MIT lisanslı tam açık kaynak kod. Analitik, takip çerezi veya gizli bulut aktarımı kesinlikle yoktur."
+                  data-en="100% open source under MIT License. Zero analytics, zero tracking cookies, zero hidden cloud uploads."
+                >
+                  MIT lisanslı tam açık kaynak kod. Analitik, takip çerezi veya gizli bulut aktarımı kesinlikle yoktur.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Download Section -->
+      <section id="download" class="section">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow" data-tr="HEMEN BAŞLA · ÜCRETSİZ" data-en="GET STARTED · FREE">
+              HEMEN BAŞLA · ÜCRETSİZ
+            </span>
+            <h2 data-tr="CONCEPTUS v4.2 Masaüstü Sürümünü İndir" data-en="Download CONCEPTUS v4.2 Desktop">
+              CONCEPTUS v4.2 Masaüstü Sürümünü İndir
+            </h2>
+          </div>
+
+          <div class="download-grid">
+            <div class="glass-panel dl-card dl-featured">
+              <div class="dl-top">
+                <span class="tag tag-cyan">Windows 10 / 11 · x64</span>
+                <span class="mono-meta">~117 MB</span>
+              </div>
+              <h3 data-tr="Windows Kurulum Paketi" data-en="Windows Installer">
+                Windows Kurulum Paketi
+              </h3>
+              <p
+                data-tr="Önerilen sürüm. Masaüstü & Başlat Menüsü kısayolu oluşturur, siyah terminal penceresi olmadan doğal uygulama olarak açılır."
+                data-en="Recommended. Creates Desktop & Start Menu shortcuts and launches natively with zero terminal window."
+              >
+                Önerilen sürüm. Masaüstü & Başlat Menüsü kısayolu oluşturur, siyah terminal penceresi olmadan doğal uygulama olarak açılır.
+              </p>
+              <a
+                id="dl-win-setup"
+                href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-4.2.0.exe"
+                class="btn btn-white btn-full"
+                data-tr="CONCEPTUS-Setup-4.2.0.exe İndir"
+                data-en="Download CONCEPTUS-Setup-4.2.0.exe"
+              >
+                CONCEPTUS-Setup-4.2.0.exe İndir
+              </a>
+            </div>
+
+            <div class="glass-panel dl-card">
+              <div class="dl-top">
+                <span class="tag tag-indigo" data-tr="Taşınabilir · Kurulumsuz" data-en="Portable · No Install">
+                  Taşınabilir · Kurulumsuz
+                </span>
+                <span class="mono-meta">~107 MB</span>
+              </div>
+              <h3 data-tr="Tek Dosya Portable (.exe)" data-en="Standalone Portable (.exe)">
+                Tek Dosya Portable (.exe)
+              </h3>
+              <p
+                data-tr="Kurulum yapmadan USB'den veya masaüstünden tek tıkla hemen çalıştır."
+                data-en="Run straight from Desktop or USB with zero installation steps."
+              >
+                Kurulum yapmadan USB'den veya masaüstünden tek tıkla hemen çalıştır.
+              </p>
+              <a
+                id="dl-win-portable"
+                href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-4.2.0-Portable.exe"
+                class="btn btn-glass btn-full"
+                data-tr="CONCEPTUS-4.2.0-Portable.exe İndir"
+                data-en="Download CONCEPTUS-4.2.0-Portable.exe"
+              >
+                CONCEPTUS-4.2.0-Portable.exe İndir
+              </a>
+            </div>
+
+            <div class="glass-panel dl-card">
+              <div class="dl-top">
+                <span class="tag tag-green" data-tr="Geliştiriciler · macOS / Linux / Win" data-en="Developers · macOS / Linux / Win">
+                  Geliştiriciler · macOS / Linux / Win
+                </span>
+                <span class="mono-meta">Node 20+</span>
+              </div>
+              <h3 data-tr="Kaynak Kod / CLI" data-en="Source / CLI Mode">
+                Kaynak Kod / CLI
+              </h3>
+              <p
+                data-tr="Doğrudan depoyu klonla, testleri çalıştır veya tarayıcı/masaüstü modunda derle."
+                data-en="Clone directly, run the Vitest suite, or build locally on macOS, Linux, or Windows."
+              >
+                Doğrudan depoyu klonla, testleri çalıştır veya tarayıcı/masaüstü modunda derle.
+              </p>
+              <div class="cli-box">
+                <code id="cli-cmd">npm install && npm run build && npm run cli</code>
+                <button type="button" id="copy-cli-btn" class="copy-btn" data-tr="Kopyala" data-en="Copy">
+                  Kopyala
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p class="smartscreen-note">
+            <strong data-tr="Not (Windows SmartScreen):" data-en="Note (Windows SmartScreen):">
+              Not (Windows SmartScreen):
+            </strong>
+            <span
+              data-tr="Açık kaynak ücretsiz sürüm henüz ücretli EV kod imzası içermediği için ilk açılışta Windows SmartScreen 'Daha fazla bilgi → Yine de çalıştır' uyarısı gösterebilir. Tüm kaynak kod GitHub'da herkese açıktır ve GitHub Actions ile şeffaf derlenir."
+              data-en="Because this free open-source release is unsigned, Windows SmartScreen may show 'More info → Run anyway' on first launch. All source code is publicly auditable on GitHub and built transparently via GitHub Actions."
+            >
+              Açık kaynak ücretsiz sürüm henüz ücretli EV kod imzası içermediği için ilk açılışta Windows SmartScreen 'Daha fazla bilgi → Yine de çalıştır' uyarısı gösterebilir. Tüm kaynak kod GitHub'da herkese açıktır ve GitHub Actions ile şeffaf derlenir.
+            </span>
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <div class="brand">
+          <img src="./icon.png" alt="" class="brand-icon sm" />
+          <span class="brand-name">CONCEPTUS</span>
+        </div>
+        <div class="footer-links">
+          <a id="footer-gh" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a id="footer-sec" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer" data-tr="Güvenlik Politikası" data-en="Security Policy">Güvenlik Politikası</a>
+          <a id="footer-lic" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

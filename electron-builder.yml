@@ -1,0 +1,49 @@
+appId: app.conceptus.desktop
+productName: CONCEPTUS
+copyright: Copyright © 2026 CONCEPTUS Contributors
+asar: true
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - build/icon.ico
+  - build/icon.png
+  - "!node_modules/**/*"
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: CONCEPTUS
+  artifactName: CONCEPTUS-Setup-${version}.exe
+
+portable:
+  artifactName: CONCEPTUS-${version}-Portable.exe
+
+mac:
+  icon: build/icon.png
+  category: public.app-category.developer-tools
+  target:
+    - dmg
+
+linux:
+  icon: build/icon.png
+  category: Development
+  target:
+    - AppImage

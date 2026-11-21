@@ -1,0 +1,74 @@
+{
+  "name": "conceptus",
+  "version": "4.2.0",
+  "private": false,
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "license": "MIT",
+  "description": "CONCEPTUS — Local-first Multi-AI Idea Evolution & Production Markdown Blueprint Studio powered by your own CLI subscriptions (zero extra API fees).",
+  "keywords": [
+    "multi-agent",
+    "ai-debate",
+    "claude-code",
+    "codex",
+    "antigravity",
+    "gemini",
+    "markdown",
+    "blueprint",
+    "local-first",
+    "spec-driven-development"
+  ],
+  "bin": {
+    "conceptus": "./bin/conceptus.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "server",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,UI -c cyan,magenta \"tsx watch server/index.ts\" \"vite\"",
+    "build": "vite build",
+    "start": "tsx server/index.ts --serve",
+    "cli": "node bin/conceptus.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test && npm run build",
+    "desktop:icon": "node scripts/generate-icon.mjs",
+    "desktop:compile": "node scripts/build-electron.mjs",
+    "desktop:dev": "npm run desktop:icon && npm run build && npm run desktop:compile && electron .",
+    "desktop:build": "npm run desktop:icon && npm run check && npm run desktop:compile && electron-builder --win"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jszip": "^3.10.2",
+    "lucide-react": "^0.511.0",
+    "mermaid": "^11.12.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.7",
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.21",
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^4.5.0",
+    "concurrently": "^9.1.2",
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0",
+    "png-to-ico": "^3.0.2",
+    "tailwindcss": "^4.1.7",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^4.0.18"
+  }
+}
