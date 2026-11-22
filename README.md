@@ -10,7 +10,7 @@
 
 Most people jump straight into an AI coding tool with a vague 2-line prompt — and get fragile, half-baked code full of guesswork and cross-file drift.
 
-**CONCEPTUS (`v5.3`)** puts multiple AI specialists at the same table **before** a single line of code is written:
+**CONCEPTUS (`v5.3.3`)** puts multiple AI specialists at the same table **before** a single line of code is written:
 
 1. **Deep Problem Analysis + Missing-Spec Radar (`Hızlı Netleştir`)** — Scans your brief instantaneously (0 tokens) for complexity (`S/M/L/XL`) and missing architectural dimensions (platform, persistence, auth/RBAC, budget, visual language), then asks 3–4 decisive Principal Architect questions.
 2. **Target Coding Tool Adaptation (`Antigravity` · `Claude Code` · `Cursor` · `Codex`)** — Pick one or more target tools upfront. Prompts, syntax (`@file` refs for Claude Code/Cursor, sandbox verification gates for Codex, workspace rules for Antigravity), and exported bridge files (`.agents/rules`, `CLAUDE.md`, `.cursor/rules`, `AGENTS.md`) are generated **exclusively** for the tools you chose.
@@ -33,8 +33,8 @@ Most people jump straight into an AI coding tool with a vague 2-line prompt — 
 
 ### Option 1 — Native Desktop App (Recommended · No Node.js Required)
 Download the latest release from the **[Official Download Page](https://conceptus-ivory.vercel.app/download)** or **[GitHub Releases (Latest)](https://github.com/Mehmet274634/CONCEPTUS/releases/latest)**:
-- **Windows Installer (`CONCEPTUS-Setup-5.3.2.exe`)** — Silent in-app updates, frameless dark window, native OS folder picker, zero terminal
-- **Windows Portable (`CONCEPTUS-5.3.2-Portable.exe`)** — Standalone `.exe` (zero install)
+- **Windows Installer (`CONCEPTUS-Setup-5.3.3.exe`)** — Silent in-app updates (fail-closed SHA-256 verified), frameless dark window, native OS folder picker, zero terminal
+- **Windows Portable (`CONCEPTUS-5.3.3-Portable.exe`)** — Standalone `.exe` (zero install)
 - **macOS (`.dmg`) & Linux (`.AppImage`)** — Available on every tagged GitHub Release alongside **`SHA256SUMS.txt`**
 
 Build the Windows desktop installer from source:
@@ -83,7 +83,7 @@ CONCEPTUS is designed as a **local-first desktop & localhost studio**, with clea
 
 - **What stays strictly on your machine:** All session histories (`data/sessions/*.json`, written atomically), exported `.md` packs, cooldown state, and preferences stay exclusively on your local disk. CONCEPTUS operates **no backend cloud database and collects zero telemetry**.
 - **What is sent externally:** When you run a debate, clarify an idea, probe quotas, or generate blueprints, your prompt and attached context are passed to the **local AI CLI tools you choose** (`agy`, `claude`, `codex`, `gemini`), which communicate with their respective model providers under your own account and privacy terms.
-- **Localhost & Desktop Isolation:** Express binds exclusively to `127.0.0.1` with CORS and `Origin` checks blocking cross-site browser calls (`403`). Electron enables `contextIsolation`, `sandbox`, and `nodeIntegration: false`, and verifies HTTPS host allowlists + `SHA256SUMS.txt` on updates. Local API endpoints are unauthenticated for single-user local usage (trust boundary = local processes on your machine).
+- **Port-Pinned Localhost & Desktop Isolation:** Express binds exclusively to `127.0.0.1` and accepts CORS / `Origin` headers strictly from CONCEPTUS’s own bound port (blocking both external sites AND foreign localhost ports with `403`). Electron enables `contextIsolation`, `sandbox`, and `nodeIntegration: false`, and enforces **fail-closed `SHA256SUMS.txt` verification** on every desktop update (if the checksum file is missing, unreachable, or mismatched, the downloaded installer is deleted and aborted). Local API endpoints are unauthenticated for single-user desktop/CLI usage (trust boundary = local processes on your machine).
 - **CLI Read-Only / Sandbox Guardrails:** CLI runs use separate argument arrays (`shell: false`) with provider restrictions (`codex exec -s read-only`, `claude --safe-mode --tools ""`, `agy --disable-slash-commands --sandbox`, `gemini --approval-mode plan`).
 - **Best-Effort Secret Filtering (Not a Guarantee):** Both the local repo scanner and manual file uploader enforce file size limits, skip sensitive filenames (`.env*`, `.pem`, `.key`, `id_rsa`, `*secret*`, `*credential*`, `service-account*.json`), and redact common key/token formats (`sk-*`, `AIza*`, `ghp_*`, `github_pat_*`, `AKIA*`, `xox*`, PEM private keys, `Bearer` tokens). Pattern-based filtering is **best-effort** and cannot catch every custom secret format — never paste production credentials directly into prompts.
 

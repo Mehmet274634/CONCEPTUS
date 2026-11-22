@@ -101,13 +101,24 @@ describe('v5.3.1 Hardening — Atomic Storage, Secret Redaction & HTTP API Integ
   });
 
   it('rejects malformed non-string payloads with 400 and blocks cross-origin requests with 403', async () => {
-    // 1. Cross-origin request must be blocked with 403 JSON
+    // 1. Cross-origin AND foreign localhost port requests must BOTH be blocked with 403 JSON
     const crossOrigin = await fetch(`${baseUrl}/api/sessions`, {
       headers: { Origin: 'https://evil.example.com' },
     });
     expect(crossOrigin.status).toBe(403);
 
-    // 2. Non-string constraints / idea must return clean 400 (never 500 TypeError on .trim())
+    const foreignLocalhost = await fetch(`${baseUrl}/api/sessions`, {
+      headers: { Origin: 'http://localhost:9999' },
+    });
+    expect(foreignLocalhost.status).toBe(403);
+
+    // Own bound origin must be allowed
+    const ownOrigin = await fetch(`${baseUrl}/api/sessions`, {
+      headers: { Origin: baseUrl },
+    });
+    expect(ownOrigin.status).toBe(200);
+
+    // 2. Non-string constraints / idea, >6 seats, or invalid seat provider must return clean 400
     const badConstraints = await fetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -124,6 +135,35 @@ describe('v5.3.1 Hardening — Atomic Storage, Secret Redaction & HTTP API Integ
       body: JSON.stringify({ idea: 12345 }),
     });
     expect(badIdea.status).toBe(400);
+
+    const tooManySeats = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idea: 'Valid idea',
+        seats: Array.from({ length: 7 }, (_, i) => ({
+          id: `s${i}`,
+          label: `Seat ${i}`,
+          provider: 'antigravity',
+          model: 'auto',
+          role: 'general',
+          effort: 'default',
+          economyMode: false,
+          enabled: true,
+        })),
+      }),
+    });
+    expect(tooManySeats.status).toBe(400);
+
+    const badProviderSeat = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idea: 'Valid idea',
+        seats: [{ id: 's1', provider: 'evil_shell', model: 'x' }],
+      }),
+    });
+    expect(badProviderSeat.status).toBe(400);
 
     // 3. Valid session creation returns 201 and persists targetCodingTools + projectMode
     const validRes = await fetch(`${baseUrl}/api/sessions`, {

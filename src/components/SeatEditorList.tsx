@@ -18,6 +18,7 @@ interface SeatEditorListProps {
 }
 
 const CUSTOM_MODEL_SENTINEL = '__custom__';
+const MAX_SEATS = 6;
 
 export function SeatEditorList({
   seats,
@@ -44,6 +45,7 @@ export function SeatEditorList({
   };
 
   const addSeat = () => {
+    if (seats.length >= MAX_SEATS) return;
     const installed = providers.filter((p) => p.installed);
     const pool = installed.length > 0 ? installed : providers;
     const pick = pool[seats.length % pool.length] || {
@@ -88,14 +90,16 @@ export function SeatEditorList({
             Ajan Masası
           </h3>
           <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-300">
-            {seats.filter((s) => s.enabled).length} aktif
+            {seats.filter((s) => s.enabled).length}/{MAX_SEATS} aktif
           </span>
         </div>
 
         <button
           type="button"
           onClick={addSeat}
-          className="glass-pill inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full text-zinc-200 hover:text-white cursor-pointer"
+          disabled={seats.length >= MAX_SEATS}
+          title={seats.length >= MAX_SEATS ? `En fazla ${MAX_SEATS} ajan eklenebilir` : 'Yeni ajan koltuğu ekle'}
+          className="glass-pill inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full text-zinc-200 hover:text-white cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Plus className="w-3.5 h-3.5" />
           Ajan Ekle

@@ -1,5 +1,5 @@
 const GITHUB_REPO = 'Mehmet274634/CONCEPTUS';
-const VERSION = '5.3.2';
+const VERSION = '5.3.3';
 const RELEASE_CACHE_KEY = 'conceptus_latest_release_v1';
 const RELEASE_CACHE_TTL_MS = 15 * 60 * 1000;
 let activeRelease = null;

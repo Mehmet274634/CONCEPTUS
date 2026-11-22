@@ -108,6 +108,26 @@ function classifyBlueprintJobType(filename: string, depth: BlueprintDepth): JobT
   return 'blueprint_standard';
 }
 
+const MAX_DEBATE_CONCURRENCY = 4;
+const MAX_ACTIVE_SEATS_PER_ROUND = 6;
+
+async function runWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<void>
+): Promise<void> {
+  const maxWorkers = Math.max(1, Math.min(limit, items.length));
+  let cursor = 0;
+  await Promise.all(
+    Array.from({ length: maxWorkers }, async () => {
+      while (cursor < items.length) {
+        const idx = cursor++;
+        await worker(items[idx], idx);
+      }
+    })
+  );
+}
+
 function getAnonymousLabel(index: number): string {
   const letter = String.fromCharCode(65 + (index % 26));
   return `Ajan ${letter}`;
@@ -221,7 +241,8 @@ async function executeRoundInternal(
   const previousRound =
     roundNumber > 1 ? session.rounds[session.rounds.length - 1] : undefined;
 
-  const responses: SeatResponse[] = enabledSeats.map((seat, idx) => ({
+  const cappedSeats = enabledSeats.slice(0, MAX_ACTIVE_SEATS_PER_ROUND);
+  const responses: SeatResponse[] = cappedSeats.map((seat, idx) => ({
     seatId: seat.id,
     seatLabel: seat.label,
     anonymousId: getAnonymousLabel(idx),
@@ -247,8 +268,7 @@ async function executeRoundInternal(
   saveSession(session);
   broadcast(sessionId, { type: 'round_started', round });
 
-  await Promise.all(
-    enabledSeats.map(async (seat, idx) => {
+  await runWithConcurrency(cappedSeats, MAX_DEBATE_CONCURRENCY, async (seat, idx) => {
       const seatResp = round.responses[idx];
       seatResp.status = 'running';
       seatResp.startedAt = Date.now();
@@ -331,8 +351,7 @@ async function executeRoundInternal(
         roundNumber,
         response: seatResp,
       });
-    })
-  );
+    });
 
   round.finishedAt = Date.now();
   saveSession(session);
@@ -720,21 +739,6 @@ export async function suggestBlueprintPlan(
     purpose: String(item.purpose || 'Master Karar doğrultusunda doküman.').trim(),
     selected: true,
   }));
-}
-
-async function runWithConcurrency<T>(
-  items: T[],
-  concurrency: number,
-  worker: (item: T) => Promise<void>
-): Promise<void> {
-  let index = 0;
-  const runners = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
-    while (index < items.length) {
-      const current = items[index++];
-      await worker(current);
-    }
-  });
-  await Promise.all(runners);
 }
 
 function sanitizeContract(raw: any, fallbackTitle: string): ProjectContract | undefined {
@@ -1664,8 +1668,10 @@ export async function startTargetedChallenge(
       saveSession(session);
       broadcast(sessionId, { type: 'round_started', round });
 
-      await Promise.all(
-        targets.map(async (seat, idx) => {
+      await runWithConcurrency(
+        targets.slice(0, MAX_ACTIVE_SEATS_PER_ROUND),
+        MAX_DEBATE_CONCURRENCY,
+        async (seat, idx) => {
           const seatResp = round.responses[idx];
           seatResp.status = 'running';
           seatResp.startedAt = Date.now();
@@ -1704,7 +1710,7 @@ export async function startTargetedChallenge(
           }
           saveSession(session);
           broadcast(sessionId, { type: 'seat_completed', roundNumber, response: seatResp });
-        })
+        }
       );
 
       round.finishedAt = Date.now();

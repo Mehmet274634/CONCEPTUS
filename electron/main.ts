@@ -170,7 +170,7 @@ function downloadHttpsToFile(
 
     const req = https.get(
       urlStr,
-      { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.2' } },
+      { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.3' } },
       (res) => {
         const status = res.statusCode || 0;
         if (status >= 300 && status < 400 && res.headers.location) {
@@ -228,7 +228,7 @@ function fetchHttpsText(urlStr: string, redirectsLeft = 4): Promise<string> {
       return;
     }
     https
-      .get(urlStr, { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.2' } }, (res) => {
+      .get(urlStr, { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.3' } }, (res) => {
         const status = res.statusCode || 0;
         if (status >= 300 && status < 400 && res.headers.location && redirectsLeft > 0) {
           res.resume();
@@ -310,30 +310,47 @@ ipcMain.handle(
 
       emit({ stage: 'verifying', percent: 97, message: 'SHA-256 bütünlüğü doğrulanıyor...' });
 
-      const checksumsUrl = String(options?.checksumsUrl || '').trim();
-      if (checksumsUrl && isAllowedUpdateHost(checksumsUrl)) {
+      const removeUnverifiedFile = () => {
         try {
-          const sumsText = await fetchHttpsText(checksumsUrl);
-          const expected = extractSha256ForFile(sumsText, rawName);
-          if (expected) {
-            const actual = await computeFileSha256(destPath);
-            if (actual !== expected) {
-              try {
-                fs.unlinkSync(destPath);
-              } catch {
-                // ignore
-              }
-              throw new Error(
-                'SHA-256 doğrulaması başarısız! İndirilen dosya bozuk olabilir ve güvenlik nedeniyle silindi.'
-              );
-            }
-          }
-        } catch (verifyErr: any) {
-          if (String(verifyErr?.message || '').includes('SHA-256 doğrulaması başarısız')) {
-            throw verifyErr;
-          }
-          // If SHA256SUMS.txt temporarily unreachable, still proceed only for verified GitHub HTTPS asset
+          if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+        } catch {
+          // ignore
         }
+      };
+
+      // Fail-closed SHA-256 integrity enforcement: NEVER launch an unverified binary!
+      const checksumsUrl = String(options?.checksumsUrl || '').trim();
+      if (!checksumsUrl || !isAllowedUpdateHost(checksumsUrl)) {
+        removeUnverifiedFile();
+        throw new Error(
+          'SHA-256 doğrulama adresi eksik veya geçersiz — güvenlik nedeniyle kurulum durduruldu.'
+        );
+      }
+
+      let sumsText: string;
+      try {
+        sumsText = await fetchHttpsText(checksumsUrl);
+      } catch (fetchErr: any) {
+        removeUnverifiedFile();
+        throw new Error(
+          `SHA256SUMS.txt indirilemedi (${fetchErr?.message || 'erişim hatası'}) — doğrulanamayan kurulum dosyası güvenlik nedeniyle silindi.`
+        );
+      }
+
+      const expected = extractSha256ForFile(sumsText, rawName);
+      if (!expected) {
+        removeUnverifiedFile();
+        throw new Error(
+          `${rawName} için SHA256SUMS.txt içinde eşleşen özet bulunamadı — güvenlik nedeniyle kurulum durduruldu.`
+        );
+      }
+
+      const actual = await computeFileSha256(destPath);
+      if (actual !== expected) {
+        removeUnverifiedFile();
+        throw new Error(
+          'SHA-256 doğrulaması başarısız! İndirilen dosya bozuk olabilir ve güvenlik nedeniyle silindi.'
+        );
       }
 
       emit({

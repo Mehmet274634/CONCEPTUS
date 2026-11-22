@@ -64,16 +64,157 @@ import type {
   DebateSession,
   DecisionGate,
   DomainMode,
+  EffortLevel,
   IdeId,
   ProjectMode,
+  ProviderId,
   RepoSnapshotMeta,
   SeatConfig,
+  SeatRole,
 } from './types.ts';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3847);
 
-const ALLOWED_ORIGIN_RE = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i;
+export const MAX_SEATS = 6;
+const ALLOWED_PROVIDERS = new Set<ProviderId>(['claude', 'antigravity', 'codex', 'gemini']);
+const ALLOWED_ROLES = new Set<SeatRole>([
+  'general',
+  'chief_architect',
+  'product_ux',
+  'risk_auditor',
+  'growth_strategist',
+  'mvp_pragmatist',
+  'root_cause',
+  'custom',
+]);
+const ALLOWED_EFFORTS = new Set<EffortLevel>(['default', 'low', 'medium', 'high', 'max']);
+
+// Strictly port-pinned origin allowlist (blocks foreign localhost ports like localhost:3000 too!)
+const allowedOrigins = new Set<string>();
+
+function registerAllowedOriginsForPort(actualPort: number) {
+  allowedOrigins.clear();
+  allowedOrigins.add(`http://127.0.0.1:${actualPort}`);
+  allowedOrigins.add(`http://localhost:${actualPort}`);
+  // Only allow Vite dev server origin during non-packaged local development
+  if (process.env.CONCEPTUS_EMBEDDED !== '1' && process.env.NODE_ENV !== 'production') {
+    allowedOrigins.add('http://127.0.0.1:5173');
+    allowedOrigins.add('http://localhost:5173');
+  }
+}
+
+export function isAllowedOrigin(origin: string): boolean {
+  return allowedOrigins.has(origin.trim().toLowerCase());
+}
+
+export function validateSeatsInput(
+  raw: unknown
+): { ok: true; seats: SeatConfig[] } | { ok: false; error: string } {
+  if (!Array.isArray(raw)) {
+    return { ok: false, error: 'Ajan koltukları geçerli bir liste olmalıdır.' };
+  }
+  if (raw.length > MAX_SEATS) {
+    return { ok: false, error: `En fazla ${MAX_SEATS} ajan koltuğu tanımlanabilir.` };
+  }
+  const clean: SeatConfig[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    const item = raw[i];
+    if (!item || typeof item !== 'object') {
+      return { ok: false, error: `Geçersiz ajan koltuğu tanımı (#${i + 1}).` };
+    }
+    const obj = item as Record<string, unknown>;
+    const provider = String(obj.provider || '').trim() as ProviderId;
+    if (!ALLOWED_PROVIDERS.has(provider)) {
+      return { ok: false, error: `Desteklenmeyen sağlayıcı: ${provider || 'boş'}` };
+    }
+    const model = String(obj.model || '').trim().slice(0, 120);
+    if (!model) {
+      return { ok: false, error: `Ajan koltuğu #${i + 1} için geçerli model adı gerekli.` };
+    }
+    const roleRaw = String(obj.role || 'general').trim() as SeatRole;
+    const role: SeatRole = ALLOWED_ROLES.has(roleRaw) ? roleRaw : 'general';
+    const effortRaw = String(obj.effort || 'default').trim() as EffortLevel;
+    const effort: EffortLevel = ALLOWED_EFFORTS.has(effortRaw) ? effortRaw : 'default';
+    clean.push({
+      id:
+        typeof obj.id === 'string' && obj.id.trim()
+          ? obj.id.trim().slice(0, 64)
+          : `seat_${i + 1}`,
+      label:
+        typeof obj.label === 'string' && obj.label.trim()
+          ? obj.label.trim().slice(0, 80)
+          : `${provider} #${i + 1}`,
+      provider,
+      model,
+      role,
+      customRoleTitle:
+        typeof obj.customRoleTitle === 'string'
+          ? obj.customRoleTitle.trim().slice(0, 80) || undefined
+          : undefined,
+      customRolePrompt:
+        typeof obj.customRolePrompt === 'string'
+          ? obj.customRolePrompt.trim().slice(0, 1500) || undefined
+          : undefined,
+      effort,
+      economyMode: Boolean(obj.economyMode),
+      enabled: obj.enabled !== false,
+    });
+  }
+  return { ok: true, seats: clean };
+}
+
+export function validateDecisionGatesInput(
+  raw: unknown
+): { ok: true; gates: DecisionGate[] } | { ok: false; error: string } {
+  if (!Array.isArray(raw)) {
+    return { ok: false, error: 'Karar kapıları geçerli bir liste olmalıdır.' };
+  }
+  if (raw.length > 8) {
+    return { ok: false, error: 'En fazla 8 karar kapısı kaydedilebilir.' };
+  }
+  const clean: DecisionGate[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    const g = raw[i];
+    if (!g || typeof g !== 'object') {
+      return { ok: false, error: `Geçersiz karar kapısı (#${i + 1}).` };
+    }
+    const obj = g as Record<string, unknown>;
+    const question = typeof obj.question === 'string' ? obj.question.trim().slice(0, 400) : '';
+    if (!question || !Array.isArray(obj.options) || obj.options.length < 1) {
+      return { ok: false, error: `Karar kapısı #${i + 1} eksik soru veya seçenek içeriyor.` };
+    }
+    const options = obj.options.slice(0, 6).map((opt: any, oIdx: number) => ({
+      id:
+        typeof opt?.id === 'string' && opt.id.trim()
+          ? opt.id.trim().slice(0, 16)
+          : String.fromCharCode(65 + oIdx),
+      label: String(opt?.label || '').trim().slice(0, 180),
+      tradeoff: String(opt?.tradeoff || '').trim().slice(0, 320),
+    }));
+    clean.push({
+      id:
+        typeof obj.id === 'string' && obj.id.trim()
+          ? obj.id.trim().slice(0, 48)
+          : `gate_${i + 1}`,
+      question,
+      recommendation:
+        typeof obj.recommendation === 'string'
+          ? obj.recommendation.trim().slice(0, 16)
+          : undefined,
+      options,
+      selectedOptionId:
+        typeof obj.selectedOptionId === 'string'
+          ? obj.selectedOptionId.trim().slice(0, 16) || undefined
+          : undefined,
+      customNote:
+        typeof obj.customNote === 'string'
+          ? obj.customNote.trim().slice(0, 500) || undefined
+          : undefined,
+    });
+  }
+  return { ok: true, gates: clean };
+}
 
 // Hardened local security headers (prevents clickjacking, MIME sniffing, XSS data exfiltration)
 app.use((_req, res, next) => {
@@ -87,11 +228,13 @@ app.use((_req, res, next) => {
   next();
 });
 
-// Guard /api/* routes against cross-site browser requests (CSRF / DNS rebinding protection)
+// Guard /api/* routes against both external sites AND foreign localhost ports
 app.use('/api', (req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && !ALLOWED_ORIGIN_RE.test(origin)) {
-    res.status(403).json({ error: 'Harici kaynaklardan yerel CONCEPTUS API çağrısı engellendi.' });
+  if (origin && !isAllowedOrigin(origin)) {
+    res.status(403).json({
+      error: 'Yetkisiz kaynaktan (farklı domain veya farklı localhost portu) CONCEPTUS API çağrısı engellendi.',
+    });
     return;
   }
   next();
@@ -100,7 +243,7 @@ app.use('/api', (req, res, next) => {
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || ALLOWED_ORIGIN_RE.test(origin)) {
+      if (!origin || isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
         callback(null, false);
@@ -428,8 +571,9 @@ app.post('/api/sessions', (req, res) => {
       res.status(400).json({ error: 'Bağlam alanı geçerli bir metin olmalıdır.' });
       return;
     }
-    if (!Array.isArray(seats)) {
-      res.status(400).json({ error: 'Ajan koltukları geçerli bir liste olmalıdır.' });
+    const seatsCheck = validateSeatsInput(seats);
+    if (!seatsCheck.ok) {
+      res.status(400).json({ error: seatsCheck.error });
       return;
     }
 
@@ -488,7 +632,7 @@ app.post('/api/sessions', (req, res) => {
       constraints: cleanConstraints,
       contextText: cleanContext,
       repoMeta: repoMeta as RepoSnapshotMeta | undefined,
-      seats: seats as SeatConfig[],
+      seats: seatsCheck.seats,
       rounds: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -511,32 +655,63 @@ app.get('/api/sessions/:id', (req, res) => {
   res.json({ session, activeRun: isSessionRunning(session.id) });
 });
 
-// Update seats / metadata
+// Update seats / metadata (runtime validated)
 app.patch('/api/sessions/:id', (req, res) => {
   const session = loadSession(req.params.id);
   if (!session) {
     res.status(404).json({ error: 'Oturum bulunamadı.' });
     return;
   }
-  const { seats, title, constraints, contextText } = req.body;
-  if (Array.isArray(seats)) session.seats = seats;
-  if (typeof title === 'string' && title.trim()) session.title = title.trim();
-  if (typeof constraints === 'string') session.constraints = constraints;
-  if (typeof contextText === 'string') session.contextText = contextText;
+  const body = req.body && typeof req.body === 'object' ? req.body : {};
+  const { seats, title, constraints, contextText } = body as Record<string, unknown>;
+  if (seats !== undefined) {
+    const seatsCheck = validateSeatsInput(seats);
+    if (!seatsCheck.ok) {
+      res.status(400).json({ error: seatsCheck.error });
+      return;
+    }
+    session.seats = seatsCheck.seats;
+  }
+  if (title !== undefined) {
+    if (typeof title !== 'string') {
+      res.status(400).json({ error: 'Başlık metin olmalıdır.' });
+      return;
+    }
+    if (title.trim()) session.title = title.trim().slice(0, 120);
+  }
+  if (constraints !== undefined) {
+    if (typeof constraints !== 'string') {
+      res.status(400).json({ error: 'Kısıtlar metin olmalıdır.' });
+      return;
+    }
+    session.constraints = constraints.slice(0, 40_000);
+  }
+  if (contextText !== undefined) {
+    if (typeof contextText !== 'string') {
+      res.status(400).json({ error: 'Bağlam metin olmalıdır.' });
+      return;
+    }
+    session.contextText = contextText.slice(0, 200_000);
+  }
   saveSession(session);
   res.json({ session });
 });
 
-// Save locked user choices on Decision Gates
+// Save locked user choices on Decision Gates (runtime validated)
 app.patch('/api/sessions/:id/decisions', (req, res) => {
   const session = loadSession(req.params.id);
   if (!session || !session.synthesis) {
     res.status(404).json({ error: 'Master Karar bulunamadı.' });
     return;
   }
-  const gates = req.body?.decisionGates as DecisionGate[] | undefined;
-  if (Array.isArray(gates)) {
-    session.synthesis.decisionGates = gates;
+  const rawGates = req.body?.decisionGates;
+  if (rawGates !== undefined) {
+    const check = validateDecisionGatesInput(rawGates);
+    if (!check.ok) {
+      res.status(400).json({ error: check.error });
+      return;
+    }
+    session.synthesis.decisionGates = check.gates;
     saveSession(session);
   }
   res.json({ synthesis: session.synthesis });
@@ -602,11 +777,20 @@ app.get('/api/sessions/:id/events', (req, res) => {
 app.post('/api/sessions/:id/autopilot', async (req, res) => {
   try {
     const { seats, judge } = req.body || {};
-    if (!judge?.provider || !judge?.model) {
-      res.status(400).json({ error: 'Oto-Pilot için hakem model gereklidir.' });
+    if (!judge?.provider || !judge?.model || !ALLOWED_PROVIDERS.has(judge.provider)) {
+      res.status(400).json({ error: 'Oto-Pilot için geçerli hakem sağlayıcı ve model gereklidir.' });
       return;
     }
-    const result = await startAutoPilot(req.params.id, { seats, judge });
+    let validatedSeats: SeatConfig[] | undefined;
+    if (seats !== undefined) {
+      const check = validateSeatsInput(seats);
+      if (!check.ok) {
+        res.status(400).json({ error: check.error });
+        return;
+      }
+      validatedSeats = check.seats;
+    }
+    const result = await startAutoPilot(req.params.id, { seats: validatedSeats, judge });
     res.status(202).json(result);
   } catch (err: any) {
     res.status(400).json({ error: err?.message || 'Oto-Pilot başlatılamadı.' });
@@ -617,7 +801,20 @@ app.post('/api/sessions/:id/autopilot', async (req, res) => {
 app.post('/api/sessions/:id/rounds', async (req, res) => {
   try {
     const { userGuidance, seats } = req.body || {};
-    const result = await startNextRound(req.params.id, userGuidance, seats);
+    if (userGuidance !== undefined && typeof userGuidance !== 'string') {
+      res.status(400).json({ error: 'Tur yönlendirmesi geçerli bir metin olmalıdır.' });
+      return;
+    }
+    let validatedSeats: SeatConfig[] | undefined;
+    if (seats !== undefined) {
+      const check = validateSeatsInput(seats);
+      if (!check.ok) {
+        res.status(400).json({ error: check.error });
+        return;
+      }
+      validatedSeats = check.seats;
+    }
+    const result = await startNextRound(req.params.id, userGuidance, validatedSeats);
     res.status(202).json(result);
   } catch (err: any) {
     res.status(400).json({ error: err?.message || 'Tur başlatılamadı.' });
@@ -946,6 +1143,7 @@ export async function startConceptusServer(options?: {
       const addr = server.address();
       const actualPort =
         typeof addr === 'object' && addr ? addr.port : requestedPort;
+      registerAllowedOriginsForPort(actualPort);
       const url = `http://127.0.0.1:${actualPort}`;
       console.log(`\n  CONCEPTUS v${APP_VERSION} hazir: ${url}\n`);
       resolve({ server, port: actualPort, url });

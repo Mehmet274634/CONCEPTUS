@@ -10,7 +10,7 @@ import type {
 
 const execFileAsync = promisify(execFile);
 
-export const APP_VERSION = '5.3.2';
+export const APP_VERSION = '5.3.3';
 export const GITHUB_REPO = 'Mehmet274634/CONCEPTUS';
 const RELEASE_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 const RELEASE_WEB_LATEST_URL = `https://github.com/${GITHUB_REPO}/releases/latest`;
