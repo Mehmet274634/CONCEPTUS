@@ -14,10 +14,14 @@ import {
   triggerBlueprintAudit,
   triggerBlueprintFix,
   triggerBlueprintGeneration,
+  triggerBlueprintLint,
+  triggerForkSession,
+  triggerRedTeam,
   triggerRegenerateFile,
   triggerRetryFailedBlueprint,
   triggerRound,
   triggerSynthesis,
+  triggerTargetedChallenge,
   updateFallbackPolicy,
   updateSessionSeats,
 } from './api.ts';
@@ -30,6 +34,7 @@ import { useI18n } from './i18n.tsx';
 import type {
   BlueprintDepth,
   BlueprintFileSpec,
+  CaliberPreference,
   DebateSession,
   DecisionGate,
   DomainMode,
@@ -126,7 +131,21 @@ function buildSeatsForPreset(
       role: 'product_ux',
       effort: 'default',
       economyMode: preset === 'fast',
-      enabled: claude.installed && !(agy && agy.installed),
+      enabled: claude.installed && (preset === 'deep' || !(agy && agy.installed)),
+    });
+  }
+
+  const geminiCli = byId.get('gemini');
+  if (geminiCli && geminiCli.installed && preset === 'deep' && seats.filter((s) => s.enabled).length < 4) {
+    seats.push({
+      id: 'seat_gemini_cli',
+      label: 'Gemini CLI · Ölçek',
+      provider: 'gemini',
+      model: pickFrom(geminiCli, ['gemini-2.5-pro', 'auto'], 'auto'),
+      role: 'growth_strategist',
+      effort: 'default',
+      economyMode: false,
+      enabled: true,
     });
   }
 
@@ -498,6 +517,30 @@ export default function App() {
         return;
       }
 
+      if (event.type === 'blueprint_contract_ready') {
+        setActiveSession((prev) =>
+          prev && prev.id === sessionId && prev.blueprint
+            ? {
+                ...prev,
+                blueprint: { ...prev.blueprint, contract: event.contract },
+              }
+            : prev
+        );
+        return;
+      }
+
+      if (event.type === 'blueprint_lint_completed') {
+        setActiveSession((prev) =>
+          prev && prev.id === sessionId && prev.blueprint
+            ? {
+                ...prev,
+                blueprint: { ...prev.blueprint, lint: event.lint },
+              }
+            : prev
+        );
+        return;
+      }
+
       if (event.type === 'blueprint_file_started') {
         buf.blueprintFiles.delete(event.fileId);
         setActiveSession((prev) => {
@@ -597,6 +640,7 @@ export default function App() {
     title: string;
     idea: string;
     domain: DomainMode;
+    caliber?: CaliberPreference;
     constraints: string;
     contextText: string;
     repoMeta?: RepoSnapshotMeta;
@@ -610,6 +654,7 @@ export default function App() {
         idea: payload.idea,
         domain: payload.domain,
         language: lang,
+        caliber: payload.caliber,
         constraints: payload.constraints,
         contextText: payload.contextText,
         repoMeta: payload.repoMeta,
@@ -794,6 +839,49 @@ export default function App() {
     void updateSessionSeats(activeSession.id, seats);
   };
 
+  const handleRedTeam = async (seatId?: string) => {
+    if (!activeSession) return;
+    setActiveRun(true);
+    try {
+      await triggerRedTeam(activeSession.id, seatId);
+    } catch (err) {
+      setActiveRun(false);
+      throw err;
+    }
+  };
+
+  const handleTargetedChallenge = async (question: string, targetSeatId?: string) => {
+    if (!activeSession) return;
+    setActiveRun(true);
+    try {
+      await triggerTargetedChallenge(activeSession.id, question, targetSeatId);
+    } catch (err) {
+      setActiveRun(false);
+      throw err;
+    }
+  };
+
+  const handleForkSession = async (options: {
+    forkLabel?: string;
+    extraConstraint?: string;
+  }) => {
+    if (!activeSession) return;
+    const forked = await triggerForkSession(activeSession.id, options);
+    setActiveSession(forked);
+    setActiveStage('debate');
+    await loadSessionsList();
+  };
+
+  const handleRunLint = async () => {
+    if (!activeSession) return;
+    const lint = await triggerBlueprintLint(activeSession.id);
+    setActiveSession((prev) =>
+      prev && prev.id === activeSession.id && prev.blueprint
+        ? { ...prev, blueprint: { ...prev.blueprint, lint } }
+        : prev
+    );
+  };
+
   const installedCount = providers.filter((p) => p.installed).length;
 
   return (
@@ -847,6 +935,9 @@ export default function App() {
                 activeStage={activeStage}
                 onSelectStage={setActiveStage}
                 onStartNextRound={handleNextRound}
+                onStartRedTeam={handleRedTeam}
+                onStartChallenge={handleTargetedChallenge}
+                onForkSession={handleForkSession}
                 onStartSynthesis={handleSynthesis}
                 onUpdateDecisionGates={handleUpdateDecisionGates}
                 onExtractGates={handleExtractGates}
@@ -854,6 +945,7 @@ export default function App() {
                 onGenerateBlueprint={handleGenerateBlueprint}
                 onRegenerateBlueprintFile={handleRegenerateBlueprintFile}
                 onRetryFailedBlueprint={handleRetryFailedBlueprint}
+                onRunLint={handleRunLint}
                 onRunAudit={handleRunAudit}
                 onFixAuditIssues={handleFixAuditIssues}
                 onBlueprintFileUpdated={handleBlueprintFileUpdated}

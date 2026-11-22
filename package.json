@@ -1,6 +1,6 @@
 {
   "name": "conceptus",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "private": false,
   "type": "module",
   "main": "dist-electron/main.cjs",

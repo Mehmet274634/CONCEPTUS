@@ -8,11 +8,14 @@ import {
   Columns2,
   Copy,
   FileCode2,
+  Flame,
   FolderGit2,
+  GitFork,
   Loader2,
   MessageSquarePlus,
   OctagonX,
   RefreshCw,
+  Send,
   SlidersHorizontal,
   Sparkles,
   Square,
@@ -54,6 +57,9 @@ interface DebateStageProps {
   activeStage: StageTab;
   onSelectStage: (stage: StageTab) => void;
   onStartNextRound: (guidance: string, seats: SeatConfig[]) => Promise<void>;
+  onStartRedTeam: (seatId?: string) => Promise<void>;
+  onStartChallenge: (question: string, targetSeatId?: string) => Promise<void>;
+  onForkSession: (options: { forkLabel?: string; extraConstraint?: string }) => Promise<void>;
   onStartSynthesis: (judge: {
     provider: ProviderId;
     model: string;
@@ -81,6 +87,7 @@ interface DebateStageProps {
     provider?: ProviderId;
     model?: string;
   }) => Promise<void>;
+  onRunLint: () => Promise<void>;
   onRunAudit: (auditor: { provider: ProviderId; model: string }) => Promise<void>;
   onFixAuditIssues: (options: {
     issueIds: string[];
@@ -241,6 +248,9 @@ export function DebateStage({
   activeStage,
   onSelectStage,
   onStartNextRound,
+  onStartRedTeam,
+  onStartChallenge,
+  onForkSession,
   onStartSynthesis,
   onUpdateDecisionGates,
   onExtractGates,
@@ -248,6 +258,7 @@ export function DebateStage({
   onGenerateBlueprint,
   onRegenerateBlueprintFile,
   onRetryFailedBlueprint,
+  onRunLint,
   onRunAudit,
   onFixAuditIssues,
   onBlueprintFileUpdated,
@@ -262,6 +273,11 @@ export function DebateStage({
   const [showIdeaBox, setShowIdeaBox] = useState(false);
   const [showSeatEditor, setShowSeatEditor] = useState(false);
   const [guidance, setGuidance] = useState('');
+  const [challengeTarget, setChallengeTarget] = useState<string>('round');
+  const [showForkBox, setShowForkBox] = useState(false);
+  const [forkLabel, setForkLabel] = useState('');
+  const [forkConstraint, setForkConstraint] = useState('');
+  const [forking, setForking] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const defaultJudge = useMemo(() => {
@@ -326,11 +342,47 @@ export function DebateStage({
     setActionError(null);
     try {
       onSelectStage('debate');
-      await onStartNextRound(guidance, session.seats);
+      if (challengeTarget !== 'round') {
+        if (!guidance.trim()) {
+          setActionError('Canlı müdahale için sorunuzu veya itirazınızı yazın.');
+          return;
+        }
+        await onStartChallenge(guidance.trim(), challengeTarget);
+      } else {
+        await onStartNextRound(guidance, session.seats);
+      }
       setGuidance('');
       setShowSeatEditor(false);
     } catch (err: any) {
       setActionError(err?.message || 'Yeni tur başlatılamadı.');
+    }
+  };
+
+  const handleRedTeamClick = async () => {
+    setActionError(null);
+    try {
+      onSelectStage('debate');
+      await onStartRedTeam();
+    } catch (err: any) {
+      setActionError(err?.message || 'Şeytanın Avukatı (Red-Team) başlatılamadı.');
+    }
+  };
+
+  const handleForkSubmit = async () => {
+    setActionError(null);
+    setForking(true);
+    try {
+      await onForkSession({
+        forkLabel: forkLabel.trim() || 'Alternatif Senaryo',
+        extraConstraint: forkConstraint.trim() || undefined,
+      });
+      setShowForkBox(false);
+      setForkLabel('');
+      setForkConstraint('');
+    } catch (err: any) {
+      setActionError(err?.message || 'Senaryo çatallanamadı.');
+    } finally {
+      setForking(false);
     }
   };
 
@@ -359,6 +411,7 @@ export function DebateStage({
         onGeneratePack={onGenerateBlueprint}
         onRegenerateFile={onRegenerateBlueprintFile}
         onRetryFailedFiles={onRetryFailedBlueprint}
+        onRunLint={onRunLint}
         onRunAudit={onRunAudit}
         onFixAuditIssues={onFixAuditIssues}
         onFileContentUpdated={onBlueprintFileUpdated}
@@ -597,7 +650,7 @@ export function DebateStage({
         </div>
       )}
 
-      {/* Floating Frosted Bottom Control Dock */}
+      {/* Floating Frosted Bottom Control Dock (Live Idea War Room Controls) */}
       <footer className="border-t glass-bar px-5 sm:px-8 py-3 shrink-0 space-y-2">
         {actionError && (
           <div className="text-xs text-[#ffb4ad] bg-[#ff7a6e]/10 border border-[#ff7a6e]/25 rounded-xl px-3 py-1.5">
@@ -605,27 +658,76 @@ export function DebateStage({
           </div>
         )}
 
-        <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2.5">
-          <div className="relative flex-1">
-            <MessageSquarePlus className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        {showForkBox && (
+          <div className="rounded-2xl bg-[#7c74ff]/[0.07] border border-[#7c74ff]/30 p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <input
               type="text"
-              value={guidance}
-              onChange={(e) => setGuidance(e.target.value)}
-              disabled={activeRun}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !activeRun) {
-                  e.preventDefault();
-                  handleNextRound();
-                }
-              }}
-              placeholder={
-                nextRoundNum === 2
-                  ? 'İsteğe bağlı yönlendirme yaz veya boş bırakıp doğrudan ajanları çarpıştır...'
-                  : 'Araya gir: "Örn. Ajan A ile B’yi birleştirin, maliyeti sıfır tutun"...'
-              }
-              className="glass-input w-full pl-10 pr-4 py-2 text-xs rounded-full text-zinc-100 placeholder:text-zinc-500 disabled:opacity-40"
+              value={forkLabel}
+              onChange={(e) => setForkLabel(e.target.value)}
+              placeholder="Dal adı (örn: SaaS Versiyonu)"
+              className="glass-input text-xs rounded-full px-3 py-1.5 text-zinc-100 placeholder:text-zinc-500 sm:w-44"
             />
+            <input
+              type="text"
+              value={forkConstraint}
+              onChange={(e) => setForkConstraint(e.target.value)}
+              placeholder="What-If değişikliği (örn: Yerel yerine çok kullanıcılı bulut abonelik olsun)"
+              className="glass-input flex-1 text-xs rounded-full px-3 py-1.5 text-zinc-100 placeholder:text-zinc-500"
+            />
+            <button
+              type="button"
+              onClick={handleForkSubmit}
+              disabled={forking}
+              className="btn-white text-xs px-3.5 py-1.5 cursor-pointer disabled:opacity-40"
+            >
+              {forking ? 'Çatallanıyor...' : 'Yeni Dal Oluştur'}
+            </button>
+          </div>
+        )}
+
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2.5">
+          <div className="flex items-center gap-1.5 flex-1">
+            <select
+              value={challengeTarget}
+              disabled={activeRun}
+              onChange={(e) => setChallengeTarget(e.target.value)}
+              title="Tartışma Turu veya Doğrudan @Ajan Müdahalesi"
+              className="glass-input text-[11px] font-medium rounded-full px-3 py-2 text-[#cbc7ff] cursor-pointer shrink-0 max-w-[140px]"
+            >
+              <option value="round">Delta Tur</option>
+              <option value="all">@Tümü Sor</option>
+              {session.seats
+                .filter((s) => s.enabled)
+                .map((s) => (
+                  <option key={s.id} value={s.id}>
+                    @{s.label}
+                  </option>
+                ))}
+            </select>
+
+            <div className="relative flex-1">
+              <MessageSquarePlus className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={guidance}
+                onChange={(e) => setGuidance(e.target.value)}
+                disabled={activeRun}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !activeRun) {
+                    e.preventDefault();
+                    void handleNextRound();
+                  }
+                }}
+                placeholder={
+                  challengeTarget !== 'round'
+                    ? 'Seçili ajana doğrudan soru sor veya itiraz et...'
+                    : nextRoundNum === 2
+                      ? 'İsteğe bağlı yönlendirme yaz veya boş bırakıp Delta çatışmayı başlat...'
+                      : 'Araya gir: "Örn. Maliyeti sıfır tutun, kapsamı 3 ekrana daraltın"...'
+                }
+                className="glass-input w-full pl-10 pr-4 py-2 text-xs rounded-full text-zinc-100 placeholder:text-zinc-500 disabled:opacity-40"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -634,7 +736,7 @@ export function DebateStage({
                 type="button"
                 onClick={() => setShowSeatEditor(!showSeatEditor)}
                 disabled={activeRun}
-                className={`glass-pill inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium cursor-pointer disabled:opacity-40 ${
+                className={`glass-pill inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium cursor-pointer disabled:opacity-40 ${
                   showSeatEditor ? 'bg-white/15 text-white' : 'text-zinc-300'
                 }`}
               >
@@ -645,14 +747,43 @@ export function DebateStage({
 
             <button
               type="button"
+              onClick={handleRedTeamClick}
+              disabled={activeRun || session.rounds.length === 0}
+              title="Şeytanın Avukatı (Red-Team): Fikrin en ölümcül 5 riskini acımasızca bulur"
+              className="glass-pill inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium text-[#ffb4ad] border-[#ff7a6e]/30 hover:bg-[#ff7a6e]/15 cursor-pointer disabled:opacity-40"
+            >
+              <Flame className="w-3.5 h-3.5" />
+              Red-Team
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowForkBox((v) => !v)}
+              disabled={activeRun}
+              title="What-If Senaryo Çatalla: Mevcut oturumu bozmadan alternatif yol dene"
+              className={`glass-pill inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium cursor-pointer disabled:opacity-40 ${
+                showForkBox ? 'bg-[#7c74ff]/20 text-[#cbc7ff] border-[#7c74ff]/40' : 'text-zinc-300'
+              }`}
+            >
+              <GitFork className="w-3.5 h-3.5" />
+              Çatalla
+            </button>
+
+            <button
+              type="button"
               onClick={handleNextRound}
               disabled={activeRun || activeSeatCount === 0}
               className="btn-accent inline-flex items-center gap-1.5 px-4 py-2 text-xs cursor-pointer disabled:opacity-40"
             >
-              {nextRoundNum === 2 ? (
+              {challengeTarget !== 'round' ? (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  Sor
+                </>
+              ) : nextRoundNum === 2 ? (
                 <>
                   <Swords className="w-3.5 h-3.5" />
-                  Fikirleri Tartıştır
+                  Delta Tartıştır
                 </>
               ) : (
                 <>

@@ -8,6 +8,7 @@ import cors from 'cors';
 import express from 'express';
 
 const execFileAsync = promisify(execFile);
+import { analyzeIdeaComplexity, estimateSessionBudget } from './complexity.ts';
 import { discoverProviders, prewarmProviders } from './discovery.ts';
 import {
   clearAllCooldowns,
@@ -20,15 +21,19 @@ import {
   abortSessionRun,
   clarifyRawIdea,
   extractDecisionGates,
+  forkSessionScenario,
   isSessionRunning,
   regenerateBlueprintFile,
   retryFailedBlueprintFiles,
   runBlueprintAudit,
+  runBlueprintLint,
   startAutoPilot,
   startBlueprintGeneration,
   startFixBlueprintIssues,
   startMasterSynthesis,
   startNextRound,
+  startRedTeamRound,
+  startTargetedChallenge,
   subscribeSessionEvents,
   suggestBlueprintPlan,
 } from './orchestrator.ts';
@@ -45,6 +50,8 @@ import {
   slugifyProjectName,
 } from './storage.ts';
 import type {
+  CaliberPreference,
+  ComplexityLevel,
   DebateSession,
   DecisionGate,
   DomainMode,
@@ -97,9 +104,32 @@ app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
     name: 'CONCEPTUS',
-    version: '4.2.0',
+    version: '5.0.0',
     uptimeSec: Math.round(process.uptime()),
   });
+});
+
+// Instant 0-Token Idea Complexity & Budget Estimator (<5ms)
+app.post('/api/idea/analyze', (req, res) => {
+  const idea = String(req.body?.idea || '');
+  const constraints = String(req.body?.constraints || '');
+  const contextText = String(req.body?.contextText || '');
+  const domain = (req.body?.domain || 'app_product') as DomainMode;
+  const caliberOverride = req.body?.caliber as CaliberPreference | undefined;
+  const seatCountOverride = Number(req.body?.seatCount || 0);
+
+  const complexity = analyzeIdeaComplexity({ idea, constraints, contextText, domain });
+  const caliber: CaliberPreference =
+    caliberOverride === 'flagship' || caliberOverride === 'hybrid' || caliberOverride === 'economy'
+      ? caliberOverride
+      : complexity.recommendedCaliber;
+  const budget = estimateSessionBudget({
+    seatCount: seatCountOverride > 0 ? seatCountOverride : complexity.recommendedSeatCount,
+    blueprintFileCount: complexity.recommendedFileCount,
+    caliber,
+  });
+
+  res.json({ complexity, budget });
 });
 
 // Providers & Models (instant cached boot + active quota cooldowns + fallback policy)
@@ -243,10 +273,11 @@ app.post('/api/repo/scan', (req, res) => {
   }
 });
 
-// Default MD Blueprint plan per domain
+// Default MD Blueprint plan per domain (+ optional XL complexity expansion)
 app.get('/api/blueprint/defaults/:domain', (req, res) => {
   const domain = req.params.domain as DomainMode;
-  res.json({ files: getDefaultBlueprintPlan(domain) });
+  const complexity = req.query.complexity as ComplexityLevel | undefined;
+  res.json({ files: getDefaultBlueprintPlan(domain, complexity) });
 });
 
 // List sessions
@@ -262,6 +293,7 @@ app.post('/api/sessions', (req, res) => {
       idea,
       domain = 'app_product',
       language = 'tr',
+      caliber,
       constraints = '',
       contextText = '',
       repoMeta,
@@ -271,6 +303,7 @@ app.post('/api/sessions', (req, res) => {
       idea?: string;
       domain?: DomainMode;
       language?: 'tr' | 'en';
+      caliber?: CaliberPreference;
       constraints?: string;
       contextText?: string;
       repoMeta?: RepoSnapshotMeta;
@@ -287,12 +320,21 @@ app.post('/api/sessions', (req, res) => {
       idea.trim().split(/\r?\n/)[0].slice(0, 64) ||
       (language === 'en' ? 'New Idea Session' : 'Yeni Fikir Oturumu');
 
+    const complexity = analyzeIdeaComplexity({
+      idea: idea.trim(),
+      constraints: constraints.trim(),
+      contextText: contextText.trim(),
+      domain,
+    });
+
     const session: DebateSession = {
       id: `cpt_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`,
       title: cleanTitle,
       idea: idea.trim(),
       domain,
       language: language === 'en' ? 'en' : 'tr',
+      complexity,
+      caliber: caliber || complexity.recommendedCaliber,
       constraints: constraints.trim(),
       contextText: contextText.trim(),
       repoMeta,
@@ -432,6 +474,43 @@ app.post('/api/sessions/:id/rounds', async (req, res) => {
   }
 });
 
+// War Room: 1-Click Red-Team / Devil's Advocate Stress Test
+app.post('/api/sessions/:id/red-team', async (req, res) => {
+  try {
+    const result = await startRedTeamRound(req.params.id, {
+      seatId: req.body?.seatId ? String(req.body.seatId) : undefined,
+    });
+    res.status(202).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err?.message || 'Red-Team saldırısı başlatılamadı.' });
+  }
+});
+
+// War Room: Targeted Live Chair Challenge (@Agent or @All)
+app.post('/api/sessions/:id/challenge', async (req, res) => {
+  try {
+    const question = String(req.body?.question || '').trim();
+    const targetSeatId = req.body?.targetSeatId ? String(req.body.targetSeatId) : undefined;
+    const result = await startTargetedChallenge(req.params.id, { question, targetSeatId });
+    res.status(202).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err?.message || 'Canlı müdahale başlatılamadı.' });
+  }
+});
+
+// War Room: Fork session into a parallel What-If scenario
+app.post('/api/sessions/:id/fork', (req, res) => {
+  try {
+    const forked = forkSessionScenario(req.params.id, {
+      forkLabel: req.body?.forkLabel ? String(req.body.forkLabel) : undefined,
+      extraConstraint: req.body?.extraConstraint ? String(req.body.extraConstraint) : undefined,
+    });
+    res.status(201).json({ session: forked });
+  } catch (err: any) {
+    res.status(400).json({ error: err?.message || 'Senaryo çatallanamadı.' });
+  }
+});
+
 // Start Master Synthesis
 app.post('/api/sessions/:id/synthesize', async (req, res) => {
   try {
@@ -485,6 +564,16 @@ app.post('/api/sessions/:id/blueprint/generate', async (req, res) => {
     res.status(202).json({ blueprint });
   } catch (err: any) {
     res.status(400).json({ error: err?.message || 'MD paketi başlatılamadı.' });
+  }
+});
+
+// Instant 0-Token Local Deterministic Blueprint Linter
+app.post('/api/sessions/:id/blueprint/lint', (req, res) => {
+  try {
+    const lint = runBlueprintLint(req.params.id);
+    res.json({ lint });
+  } catch (err: any) {
+    res.status(400).json({ error: err?.message || 'Yerel doğrulama çalıştırılamadı.' });
   }
 });
 
@@ -580,7 +669,8 @@ app.get('/api/sessions/:id/blueprint.zip', async (req, res) => {
       res.status(404).json({ error: 'Oturum bulunamadı.' });
       return;
     }
-    const buf = await buildBlueprintZipBuffer(session);
+    const includeIdeRules = req.query.ide !== '0';
+    const buf = await buildBlueprintZipBuffer(session, { includeIdeRules });
     const slug = slugifyProjectName(session.title);
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${slug}-md-paketi.zip"`);
@@ -607,7 +697,8 @@ app.post('/api/sessions/:id/blueprint/save-folder', (req, res) => {
         ? path.join(session.repoMeta.folderPath, sub)
         : session.repoMeta.folderPath;
     }
-    const result = saveBlueprintToFolder(session, targetPath);
+    const includeIdeRules = req.body?.includeIdeRules !== false;
+    const result = saveBlueprintToFolder(session, targetPath, { includeIdeRules });
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err?.message || 'Klasöre kaydedilemedi.' });

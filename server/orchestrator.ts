@@ -1,4 +1,6 @@
+import crypto from 'node:crypto';
 import type { Response as ExpressResponse } from 'express';
+import { lintBlueprintPack } from './blueprintLinter.ts';
 import { runCliSeatWithFallback, type JobType } from './fallback.ts';
 import {
   buildBlueprintAuditPrompt,
@@ -9,7 +11,10 @@ import {
   buildExtractGatesPrompt,
   buildIdeaClarifierPrompt,
   buildMasterSynthesisPrompt,
+  buildProjectContractPrompt,
+  buildRedTeamPrompt,
   buildRound1Prompt,
+  buildTargetedChallengePrompt,
 } from './prompts.ts';
 import { loadSession, saveSession } from './storage.ts';
 import type {
@@ -17,6 +22,7 @@ import type {
   BlueprintAuditIssue,
   BlueprintDepth,
   BlueprintFileSpec,
+  BlueprintLintReport,
   BlueprintPack,
   ClarifyQuestion,
   DebateRound,
@@ -25,7 +31,9 @@ import type {
   DomainMode,
   EffortLevel,
   GeneratedMdFile,
+  ProjectContract,
   ProviderId,
+  ReadinessScore,
   SeatConfig,
   SeatResponse,
   StreamEvent,
@@ -117,10 +125,37 @@ function sanitizeGates(rawGates: any): DecisionGate[] {
     });
 }
 
+function clampScore(v: any, fallback = 80): number {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(10, Math.min(100, Math.round(n)));
+}
+
+function sanitizeReadinessScore(raw: any): ReadinessScore | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const problemClarity = clampScore(raw.problemClarity, 82);
+  const uxValue = clampScore(raw.uxValue, 80);
+  const technicalSolidity = clampScore(raw.technicalSolidity, 82);
+  const securityRisk = clampScore(raw.securityRisk, 78);
+  const mvpSharpness = clampScore(raw.mvpSharpness, 84);
+  const computedOverall = Math.round(
+    (problemClarity + uxValue + technicalSolidity + securityRisk + mvpSharpness) / 5
+  );
+  return {
+    overall: Number.isFinite(Number(raw.overall)) ? clampScore(raw.overall, computedOverall) : computedOverall,
+    problemClarity,
+    uxValue,
+    technicalSolidity,
+    securityRisk,
+    mvpSharpness,
+  };
+}
+
 function parseSynthesisMeta(rawContent: string): {
   cleanMarkdown: string;
   evolutionHighlights?: string[];
   decisionGates?: DecisionGate[];
+  readinessScore?: ReadinessScore;
 } {
   const fenceRegex = /```conceptus-meta\s*\r?\n([\s\S]*?)\r?\n```\s*$/i;
   const match = rawContent.match(fenceRegex);
@@ -135,10 +170,12 @@ function parseSynthesisMeta(rawContent: string): {
       ? parsed.evolutionHighlights.map((x: any) => String(x).trim()).filter(Boolean).slice(0, 5)
       : undefined;
     const decisionGates = sanitizeGates(parsed?.decisionGates);
+    const readinessScore = sanitizeReadinessScore(parsed?.readinessScore);
     return {
       cleanMarkdown,
       evolutionHighlights: evolutionHighlights?.length ? evolutionHighlights : undefined,
       decisionGates: decisionGates.length ? decisionGates : undefined,
+      readinessScore,
     };
   } catch {
     return { cleanMarkdown };
@@ -191,6 +228,7 @@ async function executeRoundInternal(
     kind,
     title,
     userGuidance: userGuidance?.trim() || undefined,
+    protocolMode: roundNumber === 1 ? 'full' : 'delta',
     startedAt: Date.now(),
     responses,
   };
@@ -353,6 +391,7 @@ async function executeSynthesisInternal(
     synthesis.content = parsed.cleanMarkdown;
     synthesis.evolutionHighlights = parsed.evolutionHighlights;
     synthesis.decisionGates = parsed.decisionGates;
+    synthesis.readinessScore = parsed.readinessScore;
     synthesis.status = 'done';
     synthesis.finishedAt = Date.now();
     synthesis.durationMs = result.durationMs;
@@ -686,6 +725,76 @@ async function runWithConcurrency<T>(
   await Promise.all(runners);
 }
 
+function sanitizeContract(raw: any, fallbackTitle: string): ProjectContract | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const arr = (x: any, max = 10) =>
+    Array.isArray(x)
+      ? x.map((v: any) => String(v).trim()).filter(Boolean).slice(0, max)
+      : [];
+  const contract: ProjectContract = {
+    projectName: String(raw.projectName || fallbackTitle).trim() || fallbackTitle,
+    stack: arr(raw.stack, 10),
+    entities: arr(raw.entities, 12),
+    routes: arr(raw.routes, 12),
+    folderTree: arr(raw.folderTree, 12),
+    hardInvariants: arr(raw.hardInvariants, 8),
+    nonGoals: arr(raw.nonGoals, 8),
+    generatedAt: Date.now(),
+  };
+  if (
+    contract.stack.length === 0 &&
+    contract.entities.length === 0 &&
+    contract.hardInvariants.length === 0
+  ) {
+    return undefined;
+  }
+  contract.rawJson = JSON.stringify(
+    {
+      projectName: contract.projectName,
+      stack: contract.stack,
+      entities: contract.entities,
+      routes: contract.routes,
+      folderTree: contract.folderTree,
+      hardInvariants: contract.hardInvariants,
+      nonGoals: contract.nonGoals,
+    },
+    null,
+    2
+  );
+  return contract;
+}
+
+async function generateProjectContractInternal(
+  session: DebateSession,
+  options: { provider: ProviderId; model: string },
+  signal: AbortSignal
+): Promise<ProjectContract | undefined> {
+  try {
+    const prompt = buildProjectContractPrompt(session);
+    const res = await runCliSeatWithFallback({
+      provider: options.provider,
+      model: options.model,
+      effort: 'low',
+      tier: 'standard',
+      jobType: 'blueprint_core',
+      prompt,
+      signal,
+      onDelta: () => {},
+    });
+    const match = res.content.match(/\{[\s\S]*\}/);
+    if (!match) return undefined;
+    const parsed = JSON.parse(match[0]);
+    const contract = sanitizeContract(parsed, session.title);
+    if (contract) {
+      contract.generatedBy = `${res.usedProvider}/${res.usedModel}`;
+    }
+    return contract;
+  } catch {
+    // Graceful degradation: never block MD generation if Wave 0 fails
+    return undefined;
+  }
+}
+
 export async function startBlueprintGeneration(
   sessionId: string,
   options: {
@@ -747,7 +856,26 @@ export async function startBlueprintGeneration(
 
   void (async () => {
     try {
-      // Full single-wave parallel execution (up to 6 files simultaneously)
+      // Wave 0: Lock Canonical PROJECT_CONTRACT.json before parallel file generation (eliminates cross-file naming/route drift!)
+      if (!controller.signal.aborted) {
+        broadcast(sessionId, {
+          type: 'autopilot_stage',
+          stage: 'Dalga 0 · Kanonik Proje Sözleşmesi (PROJECT_CONTRACT.json) kilitleniyor...',
+        });
+        const contract = await generateProjectContractInternal(
+          session,
+          { provider: options.provider, model: options.model },
+          controller.signal
+        );
+        if (contract && !controller.signal.aborted) {
+          pack.contract = contract;
+          saveSession(session);
+          broadcast(sessionId, { type: 'blueprint_contract_ready', contract });
+        }
+        broadcast(sessionId, { type: 'autopilot_stage', stage: '' });
+      }
+
+      // Wave 1: Full single-wave parallel execution (up to 6 files simultaneously, all anchored to Wave 0 contract!)
       await runWithConcurrency(normalizedSpecs, 6, async (spec) => {
         if (controller.signal.aborted) return;
         const target = pack.files.find((f) => f.id === spec.id);
@@ -757,7 +885,14 @@ export async function startBlueprintGeneration(
         target.startedAt = Date.now();
         broadcast(sessionId, { type: 'blueprint_file_started', fileId: target.id });
 
-        const prompt = buildBlueprintFilePrompt(session, spec, normalizedSpecs, depth);
+        const prompt = buildBlueprintFilePrompt(
+          session,
+          spec,
+          normalizedSpecs,
+          depth,
+          undefined,
+          pack.contract
+        );
         try {
           const result = await runCliSeatWithFallback({
             provider: target.provider,
@@ -815,8 +950,12 @@ export async function startBlueprintGeneration(
         broadcast(sessionId, { type: 'blueprint_file_completed', file: target });
       });
 
+      // Instant 0-Token Deterministic Local Linter (<15ms!)
+      const lint = lintBlueprintPack(session);
+      pack.lint = lint;
       pack.finishedAt = Date.now();
       saveSession(session);
+      broadcast(sessionId, { type: 'blueprint_lint_completed', lint });
       broadcast(sessionId, {
         type: 'blueprint_completed',
         finishedAt: pack.finishedAt,
@@ -943,6 +1082,11 @@ export async function regenerateBlueprintFile(
         target.error = msg;
       }
     } finally {
+      if (session.blueprint) {
+        const lint = lintBlueprintPack(session);
+        session.blueprint.lint = lint;
+        broadcast(sessionId, { type: 'blueprint_lint_completed', lint });
+      }
       saveSession(session);
       activeRuns.delete(sessionId);
       broadcast(sessionId, { type: 'blueprint_file_completed', file: target });
@@ -1119,6 +1263,11 @@ export async function startFixBlueprintIssues(
         broadcast(sessionId, { type: 'blueprint_file_completed', file });
       });
 
+      if (session.blueprint) {
+        const lint = lintBlueprintPack(session);
+        session.blueprint.lint = lint;
+        broadcast(sessionId, { type: 'blueprint_lint_completed', lint });
+      }
       if (session.blueprint?.audit) {
         const remaining = session.blueprint.audit.issues.filter((i) => !i.fixed).length;
         if (remaining === 0) {
@@ -1129,6 +1278,8 @@ export async function startFixBlueprintIssues(
           type: 'blueprint_audit_completed',
           audit: session.blueprint.audit,
         });
+      } else {
+        saveSession(session);
       }
       broadcast(sessionId, { type: 'blueprint_completed', finishedAt: Date.now() });
     } finally {
@@ -1268,9 +1419,12 @@ export async function retryFailedBlueprintFiles(
       });
 
       if (session.blueprint) {
+        const lint = lintBlueprintPack(session);
+        session.blueprint.lint = lint;
         session.blueprint.finishedAt = Date.now();
+        saveSession(session);
+        broadcast(sessionId, { type: 'blueprint_lint_completed', lint });
       }
-      saveSession(session);
       broadcast(sessionId, {
         type: 'blueprint_completed',
         finishedAt: Date.now(),
@@ -1286,4 +1440,262 @@ export async function retryFailedBlueprintFiles(
   })();
 
   return { retryingFiles: failedFiles.map((f) => f.filename) };
+}
+
+export function runBlueprintLint(sessionId: string): BlueprintLintReport {
+  const session = loadSession(sessionId);
+  if (!session || !session.blueprint) {
+    throw new Error('MD paketi bulunamadı.');
+  }
+  const lint = lintBlueprintPack(session);
+  session.blueprint.lint = lint;
+  saveSession(session);
+  broadcast(sessionId, { type: 'blueprint_lint_completed', lint });
+  return lint;
+}
+
+export async function startRedTeamRound(
+  sessionId: string,
+  options?: { seatId?: string }
+): Promise<{ started: true }> {
+  if (activeRuns.has(sessionId)) {
+    throw new Error('Bu oturumda zaten devam eden bir işlem var.');
+  }
+  const session = loadSession(sessionId);
+  if (!session) throw new Error('Oturum bulunamadı.');
+
+  const enabledSeats = session.seats.filter((s) => s.enabled);
+  if (enabledSeats.length === 0) {
+    throw new Error('Red-Team için en az 1 aktif ajan gereklidir.');
+  }
+
+  // Pick explicitly requested seat, or prefer Risk Auditor, or first flagship seat
+  const attacker =
+    (options?.seatId && enabledSeats.find((s) => s.id === options.seatId)) ||
+    enabledSeats.find((s) => s.role === 'risk_auditor') ||
+    enabledSeats.find((s) => s.provider === 'claude' || s.model.toLowerCase().includes('opus')) ||
+    enabledSeats[0];
+
+  const controller = new AbortController();
+  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+
+  void (async () => {
+    try {
+      const roundNumber = session.rounds.length + 1;
+      const resp: SeatResponse = {
+        seatId: attacker.id,
+        seatLabel: `${attacker.label} · Red-Team`,
+        anonymousId: 'Şeytanın Avukatı',
+        provider: attacker.provider,
+        model: attacker.model,
+        role: 'risk_auditor',
+        status: 'running',
+        content: '',
+        startedAt: Date.now(),
+      };
+      const round: DebateRound = {
+        roundNumber,
+        kind: 'red_team',
+        title: 'Şeytanın Avukatı (Red-Team Stres Testi)',
+        targetSeatId: attacker.id,
+        protocolMode: 'delta',
+        startedAt: Date.now(),
+        responses: [resp],
+      };
+
+      session.rounds.push(round);
+      saveSession(session);
+      broadcast(sessionId, { type: 'round_started', round });
+      broadcast(sessionId, { type: 'seat_started', roundNumber, seatId: attacker.id });
+
+      try {
+        const prompt = buildRedTeamPrompt(session, attacker);
+        const result = await runCliSeatWithFallback({
+          provider: attacker.provider,
+          model: attacker.model,
+          effort: attacker.effort === 'low' ? 'medium' : attacker.effort,
+          tier: 'standard',
+          jobType: 'debate',
+          prompt,
+          signal: controller.signal,
+          onDelta: (chunk) => {
+            resp.content += chunk;
+            broadcast(sessionId, {
+              type: 'seat_delta',
+              roundNumber,
+              seatId: attacker.id,
+              delta: chunk,
+            });
+          },
+        });
+        resp.provider = result.usedProvider;
+        resp.model = result.usedModel;
+        resp.content = result.content;
+        resp.status = 'done';
+        resp.finishedAt = Date.now();
+        resp.durationMs = result.durationMs;
+      } catch (err: any) {
+        resp.status = controller.signal.aborted ? 'aborted' : 'error';
+        resp.error = err?.message || 'Red-Team saldırısı başarısız oldu.';
+        resp.finishedAt = Date.now();
+      }
+
+      round.finishedAt = Date.now();
+      saveSession(session);
+      broadcast(sessionId, { type: 'seat_completed', roundNumber, response: resp });
+      broadcast(sessionId, { type: 'round_completed', roundNumber, finishedAt: round.finishedAt });
+    } finally {
+      activeRuns.delete(sessionId);
+    }
+  })();
+
+  return { started: true };
+}
+
+export async function startTargetedChallenge(
+  sessionId: string,
+  options: { question: string; targetSeatId?: string }
+): Promise<{ started: true }> {
+  if (activeRuns.has(sessionId)) {
+    throw new Error('Bu oturumda zaten devam eden bir işlem var.');
+  }
+  const q = options.question?.trim();
+  if (!q || q.length < 3) {
+    throw new Error('Lütfen ajanlara yönelteceğin soruyu veya itirazı yaz.');
+  }
+
+  const session = loadSession(sessionId);
+  if (!session) throw new Error('Oturum bulunamadı.');
+
+  const enabledSeats = session.seats.filter((s) => s.enabled);
+  const targets =
+    options.targetSeatId && options.targetSeatId !== 'all'
+      ? enabledSeats.filter((s) => s.id === options.targetSeatId)
+      : enabledSeats;
+
+  if (targets.length === 0) {
+    throw new Error('Hedeflenen ajan koltuğu bulunamadı.');
+  }
+
+  const controller = new AbortController();
+  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+
+  void (async () => {
+    try {
+      const roundNumber = session.rounds.length + 1;
+      const responses: SeatResponse[] = targets.map((seat, idx) => ({
+        seatId: seat.id,
+        seatLabel: seat.label,
+        anonymousId: targets.length === 1 ? seat.label : getAnonymousLabel(idx),
+        provider: seat.provider,
+        model: seat.model,
+        role: seat.role,
+        customRoleTitle: seat.customRoleTitle,
+        status: 'pending',
+        content: '',
+      }));
+
+      const round: DebateRound = {
+        roundNumber,
+        kind: 'targeted_challenge',
+        title:
+          targets.length === 1
+            ? `Canlı Müdahale (@${targets[0].label})`
+            : 'Canlı Masa Müdahalesi (@Tümü)',
+        userGuidance: q,
+        targetSeatId: options.targetSeatId,
+        protocolMode: 'delta',
+        startedAt: Date.now(),
+        responses,
+      };
+
+      session.rounds.push(round);
+      saveSession(session);
+      broadcast(sessionId, { type: 'round_started', round });
+
+      await Promise.all(
+        targets.map(async (seat, idx) => {
+          const seatResp = round.responses[idx];
+          seatResp.status = 'running';
+          seatResp.startedAt = Date.now();
+          broadcast(sessionId, { type: 'seat_started', roundNumber, seatId: seat.id });
+
+          try {
+            const prompt = buildTargetedChallengePrompt(session, seat, q);
+            const result = await runCliSeatWithFallback({
+              provider: seat.provider,
+              model: seat.model,
+              effort: seat.effort,
+              tier: seat.economyMode ? 'concise' : 'standard',
+              jobType: 'debate',
+              prompt,
+              signal: controller.signal,
+              onDelta: (chunk) => {
+                seatResp.content += chunk;
+                broadcast(sessionId, {
+                  type: 'seat_delta',
+                  roundNumber,
+                  seatId: seat.id,
+                  delta: chunk,
+                });
+              },
+            });
+            seatResp.provider = result.usedProvider;
+            seatResp.model = result.usedModel;
+            seatResp.content = result.content;
+            seatResp.status = 'done';
+            seatResp.finishedAt = Date.now();
+            seatResp.durationMs = result.durationMs;
+          } catch (err: any) {
+            seatResp.status = controller.signal.aborted ? 'aborted' : 'error';
+            seatResp.error = err?.message || 'Müdahale yanıtı başarısız.';
+            seatResp.finishedAt = Date.now();
+          }
+          saveSession(session);
+          broadcast(sessionId, { type: 'seat_completed', roundNumber, response: seatResp });
+        })
+      );
+
+      round.finishedAt = Date.now();
+      saveSession(session);
+      broadcast(sessionId, { type: 'round_completed', roundNumber, finishedAt: round.finishedAt });
+    } finally {
+      activeRuns.delete(sessionId);
+    }
+  })();
+
+  return { started: true };
+}
+
+export function forkSessionScenario(
+  sessionId: string,
+  options: { forkLabel?: string; extraConstraint?: string }
+): DebateSession {
+  const source = loadSession(sessionId);
+  if (!source) throw new Error('Çatallanacak oturum bulunamadı.');
+
+  const label = (options.forkLabel || 'What-If Alternatif').trim().slice(0, 48);
+  const extra = options.extraConstraint?.trim();
+  const mergedConstraints = [
+    source.constraints.trim(),
+    extra ? `[What-If Senaryo: ${label}] ${extra}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const forked: DebateSession = {
+    ...JSON.parse(JSON.stringify(source)),
+    id: `cpt_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`,
+    title: `${source.title} (${label})`,
+    constraints: mergedConstraints,
+    forkedFromId: source.id,
+    forkLabel: label,
+    synthesis: undefined,
+    blueprint: undefined,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  saveSession(forked);
+  return forked;
 }

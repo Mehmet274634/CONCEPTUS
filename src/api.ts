@@ -2,8 +2,12 @@ import type {
   BlueprintAudit,
   BlueprintDepth,
   BlueprintFileSpec,
+  BlueprintLintReport,
   BlueprintPack,
+  CaliberPreference,
   ClarifyQuestion,
+  ComplexityAssessment,
+  ComplexityLevel,
   DebateSession,
   DecisionGate,
   DomainMode,
@@ -126,11 +130,37 @@ export async function scanRepoFolder(folderPath: string): Promise<{
   });
 }
 
+export async function analyzeIdeaClient(payload: {
+  idea: string;
+  constraints?: string;
+  contextText?: string;
+  domain?: DomainMode;
+  caliber?: CaliberPreference;
+  seatCount?: number;
+}): Promise<{
+  complexity: ComplexityAssessment;
+  budget: {
+    debateCalls: number;
+    blueprintCalls: number;
+    totalCalls: number;
+    estimatedSecMin: number;
+    estimatedSecMax: number;
+    deltaSavingsPct: number;
+  };
+}> {
+  return requestJson('/api/idea/analyze', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function fetchDefaultBlueprintPlan(
-  domain: DomainMode
+  domain: DomainMode,
+  complexity?: ComplexityLevel
 ): Promise<BlueprintFileSpec[]> {
+  const qs = complexity ? `?complexity=${encodeURIComponent(complexity)}` : '';
   const data = await requestJson<{ files: BlueprintFileSpec[] }>(
-    `/api/blueprint/defaults/${domain}`
+    `/api/blueprint/defaults/${domain}${qs}`
   );
   return data.files;
 }
@@ -145,6 +175,7 @@ export async function createSession(payload: {
   idea: string;
   domain: DomainMode;
   language?: 'tr' | 'en';
+  caliber?: CaliberPreference;
   constraints: string;
   contextText: string;
   repoMeta?: RepoSnapshotMeta;
@@ -220,6 +251,51 @@ export async function triggerRound(
     method: 'POST',
     body: JSON.stringify({ userGuidance, seats }),
   });
+}
+
+export async function triggerRedTeam(
+  sessionId: string,
+  seatId?: string
+): Promise<void> {
+  await requestJson(`/api/sessions/${sessionId}/red-team`, {
+    method: 'POST',
+    body: JSON.stringify({ seatId }),
+  });
+}
+
+export async function triggerTargetedChallenge(
+  sessionId: string,
+  question: string,
+  targetSeatId?: string
+): Promise<void> {
+  await requestJson(`/api/sessions/${sessionId}/challenge`, {
+    method: 'POST',
+    body: JSON.stringify({ question, targetSeatId }),
+  });
+}
+
+export async function triggerForkSession(
+  sessionId: string,
+  options: { forkLabel?: string; extraConstraint?: string }
+): Promise<DebateSession> {
+  const data = await requestJson<{ session: DebateSession }>(
+    `/api/sessions/${sessionId}/fork`,
+    {
+      method: 'POST',
+      body: JSON.stringify(options),
+    }
+  );
+  return data.session;
+}
+
+export async function triggerBlueprintLint(
+  sessionId: string
+): Promise<BlueprintLintReport> {
+  const data = await requestJson<{ lint: BlueprintLintReport }>(
+    `/api/sessions/${sessionId}/blueprint/lint`,
+    { method: 'POST' }
+  );
+  return data.lint;
 }
 
 export async function triggerAutoPilot(
@@ -360,6 +436,7 @@ export async function saveBlueprintToLocalFolder(
     folderPath?: string;
     useLinkedRepo?: boolean;
     subfolder?: string;
+    includeIdeRules?: boolean;
   }
 ): Promise<{ folderPath: string; fileCount: number }> {
   return requestJson<{ folderPath: string; fileCount: number }>(
@@ -395,6 +472,6 @@ export function getExportUrl(sessionId: string): string {
   return `/api/sessions/${sessionId}/export`;
 }
 
-export function getBlueprintZipUrl(sessionId: string): string {
-  return `/api/sessions/${sessionId}/blueprint.zip`;
+export function getBlueprintZipUrl(sessionId: string, includeIdeRules = true): string {
+  return `/api/sessions/${sessionId}/blueprint.zip${includeIdeRules ? '' : '?ide=0'}`;
 }

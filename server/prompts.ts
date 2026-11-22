@@ -2,10 +2,12 @@ import type {
   BlueprintAuditIssue,
   BlueprintDepth,
   BlueprintFileSpec,
+  ComplexityLevel,
   DebateRound,
   DebateSession,
   DomainMode,
   GeneratedMdFile,
+  ProjectContract,
   SeatConfig,
   SeatRole,
 } from './types.ts';
@@ -91,12 +93,15 @@ function buildBaseContext(session: DebateSession): string {
   return parts.join('\n');
 }
 
-function styleInstruction(seat: SeatConfig, lang: 'tr' | 'en' = 'tr'): string {
+function styleInstruction(seat: SeatConfig, lang: 'tr' | 'en' = 'tr', isDelta = false): string {
   const langName = lang === 'en' ? 'English' : 'Türkçe';
   if (seat.economyMode) {
-    return `\n**HIZLI & EKONOMİK MOD:** En fazla 220–260 kelime, madde madde, ultra yoğun ve keskin ${langName} Markdown yaz.`;
+    return `\n**HIZLI & EKONOMİK MOD:** En fazla ${isDelta ? '170–220' : '200–250'} kelime, madde madde, sıfır tekrar, ultra yoğun ${langName} Markdown yaz.`;
   }
-  return `\n**ÜSLUP:** Net, keskin, profesyonel ${langName} Markdown (450–650 kelime). Boş övgü ve uzun giriş cümleleri yasak; her cümle somut değer taşısın.`;
+  if (isDelta) {
+    return `\n**DELTA TARTIŞMA ÜSLUBU (YÜKSEK SİNYAL / DÜŞÜK MALİYET):** En fazla 280–390 kelime ${langName} Markdown yaz. Diğer ajanlarla zaten anlaştığın kısımları ASLA baştan yazma; her kelime doğrudan çatışmaya, itiraza ve mimari yamaya gitsin.`;
+  }
+  return `\n**ÜSLUP:** Net, keskin, yoğun ${langName} Markdown (360–520 kelime). Boş övgü ve uzun giriş cümleleri yasak; her cümle somut mimari/ürün kararı taşısın.`;
 }
 
 export function buildRound1Prompt(session: DebateSession, seat: SeatConfig): string {
@@ -167,26 +172,93 @@ export function buildCrossDebatePrompt(
     guidanceBlock,
     '',
     '---',
-    `## ÖNCEKİ TURUN (TUR ${previousRound.roundNumber}) ANONİM FİKİRLERİ`,
-    summarizeRound(previousRound, seat.id, 2800),
+    `## ÖNCEKİ TURUN (TUR ${previousRound.roundNumber}) SIKIŞTIRILMIŞ ANONİM İDDİALARI`,
+    summarizeRound(previousRound, seat.id, 1950),
     '',
     '---',
-    `## GÖREV — TUR ${newRoundNumber}: ÇAPRAZ TARTIŞMA VE EVRİM (v${newRoundNumber})`,
+    `## GÖREV — TUR ${newRoundNumber}: ÇATIŞMA ODAKLI DELTA TARTIŞMASI (v${newRoundNumber})`,
     getRoleInstruction(seat),
-    'Amaç egonu savunmak değil; masadaki en iyi parçaları birleştirip zayıf varsayımları eleyerek **en üst düzey çözüme** ulaşmak. Tam olarak şu başlıkları kullan:',
+    'KURAL: Diğer ajanlarla zaten anlaştığın noktaları baştan yazıp kota harcama! Yalnızca **gerçek çatışma eksenlerine, riskli varsayımlara ve somut mimari yamalara** odaklan. Tam olarak şu başlıkları kullan:',
     '',
-    '### 1. Diğer Ajanlardan Alınacak En Değerli Parçalar',
-    'Diğer adayların (`Ajan A`, `Ajan B`...) yakaladığı ve final çözüme mutlaka girmesi gereken noktalar.',
+    '### 1. Uzlaşılan Çekirdek Parçalar (Kısa Onay)',
+    'Diğer adaylardan (`Ajan A`, `Ajan B`...) mutlaka korunması gereken en değerli 2–3 somut karar (tek satırlık maddeler).',
     '',
     '### 2. Çürütülen Varsayımlar & Somut İtirazlar',
-    'Diğer adaylardaki zayıf, riskli veya gereksiz karmaşık noktalar (aday adı ve gerekçeyle).',
+    'Diğer adaylardaki zayıf, pahalı, riskli veya aşırı karmaşık noktalar (aday adı + somut mühendislik/ürün gerekçesiyle).',
     '',
     '### 3. Kendi Görüşümde Güncellediğim Noktalar',
-    'Diğer analizleri görünce değiştirdiğin kararlar.',
+    'Diğer analizleri görünce revize ettiğin kesin kararlar.',
     '',
-    `### 4. Evrimleşmiş Çözüm (v${newRoundNumber}) ve Güncel Artı / Eksi`,
-    'Tüm güçlü yanları birleştiren, açıkları kapatılmış yeni çözüm ve net Artı/Eksi listesi.',
-    styleInstruction(seat, session.language),
+    `### 4. Net Çatışma Çözüm Yaması (Delta v${newRoundNumber})`,
+    'Çatışan noktalar için kazanan mimari/ürün kararı, net v1 kapsam sınırı ve kalan kritik risk.',
+    styleInstruction(seat, session.language, true),
+  ].join('\n');
+}
+
+export function buildRedTeamPrompt(session: DebateSession, seat: SeatConfig): string {
+  const targetDoc =
+    session.synthesis?.content?.trim() ||
+    (session.rounds.length > 0
+      ? summarizeRound(session.rounds[session.rounds.length - 1], undefined, 2200)
+      : session.idea);
+
+  return [
+    buildBaseContext(session),
+    '',
+    '---',
+    '## HEDEF PLAN / FİKİR (SALDIRI YÜZEYİ)',
+    targetDoc.slice(0, 8000),
+    '',
+    '---',
+    '## GÖREV — ŞEYTANIN AVUKATI (RED-TEAM STRES TESTİ)',
+    'ROLÜN: Acımasız Yatırımcı, Güvenlik Araştırmacısı ve Rakip Ürün Lideri. Nezaket kesinlikle YASAK. Amacın bu fikrin gerçek dünyada **neden batabileceğini veya yarı yolda kırılacağını** kanıtlamak ve her birine cerrahi panzehir üretmek.',
+    '',
+    'Tam olarak şu başlıkları kullan:',
+    '',
+    '### 1. En Ölümcül 5 Başarısızlık Senaryosu',
+    'Pazar/kullanıcı terk riski, teknik/ölçek darboğazı, gizli maliyet, güvenlik/suistimal açığı ve kapsam şişmesi eksenlerinde 5 acımasız saldırı.',
+    '',
+    '### 2. Her Saldırı İçin Somut Panzehir (Mimari / Ürün Düzeltmesi)',
+    'Yukarıdaki 5 tehdidi koda geçmeden önce sıfırlayacak somut kararlar.',
+    '',
+    '### 3. Hayatta Kalma Skoru & Tek Kırmızı Çizgi',
+    '`X/10` — Bu fikir hayata geçmeden önce değiştirilmesi ZORUNLU tek kritik şey.',
+    styleInstruction(seat, session.language, true),
+  ].join('\n');
+}
+
+export function buildTargetedChallengePrompt(
+  session: DebateSession,
+  seat: SeatConfig,
+  userQuestion: string
+): string {
+  const latestContext =
+    session.synthesis?.content?.trim().slice(0, 5000) ||
+    (session.rounds.length > 0
+      ? summarizeRound(session.rounds[session.rounds.length - 1], seat.id, 1800)
+      : '');
+
+  return [
+    buildBaseContext(session),
+    '',
+    ...(latestContext ? ['---', '## MEVCUT MASA DURUMU', latestContext, ''] : []),
+    '---',
+    '## KULLANICININ DOĞRUDAN MÜDAHALESİ / SORUSU (ÖNCELİKLİ)',
+    `> ${userQuestion.trim()}`,
+    '',
+    '## GÖREV — CANLI MASA YANITI',
+    getRoleInstruction(seat),
+    'Kullanıcı tartışma masasına doğrudan söz hakkı aldı. Tüm projeyi baştan özetleme — doğrudan bu soruyu/itirazı kendi uzmanlık açından keskin ve uygulanabilir şekilde yanıtla:',
+    '',
+    '### 1. Net Cevap & Pozisyonum',
+    'Kullanıcının önerisi veya itirazı hakkında net karar (Destekliyorum / Şartlı Destek / Riskli — neden?).',
+    '',
+    '### 2. Mimariye & Kapsama Somut Etkisi',
+    'Bu karar alınırsa projede tam olarak nelerin değişeceği (kazanım vs. bedel).',
+    '',
+    '### 3. Önerilen Kesin Yama',
+    'Master Karar ve MD paketine işlenecek net 2–3 kural.',
+    styleInstruction(seat, session.language, true),
   ].join('\n');
 }
 
@@ -245,6 +317,14 @@ export function buildMasterSynthesisPrompt(session: DebateSession): string {
     '    "Kritik iyileştirme #2",',
     '    "Kritik iyileştirme #3"',
     '  ],',
+    '  "readinessScore": {',
+    '    "overall": 88,',
+    '    "problemClarity": 92,',
+    '    "uxValue": 86,',
+    '    "technicalSolidity": 90,',
+    '    "securityRisk": 84,',
+    '    "mvpSharpness": 90',
+    '  },',
     '  "decisionGates": [',
     '    {',
     '      "id": "gate_1",',
@@ -291,7 +371,10 @@ export function buildExtractGatesPrompt(session: DebateSession): string {
   ].join('\n');
 }
 
-export function getDefaultBlueprintPlan(domain: DomainMode): BlueprintFileSpec[] {
+export function getDefaultBlueprintPlan(
+  domain: DomainMode,
+  complexity?: ComplexityLevel
+): BlueprintFileSpec[] {
   if (domain === 'problem_solving') {
     return [
       {
@@ -365,7 +448,7 @@ export function getDefaultBlueprintPlan(domain: DomainMode): BlueprintFileSpec[]
     ];
   }
 
-  return [
+  const baseAppPack: BlueprintFileSpec[] = [
     {
       id: 'md_01_vision',
       filename: '01_PRODUCT_VISION.md',
@@ -377,31 +460,43 @@ export function getDefaultBlueprintPlan(domain: DomainMode): BlueprintFileSpec[]
       id: 'md_02_ux',
       filename: '02_UX_SCREENS_AND_DESIGN.md',
       title: 'Ekranlar, UX Akışı & Tasarım Dili',
-      purpose: 'Her ekranın bileşen listesi, ekranlar arası akış diyagramı (Mermaid), renk/tipografi/tema kuralları ve boş/hata durumları.',
+      purpose: 'Her ekranın bileşen listesi, ekranlar arası akış diyagramı (Mermaid), renk/tipografi/tema kuralları ve Loading/Empty/Error uç durum matrisi.',
       selected: true,
     },
     {
       id: 'md_03_arch',
       filename: '03_ARCHITECTURE_AND_DATA.md',
       title: 'Teknik Mimari & Veri Şeması',
-      purpose: 'Teknoloji yığını, klasör/modül yapısı, veri modeli/şeması, API/veri akışı, güvenlik, gizlilik ve maliyet sınırları.',
+      purpose: 'Teknoloji yığını, kesin klasör/modül yapısı, kanonik veri şeması, API/veri akışı, güvenlik, hata yönetimi ve maliyet sınırları.',
       selected: true,
     },
     {
       id: 'md_04_roadmap',
       filename: '04_BUILD_ROADMAP.md',
-      title: 'Adım Adım İnşa Planı & Testler',
-      purpose: 'Sıralı geliştirme fazları (Adım 1 → Adım N), her adımın somut "Bitti" kriteri, kritik risk tedbirleri ve test kontrol listesi.',
+      title: 'Adım Adım İnşa Planı & Doğrulama',
+      purpose: 'Sıralı geliştirme fazları (Faz 1 → Faz N), her faz için yürütülebilir derleme/test kabul komutları ve kritik risk tedbirleri.',
       selected: true,
     },
     {
       id: 'md_05_agents',
       filename: '05_AGENTS_START_HERE.md',
       title: 'AI Kodlama Ajanı Başlangıç Talimatı',
-      purpose: 'Antigravity, Claude Code, Cursor veya Codex’in projeyi hatasız inşa etmesi için okuma sırası, değiştirilemez kurallar (Hard Invariants) ve başlangıç direktifi.',
+      purpose: 'Antigravity, Claude Code, Cursor veya Codex’in projeyi hatasız inşa etmesi için okuma sırası, Hard Invariants ve faz faz kopyalanabilir başlangıç promptları.',
       selected: true,
     },
   ];
+
+  if (complexity === 'XL') {
+    baseAppPack.splice(4, 0, {
+      id: 'md_06_security_api',
+      filename: '04B_API_AND_SECURITY_SPEC.md',
+      title: 'API Kontratları & Güvenlik Mimarisi',
+      purpose: 'Kurumsal düzey endpoint/auth sözleşmeleri, RBAC yetki matrisi, hız sınırı, veri şifreleme ve tehdit modeli.',
+      selected: true,
+    });
+  }
+
+  return baseAppPack;
 }
 
 export function buildIdeaClarifierPrompt(
@@ -486,12 +581,58 @@ function buildLockedDecisionsBlock(session: DebateSession): string {
   return lines.join('\n');
 }
 
+export function buildProjectContractPrompt(session: DebateSession): string {
+  const locked = buildLockedDecisionsBlock(session);
+  const master = session.synthesis?.content?.trim();
+  const latestRound = session.rounds[session.rounds.length - 1];
+  const source = master || (latestRound ? summarizeRound(latestRound, undefined, 2200) : session.idea);
+
+  return [
+    '[SİSTEM KURALI: HİÇBİR araç/tool ÇAĞIRMA. Sadece geçerli tek bir JSON nesnesi döndür; başka hiçbir açıklama veya markdown bloğu ekleme.]',
+    '',
+    '# GÖREV — DALGA 0: KANONİK PROJE SÖZLEŞMESİ (PROJECT_CONTRACT.json)',
+    'Paralel üretilecek tüm `.md` dosyalarının %100 aynı teknoloji, rota, varlık, klasör ve kırmızı çizgileri kullanması için projenin **değiştirilemez teknik anayasasını** çıkar.',
+    '',
+    ...(locked ? [locked, ''] : []),
+    '## KAYNAK MASTER KARAR',
+    source.slice(0, 9000),
+    '',
+    'SADECE şu şemada tek bir geçerli JSON nesnesi döndür:',
+    '{',
+    '  "projectName": "Kısa proje adı",',
+    '  "stack": ["Örn: React 19 + TypeScript + Vite", "IndexedDB (Dexie)", "Tailwind CSS"],',
+    '  "entities": ["Veri varlığı veya model adı #1 (PascalCase)", "Model #2", "Model #3"],',
+    '  "routes": ["/ (Ana Ekran)", "/ekran-2 (Açıklama)", "/ayarlar (Açıklama)"],',
+    '  "folderTree": ["src/components/", "src/stores/", "src/lib/", "tests/"],',
+    '  "hardInvariants": ["Asla bozulmayacak kural #1", "Kural #2", "Kural #3"],',
+    '  "nonGoals": ["v1 kapsamında kesinlikle yapılmayacak #1", "Non-Goal #2"]',
+    '}',
+  ].join('\n');
+}
+
+function buildContractLockBlock(contract?: ProjectContract): string {
+  if (!contract) return '';
+  return [
+    '## KANONİK PROJE SÖZLEŞMESİ (DALGA 0 KİLİDİ — TÜM DOSYALARDA BİREBİR AYNI İSİMLERİ KULLAN!)',
+    `- **Proje:** ${contract.projectName}`,
+    ...(contract.stack.length ? [`- **Teknoloji Yığını:** ${contract.stack.join(' · ')}`] : []),
+    ...(contract.entities.length ? [`- **Kanonik Veri Varlıkları:** ${contract.entities.join(', ')}`] : []),
+    ...(contract.routes.length ? [`- **Kanonik Ekran/Rotalar:** ${contract.routes.join(' · ')}`] : []),
+    ...(contract.folderTree.length ? [`- **Klasör Ağacı:** ${contract.folderTree.join(', ')}`] : []),
+    ...(contract.hardInvariants.length
+      ? [`- **Hard Invariants (Kırmızı Çizgiler):**\n${contract.hardInvariants.map((x) => `  - ${x}`).join('\n')}`]
+      : []),
+    ...(contract.nonGoals.length ? [`- **v1 Kapsam Dışı (Non-Goals):** ${contract.nonGoals.join(' · ')}`] : []),
+  ].join('\n');
+}
+
 export function buildBlueprintFilePrompt(
   session: DebateSession,
   target: BlueprintFileSpec,
   allSelected: BlueprintFileSpec[],
   depth: BlueprintDepth = 'concise',
-  revision?: { note?: string; previousContent?: string }
+  revision?: { note?: string; previousContent?: string },
+  contract?: ProjectContract
 ): string {
   const master = session.synthesis?.content?.trim();
   const latestRound = session.rounds[session.rounds.length - 1];
@@ -500,6 +641,7 @@ export function buildBlueprintFilePrompt(
     : `# SON TARTIŞMA TURU\n${latestRound ? summarizeRound(latestRound) : session.idea}`;
 
   const lockedDecisions = buildLockedDecisionsBlock(session);
+  const contractBlock = buildContractLockBlock(contract || session.blueprint?.contract);
 
   const siblingsList = allSelected
     .map(
@@ -518,11 +660,26 @@ export function buildBlueprintFilePrompt(
   };
 
   const upperName = target.filename.toUpperCase();
-  const diagramHint = /UX|DESIGN|SCREEN/.test(upperName)
-    ? '7. GÖRSEL AKIŞ KURALI: Ekranlar arası geçişi gösteren geçerli, sade ve okunaklı 1 adet ```mermaid (`flowchart LR`) diyagramı ekle (etiketlerde özel karakter varsa çift tırnak içine al).'
-    : /ARCH|DATA|SCHEMA/.test(upperName)
-      ? '7. MİMARİ DİYAGRAM KURALI: Sistem veri akışını veya veri modelini gösteren geçerli, sade 1 adet ```mermaid (`flowchart TD` veya `erDiagram`) diyagramı ekle (etiketlerde özel karakter varsa çift tırnak içine al).'
-      : '';
+  const roleSpecificRules: string[] = [];
+  if (/UX|DESIGN|SCREEN/.test(upperName)) {
+    roleSpecificRules.push(
+      '7. GÖRSEL AKIŞ KURALI: Ekranlar arası geçişi gösteren geçerli, sade 1 adet ```mermaid (`flowchart LR`) diyagramı ekle (özel karakter içeren etiketleri çift tırnak içine al).',
+      '8. UÇ DURUM MATRİSİ (ZORUNLU): Kritik ekranlar için `Loading | Empty | Error & Retry | Validation` durumlarını tek bir net Markdown tablosunda tanımla.'
+    );
+  } else if (/ARCH|DATA|SCHEMA/.test(upperName)) {
+    roleSpecificRules.push(
+      '7. MİMARİ DİYAGRAM KURALI: Sistem veri akışını veya veri modelini gösteren geçerli, sade 1 adet ```mermaid (`flowchart TD` veya `erDiagram`) diyagramı ekle (özel karakter içeren etiketleri çift tırnak içine al).',
+      '8. UÇ DURUM & GÜVENLİK KURALI: Hata/retry stratejisi, girdi doğrulama sınırları ve güvenlik tehdit tedbirlerini somut tablo/kurallarla yaz.'
+    );
+  } else if (/ROADMAP|ACTION|PLAYBOOK/.test(upperName)) {
+    roleSpecificRules.push(
+      '7. YÜRÜTÜLEBİLİR DOĞRULAMA KAPILARI (ZORUNLU): Her fazın altına kodlama ajanının çalıştırıp doğrulayacağı somut kabul kriterleri ve terminal/test kontrol komutları (örn. typecheck, unit test, smoke check) ekle.'
+    );
+  } else if (/AGENTS|START_HERE|BRIEF/.test(upperName)) {
+    roleSpecificRules.push(
+      '7. FAZ FAZ HAZIR BAŞLANGIÇ PROMPTLARI (ZORUNLU): En sona kodlama ajanına (`Antigravity`, `Cursor`, `Claude Code`, `Codex`) kopyala-yapıştır verilebilecek **Faz 1 Başlangıç Promptu** ve **Faz 2 Devam Promptu** kod blokları ekle; tüm Hard Invariants kurallarını açıkça listele.'
+    );
+  }
 
   const revisionBlock = revision?.note?.trim()
     ? [
@@ -540,6 +697,7 @@ export function buildBlueprintFilePrompt(
     buildBaseContext(session),
     '',
     ...(lockedDecisions ? [lockedDecisions, ''] : []),
+    ...(contractBlock ? [contractBlock, ''] : []),
     '---',
     sourceOfTruth,
     '',
@@ -555,19 +713,27 @@ export function buildBlueprintFilePrompt(
     '',
     'Kurallar:',
     '1. DİSKE DOSYA YAZMA ve HİÇBİR ARAÇ/TOOL ÇAĞIRMA! İçeriği doğrudan bu yanıt metni olarak `# ...` başlığıyla yaz (başta/sonda sohbet cümlesi ekleme).',
-    '2. Master Karar ve KESİN KULLANICI KARARLARI zaten kilitlidir; alternatifleri yeniden tartışma veya "TBD / karar verilecek" bırakma.',
+    '2. Master Karar, Kanonik Proje Sözleşmesi ve KESİN KULLANICI KARARLARI zaten kilitlidir; alternatifleri yeniden tartışma veya "TBD / TODO / karar verilecek" bırakma.',
     `3. ${depthRules[depth]}`,
     '4. Paketteki diğer `.md` dosyalarının konusuna taşma; yalnızca kendi dosyanın sorumluluğunu %100 tutarlı şekilde yaz.',
     '5. Soyut açıklamalar yerine somut kurallar, net mimari/şema, kısa tablolar ve uygulanabilir maddeler kullan.',
     session.language === 'en'
       ? '6. Language: Crisp, professional English throughout.'
       : '6. Dil: Profesyonel Türkçe (teknik terimler ve kod/dosya adları standart İngilizce).',
-    ...(diagramHint ? [diagramHint] : []),
+    ...roleSpecificRules,
   ].join('\n');
 }
 
 export function buildBlueprintAuditPrompt(session: DebateSession): string {
   const locked = buildLockedDecisionsBlock(session);
+  const contractBlock = buildContractLockBlock(session.blueprint?.contract);
+  const lintIssues = session.blueprint?.lint?.issues || [];
+  const lintBlock = lintIssues.length
+    ? [
+        '## YEREL 0-TOKEN LINTER BULGULARI (ZATEN TESPİT EDİLDİ — DERİN MİMARİ ÇELİŞKİLERE ODAKLAN)',
+        ...lintIssues.map((i) => `- [${i.severity.toUpperCase()}] ${i.file}: ${i.description}`),
+      ].join('\n')
+    : '';
   const master = session.synthesis?.content?.slice(0, 6000) || '';
   const filesBlock = (session.blueprint?.files || [])
     .filter((f) => f.status === 'done' && f.content.trim())
@@ -584,12 +750,14 @@ export function buildBlueprintAuditPrompt(session: DebateSession): string {
     `[SİSTEM KURALI: HİÇBİR araç/tool ÇAĞIRMA. Sadece geçerli tek bir JSON nesnesi döndür.]`,
     '',
     '# GÖREV — ÇAPRAZ-DOSYA MD TUTARLILIK VE KALİTE DENETİMİ (QA)',
-    'Aşağıdaki Master Karar, Kilitli Kullanıcı Kararları ve üretilmiş `.md` dosyalarını çapraz denetle:',
-    '- Dosyalar arasında çelişen teknoloji/mimari/kapsam kararları var mı?',
+    'Aşağıdaki Master Karar, Kanonik Proje Sözleşmesi, Kilitli Kullanıcı Kararları ve üretilmiş `.md` dosyalarını çapraz denetle:',
+    '- Dosyalar arasında çelişen teknoloji/mimari/kapsam/varlık adları var mı?',
     '- Master Karar veya kilitli kullanıcı kararlarıyla ters düşen ya da hâlâ "TBD" bırakılmış bir nokta var mı?',
-    '- Bir AI kodlama ajanının kafasını karıştıracak kritik bir eksik var mı?',
+    '- Bir AI kodlama ajanının kafasını karıştıracak veya kırık kod yazdıracak kritik bir eksik var mı?',
     '',
     ...(locked ? [locked, ''] : []),
+    ...(contractBlock ? [contractBlock, ''] : []),
+    ...(lintBlock ? [lintBlock, ''] : []),
     '## MASTER KARAR ÖZETİ',
     master,
     '',

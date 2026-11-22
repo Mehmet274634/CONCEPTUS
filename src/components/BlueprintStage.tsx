@@ -4,10 +4,13 @@ import {
   Archive,
   Check,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Copy,
   Download,
   Edit3,
   Eye,
+  FileCheck2,
   FileCode2,
   FolderDown,
   FolderGit2,
@@ -87,6 +90,7 @@ interface BlueprintStageProps {
     model?: string;
   }) => Promise<void>;
   onRunAudit: (auditor: { provider: ProviderId; model: string }) => Promise<void>;
+  onRunLint: () => Promise<void>;
   onFixAuditIssues: (options: {
     issueIds: string[];
     provider: ProviderId;
@@ -107,13 +111,14 @@ export function BlueprintStage({
   onRegenerateFile,
   onRetryFailedFiles,
   onRunAudit,
+  onRunLint,
   onFixAuditIssues,
   onFileContentUpdated,
   onAbort,
 }: BlueprintStageProps) {
   const { t } = useI18n();
   const [depth, setDepth] = useState<BlueprintDepth>(
-    session.blueprint?.depth || 'concise'
+    session.blueprint?.depth || session.complexity?.recommendedDepth || 'concise'
   );
   const initialWriter = useMemo(
     () => pickWriterForDepth(providers, depth),
@@ -145,6 +150,10 @@ export function BlueprintStage({
   const [newFilename, setNewFilename] = useState('');
   const [newPurpose, setNewPurpose] = useState('');
   const [showBuildPrompt, setShowBuildPrompt] = useState(false);
+  const [includeIdeRules, setIncludeIdeRules] = useState(true);
+  const [linting, setLinting] = useState(false);
+  const [contractOpen, setContractOpen] = useState(false);
+  const [lintIssuesOpen, setLintIssuesOpen] = useState(false);
 
   const exhaustedPools = useMemo(
     () => new Set(cooldowns.map((c) => c.pool)),
@@ -185,16 +194,16 @@ export function BlueprintStage({
   };
 
   useEffect(() => {
-    const d = session.blueprint?.depth || 'concise';
+    const d = session.blueprint?.depth || session.complexity?.recommendedDepth || 'concise';
     setDepth(d);
     const tierWriter = pickWriterForDepth(providers, d, cooldowns);
     setGenProvider(tierWriter.provider);
     setGenModel(tierWriter.model);
-  }, [session.id, providers.length]);
+  }, [session.id, session.complexity?.recommendedDepth, providers.length]);
 
   useEffect(() => {
     setSavedFolder(session.blueprint?.savedFolderPath || null);
-    const currentDepth = session.blueprint?.depth || depth;
+    const currentDepth = session.blueprint?.depth || session.complexity?.recommendedDepth || depth;
     const tierWriter = pickWriterForDepth(providers, currentDepth, cooldowns);
 
     if (session.blueprint?.files.length) {
@@ -218,7 +227,7 @@ export function BlueprintStage({
       setShowPlanner(false);
     } else {
       setShowPlanner(true);
-      void fetchDefaultBlueprintPlan(session.domain)
+      void fetchDefaultBlueprintPlan(session.domain, session.complexity?.level)
         .then((files) =>
           setPlanFiles(
             autoAssignSpecialistModels(files, providers, currentDepth, tierWriter, cooldowns)
@@ -226,7 +235,7 @@ export function BlueprintStage({
         )
         .catch(() => {});
     }
-  }, [session.id, session.domain, Boolean(session.blueprint), providers.length, cooldowns.length]);
+  }, [session.id, session.domain, session.complexity?.level, Boolean(session.blueprint), providers.length, cooldowns.length]);
 
   const genProviderInfo = providers.find((p) => p.id === genProvider);
   const activeFile = useMemo(
@@ -411,6 +420,18 @@ export function BlueprintStage({
     URL.revokeObjectURL(url);
   };
 
+  const handleRunLint = async () => {
+    setError(null);
+    setLinting(true);
+    try {
+      await onRunLint();
+    } catch (err: any) {
+      setError(err?.message || '0-Token yerel doğrulama çalıştırılamadı.');
+    } finally {
+      setLinting(false);
+    }
+  };
+
   const handleSaveToLinkedRepo = async () => {
     setError(null);
     setSavingFolder(true);
@@ -418,6 +439,7 @@ export function BlueprintStage({
       const res = await saveBlueprintToLocalFolder(session.id, {
         useLinkedRepo: true,
         subfolder: 'docs',
+        includeIdeRules,
       });
       setSavedFolder(res.folderPath);
     } catch (err: any) {
@@ -437,6 +459,7 @@ export function BlueprintStage({
       if (picked.folderPath) {
         const res = await saveBlueprintToLocalFolder(session.id, {
           folderPath: picked.folderPath,
+          includeIdeRules,
         });
         setSavedFolder(res.folderPath);
       }
@@ -478,11 +501,14 @@ export function BlueprintStage({
     const folderNote = savedFolder
       ? `Dokümanlar \`${savedFolder}\` klasöründe bulunuyor.`
       : 'Bu klasördeki dokümanları referans al.';
+    const contractHint = session.blueprint?.contract
+      ? ' `PROJECT_CONTRACT.json` içindeki varlık adlarına, rotalara ve değiştirilemez kurallara (Hard Invariants)'
+      : ' tasarım/UX kurallarına, mimari şemaya ve son dosyadaki değiştirilemez kurallara (Hard Invariants)';
     return [
-      `${folderNote} Önce sırasıyla ${fileListStr} dosyalarını eksiksiz oku.`,
-      `Özellikle tasarım/UX kurallarına, mimari şemaya ve son dosyadaki değiştirilemez kurallara (Hard Invariants) %100 sadık kalarak; yol haritasındaki Adım 1'den başlayıp "${session.title}" projesini temiz, modüler ve test ederek inşa et. Her adımı tamamladığında doğrulamasını yapıp sıradaki adıma geç.`,
+      `${folderNote} Önce \`AGENTS.md\` dosyasını, ardından sırasıyla ${fileListStr} dosyalarını eksiksiz oku.`,
+      `Özellikle${contractHint} %100 sadık kalarak; yol haritasındaki Faz 1'den başlayıp "${session.title}" projesini temiz, modüler ve her fazın doğrulama kapısını (Verification Gate) geçirerek inşa et.`,
     ].join('\n\n');
-  }, [session.blueprint?.files, session.title, savedFolder]);
+  }, [session.blueprint?.files, session.blueprint?.contract, session.title, savedFolder]);
 
   return (
     <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6">
@@ -627,8 +653,25 @@ export function BlueprintStage({
                   Klasör Seç & Kaydet
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() => setIncludeIdeRules((v) => !v)}
+                  title={t(
+                    'Dışa aktarmaya AGENTS.md, CLAUDE.md, .cursor/rules/conceptus-architecture.mdc ve PROJECT_CONTRACT.json dosyalarını dahil et',
+                    'Include AGENTS.md, CLAUDE.md, .cursor/rules/conceptus-architecture.mdc, and PROJECT_CONTRACT.json in exports'
+                  )}
+                  className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-2 rounded-full border transition cursor-pointer ${
+                    includeIdeRules
+                      ? 'bg-[#3fd0c9]/15 text-[#88ece7] border-[#3fd0c9]/40'
+                      : 'glass-pill text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <FileCheck2 className="w-3.5 h-3.5" />
+                  {t('IDE Paketi', 'IDE Rules')}
+                </button>
+
                 <a
-                  href={getBlueprintZipUrl(session.id)}
+                  href={getBlueprintZipUrl(session.id, includeIdeRules)}
                   download
                   className="btn-white inline-flex items-center gap-1.5 text-xs px-4 py-2"
                 >
@@ -753,6 +796,195 @@ export function BlueprintStage({
                 {starterBuildPrompt}
               </pre>
             )}
+          </div>
+        )}
+
+        {/* WAVE 0 CANONICAL CONTRACT + 0-TOKEN DETERMINISTIC LINT STRIP */}
+        {!showPlanner && session.blueprint && (session.blueprint.contract || session.blueprint.lint || doneCount > 0) && (
+          <div className="glass-panel rounded-2xl p-3.5 sm:p-4 border-white/[0.10] space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                {session.blueprint.contract && (
+                  <button
+                    type="button"
+                    onClick={() => setContractOpen((v) => !v)}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-medium px-3 py-1 rounded-full bg-[#3fd0c9]/12 text-[#88ece7] border border-[#3fd0c9]/35 hover:bg-[#3fd0c9]/20 transition cursor-pointer"
+                  >
+                    <Lock className="w-3 h-3" />
+                    <span>
+                      {t('Dalga 0 Sözleşme Kilitli', 'Wave 0 Contract Locked')} ·{' '}
+                      {session.blueprint.contract.entities.length} varlık /{' '}
+                      {session.blueprint.contract.hardInvariants.length} kural
+                    </span>
+                    {contractOpen ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
+                  </button>
+                )}
+
+                {session.blueprint.lint && (
+                  <button
+                    type="button"
+                    onClick={() => setLintIssuesOpen((v) => !v)}
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold px-3 py-1 rounded-full border transition cursor-pointer ${
+                      session.blueprint.lint.score >= 90
+                        ? 'bg-[#4cc58a]/15 text-[#8ae3b7] border-[#4cc58a]/35'
+                        : session.blueprint.lint.score >= 75
+                          ? 'bg-[#f0b44c]/15 text-[#f7cf86] border-[#f0b44c]/35'
+                          : 'bg-[#ff7a6e]/15 text-[#ffb4ad] border-[#ff7a6e]/35'
+                    }`}
+                  >
+                    <FileCheck2 className="w-3 h-3" />
+                    <span>
+                      0-Token Lint: {session.blueprint.lint.score}/100 (
+                      {session.blueprint.lint.passedChecks}/{session.blueprint.lint.totalChecks})
+                    </span>
+                    {session.blueprint.lint.issues.length > 0 &&
+                      (lintIssuesOpen ? (
+                        <ChevronUp className="w-3 h-3" />
+                      ) : (
+                        <ChevronDown className="w-3 h-3" />
+                      ))}
+                  </button>
+                )}
+              </div>
+
+              {doneCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleRunLint}
+                  disabled={linting || activeRun}
+                  className="glass-pill inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full text-zinc-300 hover:text-white cursor-pointer disabled:opacity-40"
+                >
+                  {linting ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3 h-3 text-[#88ece7]" />
+                  )}
+                  {t('Yerel Lint (0 Token)', 'Local Lint (0 Token)')}
+                </button>
+              )}
+            </div>
+
+            {contractOpen && session.blueprint.contract && (
+              <div className="rounded-xl bg-black/40 border border-white/[0.08] p-3.5 text-[11px] space-y-2.5">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span className="font-mono font-semibold text-[#88ece7]">
+                    PROJECT_CONTRACT.json · {session.blueprint.contract.projectName}
+                  </span>
+                  {session.blueprint.contract.generatedBy && (
+                    <span className="text-[10px] font-mono text-zinc-500">
+                      {session.blueprint.contract.generatedBy}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-zinc-300">
+                  {session.blueprint.contract.stack.length > 0 && (
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
+                        Stack
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {session.blueprint.contract.stack.map((s, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-200 font-mono text-[10px]"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {session.blueprint.contract.entities.length > 0 && (
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
+                        Kanonik Varlıklar
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {session.blueprint.contract.entities.map((e, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 rounded-full bg-[#7c74ff]/15 text-[#cbc7ff] font-mono text-[10px]"
+                          >
+                            {e}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {session.blueprint.contract.hardInvariants.length > 0 && (
+                    <div className="md:col-span-2">
+                      <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
+                        Hard Invariants (Değiştirilemez Kurallar)
+                      </div>
+                      <ul className="list-disc pl-4 space-y-0.5 text-zinc-300">
+                        {session.blueprint.contract.hardInvariants.map((rule, idx) => (
+                          <li key={idx}>{rule}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {session.blueprint.contract.nonGoals.length > 0 && (
+                    <div className="md:col-span-2">
+                      <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
+                        Kapsam Dışı (Non-Goals)
+                      </div>
+                      <ul className="list-disc pl-4 space-y-0.5 text-zinc-400">
+                        {session.blueprint.contract.nonGoals.map((ng, idx) => (
+                          <li key={idx}>{ng}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {lintIssuesOpen &&
+              session.blueprint.lint &&
+              session.blueprint.lint.issues.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  {session.blueprint.lint.issues.map((iss) => (
+                    <div
+                      key={iss.id}
+                      className="rounded-xl px-3 py-2 border border-white/[0.08] bg-white/[0.02] flex items-start justify-between gap-2 text-[11px]"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded ${
+                              iss.severity === 'high'
+                                ? 'bg-[#ff7a6e]/20 text-[#ffb4ad]'
+                                : iss.severity === 'medium'
+                                  ? 'bg-[#f0b44c]/20 text-[#f7cf86]'
+                                  : 'bg-white/10 text-zinc-300'
+                            }`}
+                          >
+                            {iss.severity}
+                          </span>
+                          <span className="font-mono text-[#88ece7] font-semibold">
+                            {iss.file}
+                          </span>
+                          {iss.conflictWith && (
+                            <span className="text-[10px] font-mono text-zinc-500">
+                              ↔ {iss.conflictWith}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-zinc-200">{iss.description}</p>
+                        {iss.fixInstruction && (
+                          <p className="text-[10px] text-zinc-400">
+                            Öneri: {iss.fixInstruction}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
           </div>
         )}
 

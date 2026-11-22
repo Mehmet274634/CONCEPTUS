@@ -93,12 +93,61 @@ export interface SeatResponse {
 
 export interface DebateRound {
   roundNumber: number;
-  kind: 'blind_analysis' | 'cross_critique' | 'evolution';
+  kind: 'blind_analysis' | 'cross_critique' | 'evolution' | 'red_team' | 'targeted_challenge';
   title: string;
   userGuidance?: string;
+  targetSeatId?: string;
+  protocolMode?: 'full' | 'delta';
   startedAt: number;
   finishedAt?: number;
   responses: SeatResponse[];
+}
+
+export type ComplexityLevel = 'S' | 'M' | 'L' | 'XL';
+export type CaliberPreference = 'flagship' | 'hybrid' | 'economy';
+
+export interface ComplexityAssessment {
+  level: ComplexityLevel;
+  score: number;
+  labelTr: string;
+  labelEn: string;
+  reasonTr: string;
+  reasonEn: string;
+  signals: string[];
+  recommendedCaliber: CaliberPreference;
+  recommendedSeatCount: number;
+  recommendedDepth: BlueprintDepth;
+  recommendedFileCount: number;
+}
+
+export interface ReadinessScore {
+  overall: number;
+  problemClarity: number;
+  uxValue: number;
+  technicalSolidity: number;
+  securityRisk: number;
+  mvpSharpness: number;
+}
+
+export interface ProjectContract {
+  projectName: string;
+  stack: string[];
+  entities: string[];
+  routes: string[];
+  folderTree: string[];
+  hardInvariants: string[];
+  nonGoals: string[];
+  generatedBy?: string;
+  generatedAt?: number;
+  rawJson?: string;
+}
+
+export interface BlueprintLintReport {
+  score: number;
+  passedChecks: number;
+  totalChecks: number;
+  checkedAt: number;
+  issues: BlueprintAuditIssue[];
 }
 
 export interface DecisionGateOption {
@@ -125,6 +174,7 @@ export interface SynthesisResult {
   content: string;
   evolutionHighlights?: string[];
   decisionGates?: DecisionGate[];
+  readinessScore?: ReadinessScore;
   error?: string;
   startedAt: number;
   finishedAt?: number;
@@ -212,6 +262,8 @@ export interface BlueprintPack {
   startedAt: number;
   finishedAt?: number;
   savedFolderPath?: string;
+  contract?: ProjectContract;
+  lint?: BlueprintLintReport;
   files: GeneratedMdFile[];
   audit?: BlueprintAudit;
 }
@@ -245,6 +297,10 @@ export interface DebateSession {
   idea: string;
   domain: DomainMode;
   language?: AppLang;
+  complexity?: ComplexityAssessment;
+  caliber?: CaliberPreference;
+  forkedFromId?: string;
+  forkLabel?: string;
   constraints: string;
   contextText: string;
   repoMeta?: RepoSnapshotMeta;
@@ -280,9 +336,11 @@ export type StreamEvent =
   | { type: 'synthesis_delta'; delta: string }
   | { type: 'synthesis_completed'; synthesis: SynthesisResult }
   | { type: 'blueprint_started'; blueprint: BlueprintPack }
+  | { type: 'blueprint_contract_ready'; contract: ProjectContract }
   | { type: 'blueprint_file_started'; fileId: string }
   | { type: 'blueprint_file_delta'; fileId: string; delta: string }
   | { type: 'blueprint_file_completed'; file: GeneratedMdFile }
+  | { type: 'blueprint_lint_completed'; lint: BlueprintLintReport }
   | { type: 'blueprint_completed'; finishedAt: number }
   | { type: 'blueprint_audit_completed'; audit: BlueprintAudit }
   | { type: 'run_aborted' }

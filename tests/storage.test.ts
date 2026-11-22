@@ -25,7 +25,7 @@ describe('Storage, ZIP Export & AGENTS.md Bridge Generation', () => {
     expect(slugifyProjectName('   ')).toBe('conceptus-proje');
   });
 
-  it('packages numbered MDs, MASTER_DECISION.md, README.md, and AGENTS.md in ZIP & folder exports', async () => {
+  it('packages numbered MDs, MASTER_DECISION.md, README.md, PROJECT_CONTRACT.json, and Multi-IDE rules in ZIP & folder exports', async () => {
     const session: DebateSession = {
       id: testSessionId,
       title: 'Şef Tarifi',
@@ -48,6 +48,17 @@ describe('Storage, ZIP Export & AGENTS.md Bridge Generation', () => {
         model: 'gemini-4-neon-medium',
         depth: 'concise',
         startedAt: Date.now(),
+        contract: {
+          projectName: 'Şef Tarifi',
+          stack: ['React 19', 'IndexedDB'],
+          entities: ['PantryItem', 'RecipeCard'],
+          routes: ['/pantry', '/recipes'],
+          folderTree: ['src/features/pantry'],
+          hardInvariants: ['Offline-first çalışmalı'],
+          nonGoals: ['Sosyal ağ yok'],
+          rawJson: JSON.stringify({ projectName: 'Şef Tarifi', entities: ['PantryItem', 'RecipeCard'] }, null, 2),
+          generatedAt: Date.now(),
+        },
         files: [
           {
             id: 'f1',
@@ -75,23 +86,49 @@ describe('Storage, ZIP Export & AGENTS.md Bridge Generation', () => {
       updatedAt: Date.now(),
     };
 
-    // 1. Verify ZIP buffer contents
+    // 1. Verify ZIP buffer contents (default includeIdeRules = true)
     const zipBuf = await buildBlueprintZipBuffer(session);
     const zip = await JSZip.loadAsync(zipBuf);
     const zipPaths = Object.keys(zip.files);
     expect(zipPaths.some((p) => p.endsWith('/README.md'))).toBe(true);
     expect(zipPaths.some((p) => p.endsWith('/AGENTS.md'))).toBe(true);
+    expect(zipPaths.some((p) => p.endsWith('/CLAUDE.md'))).toBe(true);
+    expect(zipPaths.some((p) => p.endsWith('/.cursor/rules/conceptus-architecture.mdc'))).toBe(true);
+    expect(zipPaths.some((p) => p.endsWith('/PROJECT_CONTRACT.json'))).toBe(true);
     expect(zipPaths.some((p) => p.endsWith('/MASTER_DECISION.md'))).toBe(true);
     expect(zipPaths.some((p) => p.endsWith('/01_PRODUCT_VISION.md'))).toBe(true);
     expect(zipPaths.some((p) => p.endsWith('/05_AGENTS_START_HERE.md'))).toBe(true);
 
-    // 2. Verify Folder export writes AGENTS.md + all files
+    // 2. Verify Folder export writes Multi-IDE rules + PROJECT_CONTRACT.json + all files (8 total)
     const exported = saveBlueprintToFolder(session, tempExportDir);
-    expect(exported.fileCount).toBe(5);
+    expect(exported.fileCount).toBe(8);
     expect(fs.existsSync(path.join(tempExportDir, 'AGENTS.md'))).toBe(true);
+    expect(fs.existsSync(path.join(tempExportDir, 'CLAUDE.md'))).toBe(true);
+    expect(fs.existsSync(path.join(tempExportDir, '.cursor', 'rules', 'conceptus-architecture.mdc'))).toBe(true);
+    expect(fs.existsSync(path.join(tempExportDir, 'PROJECT_CONTRACT.json'))).toBe(true);
     expect(fs.existsSync(path.join(tempExportDir, '01_PRODUCT_VISION.md'))).toBe(true);
+
     const bridge = fs.readFileSync(path.join(tempExportDir, 'AGENTS.md'), 'utf8');
     expect(bridge).toContain('01_PRODUCT_VISION.md');
     expect(bridge).toContain('05_AGENTS_START_HERE.md');
+    expect(bridge).toContain('Offline-first çalışmalı');
+
+    const cursorRule = fs.readFileSync(
+      path.join(tempExportDir, '.cursor', 'rules', 'conceptus-architecture.mdc'),
+      'utf8'
+    );
+    expect(cursorRule).toContain('alwaysApply: true');
+    expect(cursorRule).toContain('PantryItem');
+
+    // 3. Verify includeIdeRules: false skips CLAUDE.md and .cursor rules
+    const minimalDir = fs.mkdtempSync(path.join(os.tmpdir(), 'conceptus-minimal-test-'));
+    try {
+      const minimalExport = saveBlueprintToFolder(session, minimalDir, { includeIdeRules: false });
+      expect(minimalExport.fileCount).toBe(6); // 2 MDs + MASTER_DECISION + README + AGENTS + PROJECT_CONTRACT.json
+      expect(fs.existsSync(path.join(minimalDir, 'CLAUDE.md'))).toBe(false);
+      expect(fs.existsSync(path.join(minimalDir, '.cursor', 'rules', 'conceptus-architecture.mdc'))).toBe(false);
+    } finally {
+      fs.rmSync(minimalDir, { recursive: true, force: true });
+    }
   });
 });

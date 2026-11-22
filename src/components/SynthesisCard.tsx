@@ -51,6 +51,7 @@ export function SynthesisCard({
 
   const gates = synthesis.decisionGates || [];
   const highlights = synthesis.evolutionHighlights || [];
+  const readiness = synthesis.readinessScore;
 
   const selectOption = (gateId: string, optionId: string) => {
     const updated = gates.map((g) =>
@@ -68,6 +69,48 @@ export function SynthesisCard({
 
   return (
     <div className="space-y-4">
+      {/* 0. 5-Axis Idea Readiness Radar Bar */}
+      {readiness && (
+        <div className="glass-panel rounded-2xl p-4 sm:p-5 border-[#7c74ff]/30">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#cbc7ff]">
+              <Sparkles className="w-3.5 h-3.5" />
+              {t('Fikir Olgunluk Radarı (5 Eksen)', 'Idea Readiness Radar (5 Axes)')}
+            </div>
+            <span className="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#4cc58a]/15 text-[#8ae3b7] border border-[#4cc58a]/35">
+              {readiness.overall}/100
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            {(
+              [
+                { k: 'problemClarity', tr: 'Problem Netliği', en: 'Problem Clarity', v: readiness.problemClarity },
+                { k: 'uxValue', tr: 'UX & Değer', en: 'UX & Value', v: readiness.uxValue },
+                { k: 'technicalSolidity', tr: 'Teknik Mimari', en: 'Tech Architecture', v: readiness.technicalSolidity },
+                { k: 'securityRisk', tr: 'Güvenlik & Risk', en: 'Security & Risk', v: readiness.securityRisk },
+                { k: 'mvpSharpness', tr: 'MVP Keskinliği', en: 'MVP Sharpness', v: readiness.mvpSharpness },
+              ] as const
+            ).map((axis) => (
+              <div
+                key={axis.k}
+                className="rounded-xl bg-white/[0.025] border border-white/[0.06] px-3 py-2 space-y-1.5"
+              >
+                <div className="flex items-center justify-between gap-1 text-[10.5px]">
+                  <span className="text-zinc-400 truncate">{t(axis.tr, axis.en)}</span>
+                  <span className="font-mono text-zinc-200 font-semibold">{axis.v}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#7c74ff] to-[#3fd0c9]"
+                    style={{ width: `${Math.max(10, Math.min(100, axis.v))}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 1. "Ne Değişti?" Evolution Summary Strip */}
       {highlights.length > 0 && (
         <div className="glass-panel rounded-2xl p-4 sm:p-5 border-[#3fd0c9]/25">
