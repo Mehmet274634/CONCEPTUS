@@ -60,54 +60,160 @@
   </header>
 
   <main>
-    <!-- SECTION 1: PURE FULL-VIEWPORT HERO (ONLY Headline + Short Subtitle + 2 Buttons + Live Luminous Canvas) -->
+    <!-- SECTION 1: PURE FULL-VIEWPORT HERO + FLOWING CLI & AGENT MARQUEE -->
     <section class="hero-section">
       <canvas class="light-canvas" data-light-canvas="hero" aria-hidden="true"></canvas>
       <div class="hero-glow" aria-hidden="true"></div>
 
-      <div class="wrap">
-        <div class="hero-head">
-          <h1 class="hero-title enter" data-tr="İki cümlelik fikrin, 5 dosyalık mimariye dönüşsün." data-en="Turn a two-sentence idea into a 5-file blueprint.">
-            İki cümlelik fikrin, 5 dosyalık mimariye dönüşsün.
-          </h1>
+      <div class="hero-main-center">
+        <div class="wrap">
+          <div class="hero-head">
+            <h1 class="hero-title enter" data-tr="İki cümlelik fikrin, 5 dosyalık mimariye dönüşsün." data-en="Turn a two-sentence idea into a 5-file blueprint.">
+              İki cümlelik fikrin, 5 dosyalık mimariye dönüşsün.
+            </h1>
 
-          <p class="lead enter enter-d1">
-            <span data-tr="Gemini, Claude ve Codex yerel masada çarpışır — kodlamaya hazır " data-en="Gemini, Claude, and Codex clash on one local desk — outputting ">Gemini, Claude ve Codex yerel masada çarpışır — kodlamaya hazır </span>
-            <span class="bright" data-tr="5'li MD paketi" data-en="a 5-file MD pack">5'li MD paketi</span>
-            <span data-tr=" çıkar. Ekstra API ücreti yok." data-en=" ready to build. Zero extra API fees."> çıkar. Ekstra API ücreti yok.</span>
-          </p>
+            <p class="lead enter enter-d1">
+              <span data-tr="Gemini, Claude ve Codex yerel masada çarpışır — kodlamaya hazır " data-en="Gemini, Claude, and Codex clash on one local desk — outputting ">Gemini, Claude ve Codex yerel masada çarpışır — kodlamaya hazır </span>
+              <span class="bright" data-tr="5'li MD paketi" data-en="a 5-file MD pack">5'li MD paketi</span>
+              <span data-tr=" çıkar. Ekstra API ücreti yok." data-en=" ready to build. Zero extra API fees."> çıkar. Ekstra API ücreti yok.</span>
+            </p>
 
-          <div class="hero-actions enter enter-d2">
-            <a class="btn btn-primary btn-lg" href="download.html">
-              <span data-tr="Masaüstü Uygulamasını İndir" data-en="Download Desktop Studio">Masaüstü Uygulamasını İndir</span>
-              <span class="arr" aria-hidden="true">→</span>
-            </a>
-            <a class="btn btn-ghost btn-lg" href="#blueprint" data-tr="5'li MD Paketini İncele" data-en="Inspect the 5-File Pack">5'li MD Paketini İncele</a>
+            <div class="hero-actions enter enter-d2">
+              <a class="btn btn-primary btn-lg" href="download.html">
+                <span data-tr="Masaüstü Uygulamasını İndir" data-en="Download Desktop Studio">Masaüstü Uygulamasını İndir</span>
+                <span class="arr" aria-hidden="true">→</span>
+              </a>
+              <a class="btn btn-ghost btn-lg" href="#blueprint" data-tr="5'li MD Paketini İncele" data-en="Inspect the 5-File Pack">5'li MD Paketini İncele</a>
+            </div>
           </div>
         </div>
       </div>
 
-      <a class="scroll-cue" href="#prism" aria-label="Scroll down">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 5v14M5 12l7 7 7-7" />
-        </svg>
-      </a>
+      <!-- Flowing Right-to-Left CLI & Coding Agents Strip (Visible on Screen 1) -->
+      <div class="hero-marquee enter enter-d3">
+        <div class="hero-marquee-label" data-tr="Çalışılan CLI &amp; Kodlama Ajanları" data-en="Supported CLIs &amp; Coding Agents">
+          Çalışılan CLI &amp; Kodlama Ajanları
+        </div>
+        <div class="cli-marquee" aria-label="Supported CLIs and coding agents">
+          <div class="cli-marquee-track">
+            <!-- Track Set 1 -->
+            <span class="cli-pill">
+              <span class="cli-pill-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#958fff" stroke-width="2"><polygon points="12 2 21 7 21 17 12 22 3 17 3 7" /><circle cx="12" cy="12" r="3" fill="#4ff2ea" stroke="none" /></svg>
+              </span>
+              <span>Antigravity</span><small>agy</small>
+            </span>
+            <span class="cli-pill">
+              <span class="cli-pill-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f5c266" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" /></svg>
+              </span>
+              <span>Claude Code</span><small>claude</small>
+            </span>
+            <span class="cli-pill">
+              <span class="cli-pill-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5ce8e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 7 3 12 8 17" /><polyline points="16 7 21 12 16 17" /><line x1="14" y1="4" x2="10" y2="20" /></svg>
+              </span>
+              <span>Codex CLI</span><small>codex</small>
+            </span>
+            <span class="cli-pill">
+              <span class="cli-pill-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a29bff" stroke-width="2"><path d="M12 2 L14.8 9.2 L22 12 L14.8 14.8 L12 22 L9.2 14.8 L2 12 L9.2 9.2 Z" /></svg>
+              </span>
+              <span>Gemini CLI</span><small>gemini</small>
+            </span>
+            <span class="cli-pill">
+              <span class="cli-pill-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e2e6f0" stroke-width="2" stroke-linejoin="round"><polygon points="12 3 21 8.5 12 14 3 8.5" /><polyline points="3 15.5 12 21 21 15.5" /></svg>
+              </span>
+              <span>Cursor</span><small>AGENTS.md</small>
+            </span>
+            <span class="cli-pill">
+              <span class="cli-pill-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4cc58a" stroke-width="2" stroke-linecap="round"><path d="M3 15c3-6 6-6 9 0s6 6 9 0" /><path d="M3 9c3-6 6-6 9 0s6 6 9 0" stroke-opacity="0.55" /></svg>
+              </span>
+              <span>Windsurf</span><small>Cascade</small>
+            </span>
+            <span class="cli-pill">
+              <span class="cli-pill-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8cb4ff" stroke-width="2" stroke-linecap="round"><rect x="3" y="8" width="18" height="10" rx="5" /><circle cx="9" cy="13" r="1.5" fill="#8cb4ff" stroke="none" /><circle cx="15" cy="13" r="1.5" fill="#8cb4ff" stroke="none" /></svg>
+              </span>
+              <span>GitHub Copilot</span><small>MD</small>
+            </span>
+            <span class="cli-pill">
+              <span class="cli-pill-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2" stroke-linejoin="round"><path d="M16.5 3 21 5.5v13L16.5 21 3 12l13.5-9Z" /></svg>
+              </span>
+              <span>VS Code</span><small>Workspace</small>
+            </span>
+
+            <!-- Track Set 2 (Seamless Loop Mirror) -->
+            <span class="cli-pill" aria-hidden="true">
+              <span class="cli-pill-ico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#958fff" stroke-width="2"><polygon points="12 2 21 7 21 17 12 22 3 17 3 7" /><circle cx="12" cy="12" r="3" fill="#4ff2ea" stroke="none" /></svg>
+              </span>
+              <span>Antigravity</span><small>agy</small>
+            </span>
+            <span class="cli-pill" aria-hidden="true">
+              <span class="cli-pill-ico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f5c266" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" /></svg>
+              </span>
+              <span>Claude Code</span><small>claude</small>
+            </span>
+            <span class="cli-pill" aria-hidden="true">
+              <span class="cli-pill-ico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5ce8e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 7 3 12 8 17" /><polyline points="16 7 21 12 16 17" /><line x1="14" y1="4" x2="10" y2="20" /></svg>
+              </span>
+              <span>Codex CLI</span><small>codex</small>
+            </span>
+            <span class="cli-pill" aria-hidden="true">
+              <span class="cli-pill-ico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a29bff" stroke-width="2"><path d="M12 2 L14.8 9.2 L22 12 L14.8 14.8 L12 22 L9.2 14.8 L2 12 L9.2 9.2 Z" /></svg>
+              </span>
+              <span>Gemini CLI</span><small>gemini</small>
+            </span>
+            <span class="cli-pill" aria-hidden="true">
+              <span class="cli-pill-ico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e2e6f0" stroke-width="2" stroke-linejoin="round"><polygon points="12 3 21 8.5 12 14 3 8.5" /><polyline points="3 15.5 12 21 21 15.5" /></svg>
+              </span>
+              <span>Cursor</span><small>AGENTS.md</small>
+            </span>
+            <span class="cli-pill" aria-hidden="true">
+              <span class="cli-pill-ico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4cc58a" stroke-width="2" stroke-linecap="round"><path d="M3 15c3-6 6-6 9 0s6 6 9 0" /><path d="M3 9c3-6 6-6 9 0s6 6 9 0" stroke-opacity="0.55" /></svg>
+              </span>
+              <span>Windsurf</span><small>Cascade</small>
+            </span>
+            <span class="cli-pill" aria-hidden="true">
+              <span class="cli-pill-ico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8cb4ff" stroke-width="2" stroke-linecap="round"><rect x="3" y="8" width="18" height="10" rx="5" /><circle cx="9" cy="13" r="1.5" fill="#8cb4ff" stroke="none" /><circle cx="15" cy="13" r="1.5" fill="#8cb4ff" stroke="none" /></svg>
+              </span>
+              <span>GitHub Copilot</span><small>MD</small>
+            </span>
+            <span class="cli-pill" aria-hidden="true">
+              <span class="cli-pill-ico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2" stroke-linejoin="round"><path d="M16.5 3 21 5.5v13L16.5 21 3 12l13.5-9Z" /></svg>
+              </span>
+              <span>VS Code</span><small>Workspace</small>
+            </span>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- SECTION 2: STANDALONE PRISM CONVERGENCE ANIMATION SHOWCASE -->
+    <!-- SECTION 2: STANDALONE MULTI-AI CONVERGENCE PRISM (4 AI Inputs -> Continuous Dotted Photon Streams -> 5 Blueprint MDs -> Coding Agents Dock) -->
     <section class="section band" id="prism">
       <div class="wrap">
         <div class="section-head center reveal">
-          <h2 class="display" data-tr="Üç zihin çarpışır. Tek mimari doğar." data-en="Three minds clash. One architecture emerges.">
-            Üç zihin çarpışır. Tek mimari doğar.
+          <h2 class="display" data-tr="Çoklu zihin çarpışır. Tek mimari doğar." data-en="Multiple minds clash. One architecture emerges.">
+            Çoklu zihin çarpışır. Tek mimari doğar.
           </h2>
-          <p class="lead" data-tr="Gemini, Claude ve Codex kör noktaları eler; prizmadan 5 kusursuz MD çıkar." data-en="Gemini, Claude, and Codex eliminate blind spots — five crisp MDs emerge.">
-            Gemini, Claude ve Codex kör noktaları eler; prizmadan 5 kusursuz MD çıkar.
+          <p class="lead" data-tr="Yerel CLI modellerin paralel tartışır; prizmadan her kodlama ajanına hazır 5'li MD çıkar." data-en="Local CLI models debate in parallel — outputting a 5-file MD pack ready for any coding agent.">
+            Yerel CLI modellerin paralel tartışır; prizmadan her kodlama ajanına hazır 5'li MD çıkar.
           </p>
         </div>
 
         <div class="hero-visual-stage reveal" aria-label="CONCEPTUS Multi-AI Convergence Prism">
-          <svg class="prism-svg" viewBox="0 0 1120 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3 AI models converging through the CONCEPTUS prism into 5 blueprint files">
+          <svg class="prism-svg" viewBox="0 0 1140 440" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="4 AI engines streaming continuous dotted data into the CONCEPTUS prism and 5 blueprint files">
             <defs>
               <filter id="glowCore" x="-40%" y="-40%" width="180%" height="180%">
                 <feGaussianBlur stdDeviation="8" result="blur" />
@@ -117,7 +223,7 @@
                 </feMerge>
               </filter>
               <filter id="glowSoft" x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feGaussianBlur stdDeviation="3.2" result="blur" />
                 <feMerge>
                   <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
@@ -133,25 +239,9 @@
                 <stop offset="50%" stop-color="#5c9eff" />
                 <stop offset="100%" stop-color="#3fd0c9" />
               </linearGradient>
-              <linearGradient id="streamViolet" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#7c74ff" stop-opacity="0.3" />
-                <stop offset="100%" stop-color="#b4afff" stop-opacity="1" />
-              </linearGradient>
-              <linearGradient id="streamAmber" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#f0b44c" stop-opacity="0.3" />
-                <stop offset="100%" stop-color="#ffe09e" stop-opacity="1" />
-              </linearGradient>
-              <linearGradient id="streamCyan" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#3fd0c9" stop-opacity="0.3" />
-                <stop offset="100%" stop-color="#9cf7f2" stop-opacity="1" />
-              </linearGradient>
-              <linearGradient id="outBeam" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#6ef2eb" stop-opacity="1" />
-                <stop offset="100%" stop-color="#958fff" stop-opacity="0.45" />
-              </linearGradient>
               <linearGradient id="upSpine" x1="0" y1="1" x2="0" y2="0">
                 <stop offset="0%" stop-color="#7c74ff" stop-opacity="0" />
-                <stop offset="45%" stop-color="#3fd0c9" stop-opacity="0.7" />
+                <stop offset="45%" stop-color="#3fd0c9" stop-opacity="0.68" />
                 <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
               </linearGradient>
               <linearGradient id="plateFill" x1="0" y1="0" x2="0" y2="1">
@@ -166,104 +256,128 @@
             </defs>
 
             <!-- Central vertical energy spine + atmospheric bloom -->
-            <line x1="560" y1="10" x2="560" y2="410" stroke="url(#upSpine)" stroke-width="1.6" />
-            <circle cx="560" cy="210" r="158" fill="url(#coreAura)" class="prism-breathe" />
+            <line x1="570" y1="12" x2="570" y2="428" stroke="url(#upSpine)" stroke-width="1.6" />
+            <circle cx="570" cy="220" r="164" fill="url(#coreAura)" class="prism-breathe" />
 
-            <!-- LEFT INPUTS: 3 AI Streams -->
-            <path d="M238 92 C358 92, 415 170, 500 194" stroke="#7c74ff4d" stroke-width="1.8" />
-            <path d="M238 210 C358 210, 415 210, 490 210" stroke="#f0b44c4d" stroke-width="1.8" />
-            <path d="M238 328 C358 328, 415 250, 500 226" stroke="#3fd0c94d" stroke-width="1.8" />
+            <!-- LEFT INPUTS: 4 Continuous Dotted Luminous Data Streams -->
+            <!-- Subtle base guide rails -->
+            <path d="M242 68 C366 68, 424 176, 510 198" stroke="#958fff2e" stroke-width="1.4" />
+            <path d="M242 169 C366 169, 424 205, 502 212" stroke="#f5c2662e" stroke-width="1.4" />
+            <path d="M242 271 C366 271, 424 235, 502 228" stroke="#5ce8e12e" stroke-width="1.4" />
+            <path d="M242 372 C366 372, 424 264, 510 242" stroke="#68b8ff2e" stroke-width="1.4" />
 
-            <!-- Glowing animated light pulses traveling into core -->
-            <path class="stream-pulse" d="M238 92 C358 92, 415 170, 500 194" stroke="url(#streamViolet)" stroke-width="3" stroke-linecap="round" filter="url(#glowSoft)" />
-            <path class="stream-pulse d2" d="M238 210 C358 210, 415 210, 490 210" stroke="url(#streamAmber)" stroke-width="3" stroke-linecap="round" filter="url(#glowSoft)" />
-            <path class="stream-pulse d3" d="M238 328 C358 328, 415 250, 500 226" stroke="url(#streamCyan)" stroke-width="3" stroke-linecap="round" filter="url(#glowSoft)" />
+            <!-- Continuous glowing dotted photon traffic (non-stop data stream!) -->
+            <path class="dot-stream" d="M242 68 C366 68, 424 176, 510 198" stroke="#b4afff" stroke-width="3.2" filter="url(#glowSoft)" />
+            <path class="dot-stream d2" d="M242 169 C366 169, 424 205, 502 212" stroke="#ffd98a" stroke-width="3.2" filter="url(#glowSoft)" />
+            <path class="dot-stream d3" d="M242 271 C366 271, 424 235, 502 228" stroke="#7cf5ee" stroke-width="3.2" filter="url(#glowSoft)" />
+            <path class="dot-stream" d="M242 372 C366 372, 424 264, 510 242" stroke="#8cc8ff" stroke-width="3.2" filter="url(#glowSoft)" />
 
             <!-- AI Node 1: Gemini -->
-            <rect x="30" y="58" width="208" height="68" rx="16" fill="url(#plateFill)" stroke="#7c74ff7a" stroke-width="1.2" />
-            <line x1="54" y1="59" x2="214" y2="59" stroke="url(#glassBevel)" stroke-width="1" />
-            <circle cx="62" cy="92" r="14" fill="#7c74ff26" />
-            <circle cx="62" cy="92" r="6" fill="#958fff" filter="url(#glowSoft)" />
-            <text x="88" y="88" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="14" font-weight="600">Gemini</text>
-            <text x="88" y="106" fill="#9ea4b2" font-family="JetBrains Mono, monospace" font-size="11">System Architect</text>
+            <rect x="26" y="34" width="216" height="68" rx="16" fill="url(#plateFill)" stroke="#7c74ff7a" stroke-width="1.2" />
+            <line x1="50" y1="35" x2="218" y2="35" stroke="url(#glassBevel)" stroke-width="1" />
+            <circle cx="58" cy="68" r="14" fill="#7c74ff26" />
+            <circle cx="58" cy="68" r="6" fill="#a29bff" filter="url(#glowSoft)" />
+            <text x="84" y="64" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="14" font-weight="600">Gemini CLI</text>
+            <text x="84" y="82" fill="#9ea4b2" font-family="JetBrains Mono, monospace" font-size="11">System Architect</text>
 
             <!-- AI Node 2: Claude -->
-            <rect x="30" y="176" width="208" height="68" rx="16" fill="url(#plateFill)" stroke="#f0b44c7a" stroke-width="1.2" />
-            <line x1="54" y1="177" x2="214" y2="177" stroke="url(#glassBevel)" stroke-width="1" />
-            <circle cx="62" cy="210" r="14" fill="#f0b44c26" />
-            <circle cx="62" cy="210" r="6" fill="#f5c266" filter="url(#glowSoft)" />
-            <text x="88" y="206" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="14" font-weight="600">Claude</text>
-            <text x="88" y="224" fill="#9ea4b2" font-family="JetBrains Mono, monospace" font-size="11">Risk &amp; UX Critic</text>
+            <rect x="26" y="135" width="216" height="68" rx="16" fill="url(#plateFill)" stroke="#f0b44c7a" stroke-width="1.2" />
+            <line x1="50" y1="136" x2="218" y2="136" stroke="url(#glassBevel)" stroke-width="1" />
+            <circle cx="58" cy="169" r="14" fill="#f0b44c26" />
+            <circle cx="58" cy="169" r="6" fill="#f5c266" filter="url(#glowSoft)" />
+            <text x="84" y="165" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="14" font-weight="600">Claude Code</text>
+            <text x="84" y="183" fill="#9ea4b2" font-family="JetBrains Mono, monospace" font-size="11">Risk &amp; UX Critic</text>
 
             <!-- AI Node 3: Codex -->
-            <rect x="30" y="294" width="208" height="68" rx="16" fill="url(#plateFill)" stroke="#3fd0c97a" stroke-width="1.2" />
-            <line x1="54" y1="295" x2="214" y2="295" stroke="url(#glassBevel)" stroke-width="1" />
-            <circle cx="62" cy="328" r="14" fill="#3fd0c926" />
-            <circle cx="62" cy="328" r="6" fill="#5ce8e1" filter="url(#glowSoft)" />
-            <text x="88" y="324" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="14" font-weight="600">Codex</text>
-            <text x="88" y="342" fill="#9ea4b2" font-family="JetBrains Mono, monospace" font-size="11">MVP Engineer</text>
+            <rect x="26" y="237" width="216" height="68" rx="16" fill="url(#plateFill)" stroke="#3fd0c97a" stroke-width="1.2" />
+            <line x1="50" y1="238" x2="218" y2="238" stroke="url(#glassBevel)" stroke-width="1" />
+            <circle cx="58" cy="271" r="14" fill="#3fd0c926" />
+            <circle cx="58" cy="271" r="6" fill="#5ce8e1" filter="url(#glowSoft)" />
+            <text x="84" y="267" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="14" font-weight="600">Codex CLI</text>
+            <text x="84" y="285" fill="#9ea4b2" font-family="JetBrains Mono, monospace" font-size="11">MVP Engineer</text>
 
-            <!-- RIGHT OUTPUTS: 5 Refracted Blueprint Beams -->
-            <g stroke="#ffffff24" stroke-width="1.4">
-              <path d="M620 186 C708 160, 748 64, 848 64" />
-              <path d="M626 198 C712 188, 750 137, 848 137" />
-              <path d="M628 210 C715 210, 755 210, 848 210" />
-              <path d="M626 222 C712 232, 750 283, 848 283" />
-              <path d="M620 234 C708 260, 748 356, 848 356" />
+            <!-- AI Node 4: Antigravity -->
+            <rect x="26" y="338" width="216" height="68" rx="16" fill="url(#plateFill)" stroke="#68b8ff7a" stroke-width="1.2" />
+            <line x1="50" y1="339" x2="218" y2="339" stroke="url(#glassBevel)" stroke-width="1" />
+            <circle cx="58" cy="372" r="14" fill="#68b8ff26" />
+            <circle cx="58" cy="372" r="6" fill="#7dc4ff" filter="url(#glowSoft)" />
+            <text x="84" y="368" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="14" font-weight="600">Antigravity</text>
+            <text x="84" y="386" fill="#9ea4b2" font-family="JetBrains Mono, monospace" font-size="11">Multi-Pool CLI</text>
+
+            <!-- RIGHT OUTPUTS: 5 Continuous Dotted Refracted Photon Streams -->
+            <g stroke="#ffffff1f" stroke-width="1.4">
+              <path d="M630 196 C720 166, 760 66, 864 66" />
+              <path d="M636 208 C724 196, 762 143, 864 143" />
+              <path d="M638 220 C725 220, 765 220, 864 220" />
+              <path d="M636 232 C724 244, 762 297, 864 297" />
+              <path d="M630 244 C720 274, 760 374, 864 374" />
             </g>
-            <!-- Glowing animated output light pulses -->
-            <path class="stream-out" d="M620 186 C708 160, 748 64, 848 64" stroke="url(#outBeam)" stroke-width="2.6" stroke-linecap="round" filter="url(#glowSoft)" />
-            <path class="stream-out d2" d="M626 198 C712 188, 750 137, 848 137" stroke="url(#outBeam)" stroke-width="2.6" stroke-linecap="round" filter="url(#glowSoft)" />
-            <path class="stream-out d3" d="M628 210 C715 210, 755 210, 848 210" stroke="#6ef2eb" stroke-width="2.8" stroke-linecap="round" filter="url(#glowSoft)" />
-            <path class="stream-out d2" d="M626 222 C712 232, 750 283, 848 283" stroke="url(#outBeam)" stroke-width="2.6" stroke-linecap="round" filter="url(#glowSoft)" />
-            <path class="stream-out" d="M620 234 C708 260, 748 356, 848 356" stroke="url(#outBeam)" stroke-width="2.6" stroke-linecap="round" filter="url(#glowSoft)" />
+            <!-- Continuous glowing dotted data flow out to all 5 MD plates -->
+            <path class="dot-stream-out" d="M630 196 C720 166, 760 66, 864 66" stroke="#6ef2b4" stroke-width="3" filter="url(#glowSoft)" />
+            <path class="dot-stream-out d2" d="M636 208 C724 196, 762 143, 864 143" stroke="#b4afff" stroke-width="3" filter="url(#glowSoft)" />
+            <path class="dot-stream-out d3" d="M638 220 C725 220, 765 220, 864 220" stroke="#7cf5ee" stroke-width="3.2" filter="url(#glowSoft)" />
+            <path class="dot-stream-out d2" d="M636 232 C724 244, 762 297, 864 297" stroke="#ffd98a" stroke-width="3" filter="url(#glowSoft)" />
+            <path class="dot-stream-out" d="M630 244 C720 274, 760 374, 864 374" stroke="#6ef2b4" stroke-width="3" filter="url(#glowSoft)" />
 
             <!-- CENTER: Luminous CONCEPTUS Convergence Prism Core -->
             <g class="prism-core-ring">
-              <circle cx="560" cy="210" r="96" stroke="#ffffff22" stroke-width="1" stroke-dasharray="6 10" />
-              <circle cx="560" cy="114" r="3.6" fill="#958fff" filter="url(#glowSoft)" />
-              <circle cx="560" cy="306" r="3.6" fill="#3fd0c9" filter="url(#glowSoft)" />
+              <circle cx="570" cy="220" r="100" stroke="#ffffff22" stroke-width="1" stroke-dasharray="6 10" />
+              <circle cx="570" cy="120" r="3.8" fill="#958fff" filter="url(#glowSoft)" />
+              <circle cx="570" cy="320" r="3.8" fill="#3fd0c9" filter="url(#glowSoft)" />
             </g>
             <g class="prism-core-ring-rev">
-              <circle cx="560" cy="210" r="74" stroke="#7c74ff66" stroke-width="1.3" stroke-dasharray="32 16" />
-              <circle cx="634" cy="210" r="2.8" fill="#ffffff" />
+              <circle cx="570" cy="220" r="76" stroke="#7c74ff66" stroke-width="1.3" stroke-dasharray="32 16" />
+              <circle cx="646" cy="220" r="3" fill="#ffffff" />
             </g>
             <!-- Hexagonal Obsidian Crystal Core with Bloom -->
-            <polygon points="560,148 614,179 614,241 560,272 506,241 506,179" fill="#0d1018" stroke="url(#coreHex)" stroke-width="2.4" filter="url(#glowCore)" />
-            <polygon points="560,162 602,186 602,234 560,258 518,234 518,186" fill="#151929" stroke="#ffffff28" stroke-width="1" />
+            <polygon points="570,156 626,188 626,252 570,284 514,252 514,188" fill="#0d1018" stroke="url(#coreHex)" stroke-width="2.4" filter="url(#glowCore)" />
+            <polygon points="570,170 614,195 614,245 570,270 526,245 526,195" fill="#151929" stroke="#ffffff28" stroke-width="1" />
             <!-- Inner Radiant C-Spark Emblem -->
-            <path d="M574 194 A19 19 0 1 0 574 226" stroke="#ffffff" stroke-width="4.4" stroke-linecap="round" filter="url(#glowSoft)" />
-            <circle cx="560" cy="210" r="5" fill="#4ff2ea" filter="url(#glowSoft)" />
-            <circle cx="579" cy="210" r="2.8" fill="#a29bff" />
+            <path d="M584 204 A19 19 0 1 0 584 236" stroke="#ffffff" stroke-width="4.4" stroke-linecap="round" filter="url(#glowSoft)" />
+            <circle cx="570" cy="220" r="5" fill="#4ff2ea" filter="url(#glowSoft)" />
+            <circle cx="589" cy="220" r="2.8" fill="#a29bff" />
 
             <!-- RIGHT: 5 Illuminated Obsidian-Glass Blueprint Plates -->
             <g>
-              <rect x="848" y="38" width="242" height="52" rx="13" fill="url(#plateFill)" stroke="#4cc58a55" stroke-width="1.15" />
-              <line x1="868" y1="39" x2="1070" y2="39" stroke="url(#glassBevel)" stroke-width="1" />
-              <text x="868" y="68" fill="#9cf7f2" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">01_PRODUCT_VISION.md</text>
-              <circle cx="1070" cy="64" r="4.2" fill="#4cc58a" filter="url(#glowSoft)" />
+              <rect x="864" y="40" width="250" height="52" rx="13" fill="url(#plateFill)" stroke="#4cc58a66" stroke-width="1.2" />
+              <line x1="884" y1="41" x2="1094" y2="41" stroke="url(#glassBevel)" stroke-width="1" />
+              <text x="884" y="70" fill="#9cf7f2" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">01_PRODUCT_VISION.md</text>
+              <circle cx="1094" cy="66" r="4.2" fill="#4cc58a" filter="url(#glowSoft)" />
 
-              <rect x="848" y="111" width="242" height="52" rx="13" fill="url(#plateFill)" stroke="#7c74ff66" stroke-width="1.15" />
-              <line x1="868" y1="112" x2="1070" y2="112" stroke="url(#glassBevel)" stroke-width="1" />
-              <text x="868" y="141" fill="#9cf7f2" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">02_UX_SCREENS.md</text>
-              <circle cx="1070" cy="137" r="4.2" fill="#958fff" filter="url(#glowSoft)" />
+              <rect x="864" y="117" width="250" height="52" rx="13" fill="url(#plateFill)" stroke="#7c74ff66" stroke-width="1.2" />
+              <line x1="884" y1="118" x2="1094" y2="118" stroke="url(#glassBevel)" stroke-width="1" />
+              <text x="884" y="147" fill="#9cf7f2" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">02_UX_SCREENS.md</text>
+              <circle cx="1094" cy="143" r="4.2" fill="#958fff" filter="url(#glowSoft)" />
 
-              <rect x="848" y="184" width="242" height="52" rx="13" fill="url(#plateFill)" stroke="#3fd0c988" stroke-width="1.3" />
-              <line x1="868" y1="185" x2="1070" y2="185" stroke="url(#glassBevel)" stroke-width="1" />
-              <text x="868" y="214" fill="#b4fffb" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">03_ARCHITECTURE.md</text>
-              <circle cx="1070" cy="210" r="4.2" fill="#3fd0c9" filter="url(#glowSoft)" />
+              <rect x="864" y="194" width="250" height="52" rx="13" fill="url(#plateFill)" stroke="#3fd0c988" stroke-width="1.35" />
+              <line x1="884" y1="195" x2="1094" y2="195" stroke="url(#glassBevel)" stroke-width="1" />
+              <text x="884" y="224" fill="#b4fffb" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">03_ARCHITECTURE.md</text>
+              <circle cx="1094" cy="220" r="4.2" fill="#3fd0c9" filter="url(#glowSoft)" />
 
-              <rect x="848" y="257" width="242" height="52" rx="13" fill="url(#plateFill)" stroke="#f0b44c55" stroke-width="1.15" />
-              <line x1="868" y1="258" x2="1070" y2="258" stroke="url(#glassBevel)" stroke-width="1" />
-              <text x="868" y="287" fill="#9cf7f2" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">04_BUILD_ROADMAP.md</text>
-              <circle cx="1070" cy="283" r="4.2" fill="#f0b44c" filter="url(#glowSoft)" />
+              <rect x="864" y="271" width="250" height="52" rx="13" fill="url(#plateFill)" stroke="#f0b44c66" stroke-width="1.2" />
+              <line x1="884" y1="272" x2="1094" y2="272" stroke="url(#glassBevel)" stroke-width="1" />
+              <text x="884" y="301" fill="#9cf7f2" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">04_BUILD_ROADMAP.md</text>
+              <circle cx="1094" cy="297" r="4.2" fill="#f0b44c" filter="url(#glowSoft)" />
 
-              <rect x="848" y="330" width="242" height="52" rx="13" fill="url(#plateFill)" stroke="#4cc58a66" stroke-width="1.15" />
-              <line x1="868" y1="331" x2="1070" y2="331" stroke="url(#glassBevel)" stroke-width="1" />
-              <text x="868" y="360" fill="#9cf7f2" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">05_AGENTS_START.md</text>
-              <circle cx="1070" cy="356" r="4.2" fill="#4cc58a" filter="url(#glowSoft)" />
+              <rect x="864" y="348" width="250" height="52" rx="13" fill="url(#plateFill)" stroke="#4cc58a66" stroke-width="1.2" />
+              <line x1="884" y1="349" x2="1094" y2="349" stroke="url(#glassBevel)" stroke-width="1" />
+              <text x="884" y="378" fill="#9cf7f2" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">05_AGENTS_START.md</text>
+              <circle cx="1094" cy="374" r="4.2" fill="#4cc58a" filter="url(#glowSoft)" />
             </g>
           </svg>
+
+          <!-- Integrated Coding Agents Handoff Dock -->
+          <div class="prism-agents-dock">
+            <span class="dock-label" data-tr="AGENTS.md ile tek tıkta kodlama ajanına aktar →" data-en="Hand off directly via AGENTS.md to →">AGENTS.md ile tek tıkta kodlama ajanına aktar →</span>
+            <div class="dock-pills">
+              <span class="dock-chip">Cursor</span>
+              <span class="dock-chip">Antigravity</span>
+              <span class="dock-chip">Claude Code</span>
+              <span class="dock-chip">Codex</span>
+              <span class="dock-chip">Windsurf</span>
+              <span class="dock-chip">Copilot</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

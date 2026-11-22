@@ -278,18 +278,18 @@ function initHeroLightCanvas() {
       const px = (mouseX - 0.5) * (isSub ? 24 : 52);
       const py = (mouseY - 0.5) * (isSub ? 14 : 28);
 
-      // 1. Ambient obsidian-horizon aurora glow
-      const horizonY = isSub ? h * 0.98 : h * 0.92;
-      const g1 = ctx.createRadialGradient(w * 0.42 + px, horizonY + py * 0.4, 12, w * 0.42 + px, horizonY, w * 0.55);
-      g1.addColorStop(0, 'rgba(124, 116, 255, 0.34)');
-      g1.addColorStop(0.42, 'rgba(124, 116, 255, 0.11)');
+      // 1. Ambient obsidian-horizon aurora glow (feathered safely above bottom edge)
+      const horizonY = isSub ? h * 0.68 : h * 0.78;
+      const g1 = ctx.createRadialGradient(w * 0.42 + px, horizonY + py * 0.4, 12, w * 0.42 + px, horizonY, w * 0.52);
+      g1.addColorStop(0, 'rgba(124, 116, 255, 0.32)');
+      g1.addColorStop(0.45, 'rgba(124, 116, 255, 0.1)');
       g1.addColorStop(1, 'rgba(8, 9, 10, 0)');
       ctx.fillStyle = g1;
       ctx.fillRect(0, 0, w, h);
 
-      const g2 = ctx.createRadialGradient(w * 0.62 - px * 0.8, horizonY * 0.94, 10, w * 0.62 - px * 0.8, horizonY, w * 0.48);
-      g2.addColorStop(0, 'rgba(63, 208, 201, 0.25)');
-      g2.addColorStop(0.45, 'rgba(63, 208, 201, 0.07)');
+      const g2 = ctx.createRadialGradient(w * 0.62 - px * 0.8, horizonY * 0.94, 10, w * 0.62 - px * 0.8, horizonY, w * 0.46);
+      g2.addColorStop(0, 'rgba(63, 208, 201, 0.24)');
+      g2.addColorStop(0.48, 'rgba(63, 208, 201, 0.07)');
       g2.addColorStop(1, 'rgba(8, 9, 10, 0)');
       ctx.fillStyle = g2;
       ctx.fillRect(0, 0, w, h);
@@ -297,33 +297,39 @@ function initHeroLightCanvas() {
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
 
-      // 2. Volumetric rising convergence light rays (fanning subtly upward from horizon)
+      // 2. Volumetric rising convergence light rays (fading smoothly at both bottom and top)
       beams.forEach((b) => {
         const baseX = w * (0.06 + b.norm * 0.88) + px * (0.45 - b.centerDist * 0.2);
         const topSpread = (b.norm - 0.5) * w * 0.14;
         const topX = baseX + topSpread;
         const pulse = 0.52 + 0.48 * Math.sin(tSec * b.speed + b.phase);
-        const alpha = (1 - b.centerDist * 0.62) * (isSub ? 0.16 : 0.22) * pulse;
+        const alpha = (1 - b.centerDist * 0.62) * (isSub ? 0.17 : 0.22) * pulse;
         const [r, g, bl] = b.color;
 
-        // Soft ambient shaft
-        const shaft = ctx.createLinearGradient(baseX, h, topX, h * 0.06);
-        shaft.addColorStop(0, `rgba(${r},${g},${bl},${alpha * 0.95})`);
-        shaft.addColorStop(0.55, `rgba(${r},${g},${bl},${alpha * 0.32})`);
+        // Soft ambient shaft (feathered to 0 at bottom and top)
+        const shaft = ctx.createLinearGradient(baseX, h, topX, h * 0.04);
+        shaft.addColorStop(0, `rgba(${r},${g},${bl},0)`);
+        shaft.addColorStop(0.24, `rgba(${r},${g},${bl},${alpha * 0.95})`);
+        shaft.addColorStop(0.62, `rgba(${r},${g},${bl},${alpha * 0.34})`);
         shaft.addColorStop(1, `rgba(${r},${g},${bl},0)`);
         ctx.strokeStyle = shaft;
         ctx.lineWidth = b.width * 3.4;
         ctx.beginPath();
         ctx.moveTo(baseX, h);
-        ctx.lineTo(topX, h * 0.06);
+        ctx.lineTo(topX, h * 0.04);
         ctx.stroke();
 
-        // Crisp luminous core hairline
-        ctx.strokeStyle = `rgba(${r},${g},${bl},${alpha * 1.45})`;
+        // Crisp luminous core hairline (also feathered cleanly)
+        const coreGrad = ctx.createLinearGradient(baseX, h, topX, h * 0.06);
+        coreGrad.addColorStop(0, `rgba(${r},${g},${bl},0)`);
+        coreGrad.addColorStop(0.26, `rgba(${r},${g},${bl},${alpha * 1.45})`);
+        coreGrad.addColorStop(0.75, `rgba(${r},${g},${bl},${alpha * 0.35})`);
+        coreGrad.addColorStop(1, `rgba(${r},${g},${bl},0)`);
+        ctx.strokeStyle = coreGrad;
         ctx.lineWidth = Math.max(0.8, b.width * 0.48);
         ctx.beginPath();
         ctx.moveTo(baseX, h);
-        ctx.lineTo(topX, h * 0.08);
+        ctx.lineTo(topX, h * 0.06);
         ctx.stroke();
 
         // Rising bright light packet riding up each ray
@@ -351,13 +357,13 @@ function initHeroLightCanvas() {
       // 3. Three living luminous horizon ribbons (Violet, Cyan, Starlight)
       const ribbons = isSub
         ? [
-            { y: h * 0.86, amp: 16, freq: 1.5, spd: 0.45, col: '124,116,255', a: 0.24 },
-            { y: h * 0.9, amp: 12, freq: 2.1, spd: -0.38, col: '63,208,201', a: 0.2 },
+            { y: h * 0.6, amp: 14, freq: 1.5, spd: 0.45, col: '124,116,255', a: 0.22 },
+            { y: h * 0.66, amp: 11, freq: 2.1, spd: -0.38, col: '63,208,201', a: 0.18 },
           ]
         : [
-            { y: h * 0.77, amp: 28, freq: 1.4, spd: 0.45, col: '124,116,255', a: 0.34 },
-            { y: h * 0.82, amp: 22, freq: 1.9, spd: -0.35, col: '63,208,201', a: 0.28 },
-            { y: h * 0.86, amp: 15, freq: 2.4, spd: 0.55, col: '240,180,76', a: 0.16 },
+            { y: h * 0.67, amp: 24, freq: 1.4, spd: 0.45, col: '124,116,255', a: 0.32 },
+            { y: h * 0.72, amp: 20, freq: 1.9, spd: -0.35, col: '63,208,201', a: 0.26 },
+            { y: h * 0.76, amp: 14, freq: 2.4, spd: 0.55, col: '240,180,76', a: 0.15 },
           ];
 
       ribbons.forEach((rb) => {
@@ -396,8 +402,8 @@ function initHeroLightCanvas() {
         ctx.strokeStyle = rimGrad;
         ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.moveTo(w * 0.08, h * 0.96);
-        ctx.quadraticCurveTo(w * 0.5 + px * 0.4, h * 0.83, w * 0.92, h * 0.96);
+        ctx.moveTo(w * 0.08, h * 0.84);
+        ctx.quadraticCurveTo(w * 0.5 + px * 0.4, h * 0.71, w * 0.92, h * 0.84);
         ctx.stroke();
       }
 

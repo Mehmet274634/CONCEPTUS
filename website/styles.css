@@ -82,18 +82,20 @@ a {
 
 .band {
   background:
-    radial-gradient(60% 80% at 50% 0%, #7c74ff12, #0000 70%),
-    linear-gradient(#0c0d0f, #0a0b0c);
-  border-top: 1px solid #ffffff0f;
-  border-bottom: 1px solid #ffffff0f;
+    radial-gradient(62% 58% at 50% 45%, #7c74ff10, transparent 74%),
+    linear-gradient(180deg, var(--canvas) 0%, #0d0e13 18%, #0d0e13 82%, var(--canvas) 100%);
+  border-top: 0;
+  border-bottom: 0;
 }
 
-/* Typography */
+/* Typography — generous vertical paint box so gradient-clipped Turkish descenders (y, ğ, ş, ç, g) never clip */
 .hero-title {
   font-size: clamp(2.55rem, 6.2vw, 5.1rem);
   font-weight: 600;
-  line-height: 1.01;
-  letter-spacing: -0.042em;
+  line-height: 1.13;
+  letter-spacing: -0.04em;
+  padding-top: 0.08em;
+  padding-bottom: 0.14em;
   background: linear-gradient(#ffffff 38%, #a9aebb);
   -webkit-background-clip: text;
   background-clip: text;
@@ -101,10 +103,12 @@ a {
 }
 
 .display {
-  font-size: clamp(2.3rem, 5.4vw, 4.25rem);
+  font-size: clamp(2.3rem, 5.2vw, 4.15rem);
   font-weight: 600;
-  line-height: 1.04;
-  letter-spacing: -0.036em;
+  line-height: 1.14;
+  letter-spacing: -0.034em;
+  padding-top: 0.08em;
+  padding-bottom: 0.14em;
   background: linear-gradient(#ffffff 42%, #a9aebb);
   -webkit-background-clip: text;
   background-clip: text;
@@ -114,8 +118,9 @@ a {
 .h2 {
   font-size: clamp(1.85rem, 3.8vw, 2.85rem);
   font-weight: 600;
-  line-height: 1.09;
+  line-height: 1.14;
   letter-spacing: -0.03em;
+  padding-bottom: 0.06em;
   color: var(--text);
 }
 
@@ -514,17 +519,28 @@ a {
   }
 }
 
-/* Hero — Pure Full-Viewport Luminous Arrival (Headline + Subtitle + 2 Buttons + Live Light Field) */
+/* Hero — Pure Full-Viewport Luminous Arrival + Bottom Flowing CLI Marquee */
 .hero-section {
   position: relative;
   min-height: calc(100svh - 70px);
-  padding-top: clamp(72px, 10vh, 116px);
-  padding-bottom: clamp(72px, 10vh, 116px);
+  padding-top: clamp(56px, 8vh, 96px);
+  padding-bottom: clamp(28px, 4vh, 48px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 36px;
   overflow: hidden;
+}
+
+.hero-main-center {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
 }
 
 .light-canvas {
@@ -535,6 +551,8 @@ a {
   pointer-events: none;
   z-index: 0;
   display: block;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 66%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 66%, transparent 100%);
 }
 
 .hero-rays {
@@ -620,18 +638,20 @@ a {
 }
 
 .hero-head .hero-title {
-  font-size: clamp(2.85rem, 6.8vw, 5.5rem);
-  line-height: 1.01;
+  font-size: clamp(2.8rem, 6.4vw, 5.25rem);
+  line-height: 1.13;
+  padding-top: 0.08em;
+  padding-bottom: 0.14em;
   text-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
 }
 
 .hero-head .lead {
   max-width: 610px;
-  margin: 24px auto 0;
+  margin: 14px auto 0;
 }
 
 .hero-actions {
-  margin-top: 34px;
+  margin-top: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -651,39 +671,169 @@ a {
   backdrop-filter: blur(12px);
 }
 
-.scroll-cue {
-  position: absolute;
-  left: 50%;
-  bottom: 26px;
-  transform: translateX(-50%);
-  z-index: 2;
+/* Flowing Right-to-Left CLI & Coding Agents Marquee (inside lower Hero) */
+.hero-marquee {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 100%;
+  padding-top: 10px;
+}
+
+.hero-marquee-label {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8f96a6;
+  margin-bottom: 14px;
+}
+
+.cli-marquee {
+  position: relative;
+  width: 100%;
+  max-width: var(--wrap);
+  margin: 0 auto;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+}
+
+.cli-marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  animation: marquee-rtl 32s linear infinite;
+}
+
+.cli-marquee:hover .cli-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-rtl {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.cli-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px 0 12px;
+  border-radius: 999px;
+  background: rgba(16, 18, 24, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.1),
+    0 10px 28px -16px rgba(0, 0, 0, 0.9);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: #e6e9f2;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 180ms var(--ease), background 180ms var(--ease);
+}
+
+.cli-pill:hover {
+  border-color: rgba(124, 116, 255, 0.55);
+  background: rgba(24, 26, 36, 0.85);
+}
+
+.cli-pill-ico {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.06);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  border: 1px solid #ffffff1c;
-  background: #ffffff06;
+  flex-shrink: 0;
+}
+
+.cli-pill small {
+  font-family: var(--mono);
+  font-size: 11px;
   color: var(--muted);
-  transition: color 180ms var(--ease), border-color 180ms var(--ease);
-  animation: cue-float 2.6s ease-in-out infinite;
+  margin-left: 2px;
 }
 
-.scroll-cue:hover {
-  color: var(--text);
-  border-color: #ffffff44;
+/* Continuous Luminous Dotted Photon Data Streams (Prism Architecture) */
+.dot-stream {
+  stroke-dasharray: 2 11;
+  stroke-linecap: round;
+  animation: dot-flow 1.35s linear infinite;
 }
 
-@keyframes cue-float {
-  0%, 100% {
-    transform: translate(-50%, 0);
-    opacity: 0.72;
+.dot-stream.d2 {
+  animation-duration: 1.55s;
+}
+
+.dot-stream.d3 {
+  animation-duration: 1.2s;
+}
+
+.dot-stream-out {
+  stroke-dasharray: 2 11;
+  stroke-linecap: round;
+  animation: dot-flow 1.25s linear infinite;
+}
+
+@keyframes dot-flow {
+  from {
+    stroke-dashoffset: 26;
   }
-  50% {
-    transform: translate(-50%, 6px);
-    opacity: 1;
+  to {
+    stroke-dashoffset: 0;
   }
+}
+
+/* Coding Agents Dock integrated at bottom of Prism stage */
+.prism-agents-dock {
+  position: relative;
+  z-index: 2;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #ffffff12;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.prism-agents-dock .dock-label {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: #8f96a6;
+}
+
+.prism-agents-dock .dock-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dock-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #101219;
+  border: 1px solid #ffffff18;
+  font-size: 12px;
+  font-weight: 500;
+  color: #dce0ec;
 }
 
 /* Standalone Prism Convergence Animation Showcase (Section 2) */
@@ -1429,7 +1579,9 @@ a {
   font-family: var(--mono);
   font-size: 13px;
   line-height: 1.7;
-  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow-x: hidden;
   color: #e4e7ee;
 }
 
@@ -1577,14 +1729,14 @@ a {
   box-shadow: 0 14px 40px -6px rgba(91, 75, 255, 0.7);
 }
 
-/* Giant Wordmark Footer */
+/* Giant Wordmark Footer — Seamless Top Melt */
 .footer {
   position: relative;
   padding-top: clamp(92px, 11vw, 136px);
   padding-bottom: 48px;
-  border-top: 1px solid #ffffff0f;
+  border-top: 0;
   background:
-    radial-gradient(50% 45% at 50% 0%, #7c74ff1a, transparent 72%),
+    radial-gradient(50% 45% at 50% 0%, #7c74ff16, transparent 72%),
     var(--canvas);
   overflow: hidden;
 }
@@ -1600,7 +1752,8 @@ a {
   font-size: clamp(2.4rem, 10.4vw, 10.2rem);
   font-weight: 700;
   letter-spacing: -0.048em;
-  line-height: 0.92;
+  line-height: 1.02;
+  padding-block: 0.06em;
   white-space: nowrap;
   background: linear-gradient(#ffffff42 0%, #ffffff14 58%, #ffffff00 100%);
   -webkit-background-clip: text;
@@ -1652,12 +1805,24 @@ a {
   color: var(--faint);
 }
 
-/* Download Page (Desktop-First OS Cards) */
+/* Download Page (Seamless Luminous Sub-Hero Melt Into OS Cards) */
 .sub-hero {
   position: relative;
   text-align: center;
-  padding: clamp(72px, 10vw, 116px) 0 48px;
+  padding: clamp(72px, 10vw, 112px) 0 116px;
   overflow: hidden;
+}
+
+.sub-hero .light-canvas {
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 54%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 54%, transparent 100%);
+}
+
+.os-section {
+  position: relative;
+  z-index: 3;
+  margin-top: -68px;
+  padding-top: 0;
 }
 
 .req-pills {
