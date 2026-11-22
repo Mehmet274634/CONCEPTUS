@@ -297,6 +297,40 @@ export interface SessionSummary {
   updatedAt: number;
 }
 
+export interface UpdateAsset {
+  name: string;
+  url: string;
+  sizeBytes: number;
+}
+
+export interface UpdateCheckResult {
+  status: 'up_to_date' | 'update_available' | 'offline';
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  releaseName: string;
+  releaseUrl: string;
+  publishedAt?: string;
+  releaseNotes: string;
+  setupAsset?: UpdateAsset;
+  portableAsset?: UpdateAsset;
+  macAsset?: UpdateAsset;
+  linuxAsset?: UpdateAsset;
+  checksumsUrl?: string;
+  isDesktop: boolean;
+  isGitRepo: boolean;
+  checkedAt: number;
+  error?: string;
+}
+
+export interface SelfUpdateResult {
+  ok: boolean;
+  updatedTo?: string;
+  restartRequired: boolean;
+  message: string;
+  log?: string;
+}
+
 export type StreamEvent =
   | { type: 'session_snapshot'; session: DebateSession; activeRun: boolean }
   | { type: 'autopilot_stage'; stage: string }

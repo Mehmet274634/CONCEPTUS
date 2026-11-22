@@ -10,6 +10,7 @@ import type {
   ComplexityLevel,
   DebateSession,
   DecisionGate,
+  DesktopUpdateProgress,
   DomainMode,
   EffortLevel,
   FallbackPolicy,
@@ -19,9 +20,11 @@ import type {
   ProviderInfo,
   RepoSnapshotMeta,
   SeatConfig,
+  SelfUpdateResult,
   SessionSummary,
   StreamEvent,
   SynthesisResult,
+  UpdateCheckResult,
 } from './types.ts';
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -474,4 +477,40 @@ export function getExportUrl(sessionId: string): string {
 
 export function getBlueprintZipUrl(sessionId: string, includeIdeRules = true): string {
   return `/api/sessions/${sessionId}/blueprint.zip${includeIdeRules ? '' : '?ide=0'}`;
+}
+
+export async function checkForAppUpdates(force = false): Promise<UpdateCheckResult> {
+  return requestJson<UpdateCheckResult>(`/api/update/check${force ? '?force=1' : ''}`);
+}
+
+export async function runWebSelfUpdate(): Promise<SelfUpdateResult> {
+  const res = await fetch('/api/update/self-update', { method: 'POST' });
+  const data = await res.json().catch(() => ({}));
+  return {
+    ok: Boolean(data?.ok),
+    updatedTo: data?.updatedTo,
+    restartRequired: Boolean(data?.restartRequired),
+    message: data?.message || (res.ok ? 'Güncelleme tamamlandı.' : `Hata (${res.status})`),
+    log: data?.log,
+  };
+}
+
+export async function downloadAndInstallDesktopUpdate(options: {
+  url: string;
+  filename: string;
+  checksumsUrl?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  if (typeof window !== 'undefined' && window.conceptusDesktop?.downloadAndInstallUpdate) {
+    return window.conceptusDesktop.downloadAndInstallUpdate(options);
+  }
+  return { ok: false, error: 'Masaüstü köprüsü kullanılamıyor.' };
+}
+
+export function subscribeDesktopUpdateProgress(
+  cb: (progress: DesktopUpdateProgress) => void
+): () => void {
+  if (typeof window !== 'undefined' && window.conceptusDesktop?.onUpdateProgress) {
+    return window.conceptusDesktop.onUpdateProgress(cb);
+  }
+  return () => {};
 }

@@ -1,4 +1,5 @@
 import {
+  ArrowUpCircle,
   FileCode2,
   PanelLeftOpen,
   PanelRightClose,
@@ -11,6 +12,7 @@ import {
   DOMAIN_OPTIONS,
   type DebateSession,
   type UiMode,
+  type UpdateCheckResult,
 } from '../types.ts';
 
 export type StageTab = 'debate' | 'synthesis' | 'blueprint';
@@ -27,6 +29,8 @@ interface TopBarProps {
   onToggleRight: () => void;
   installedCount: number;
   totalProviders: number;
+  updateInfo: UpdateCheckResult | null;
+  onOpenUpdateModal: () => void;
 }
 
 const DOMAIN_SHORT_EN: Record<string, string> = {
@@ -48,6 +52,8 @@ export function TopBar({
   onToggleRight,
   installedCount,
   totalProviders,
+  updateInfo,
+  onOpenUpdateModal,
 }: TopBarProps) {
   const { lang, setLang, t } = useI18n();
   const desktopWin =
@@ -168,8 +174,35 @@ export function TopBar({
         </nav>
       )}
 
-      {/* Right: TR/EN + Simple/Pro + Right Tools Toggle */}
+      {/* Right: Update Pill + TR/EN + Simple/Pro + Right Tools Toggle */}
       <div className="desktop-no-drag flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          onClick={onOpenUpdateModal}
+          title={
+            updateInfo?.updateAvailable
+              ? t(
+                  `Yeni sürüm mevcut: v${updateInfo.latestVersion} — Güncellemek için tıkla`,
+                  `New release available: v${updateInfo.latestVersion} — Click to update`
+                )
+              : t('Sürüm & Otomatik Güncelleme Merkezi', 'Version & Auto-Update Center')
+          }
+          className={`inline-flex items-center gap-1.5 text-[10.5px] font-mono px-2.5 py-1 rounded-full border transition cursor-pointer ${
+            updateInfo?.updateAvailable
+              ? 'bg-[#3fd0c9]/15 text-[#88ece7] border-[#3fd0c9]/45 hover:bg-[#3fd0c9]/25'
+              : 'bg-white/[0.03] text-zinc-400 border-white/[0.08] hover:text-zinc-200 hover:bg-white/[0.06]'
+          }`}
+        >
+          {updateInfo?.updateAvailable && (
+            <ArrowUpCircle className="w-3 h-3 text-[#4cc58a]" />
+          )}
+          <span>
+            {updateInfo?.updateAvailable
+              ? `v${updateInfo.latestVersion}`
+              : `v${updateInfo?.currentVersion || '5.0.0'}`}
+          </span>
+        </button>
+
         {/* TR | EN Language Switch */}
         <div
           className="flex items-center p-0.5 rounded-full bg-white/[0.04] border border-white/[0.08]"

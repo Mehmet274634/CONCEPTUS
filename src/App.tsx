@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   abortRun,
+  checkForAppUpdates,
   createSession,
   extractSessionDecisionGates,
   fetchProvidersState,
@@ -30,6 +31,7 @@ import { LeftRail } from './components/LeftRail.tsx';
 import { RightToolsBox } from './components/RightToolsBox.tsx';
 import { SetupStage } from './components/SetupStage.tsx';
 import { TopBar, type StageTab } from './components/TopBar.tsx';
+import { UpdateModal } from './components/UpdateModal.tsx';
 import { useI18n } from './i18n.tsx';
 import type {
   BlueprintDepth,
@@ -49,6 +51,7 @@ import type {
   SimplePresetId,
   StreamEvent,
   UiMode,
+  UpdateCheckResult,
 } from './types.ts';
 
 function pickFrom(info: ProviderInfo | undefined, candidates: string[], fallback: string): string {
@@ -217,6 +220,38 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
+  const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [autoCheckUpdates, setAutoCheckUpdates] = useState<boolean>(() => {
+    const saved = localStorage.getItem('conceptus_auto_update');
+    return saved !== '0';
+  });
+
+  const handleCheckUpdates = useCallback(async (force = false) => {
+    setCheckingUpdate(true);
+    try {
+      const res = await checkForAppUpdates(force);
+      setUpdateInfo(res);
+    } catch {
+      // silent offline fallback
+    } finally {
+      setCheckingUpdate(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!autoCheckUpdates) return;
+    const timer = window.setTimeout(() => {
+      void handleCheckUpdates(false);
+    }, 2400);
+    return () => window.clearTimeout(timer);
+  }, [autoCheckUpdates, handleCheckUpdates]);
+
+  const handleToggleAutoCheck = (next: boolean) => {
+    setAutoCheckUpdates(next);
+    localStorage.setItem('conceptus_auto_update', next ? '1' : '0');
+  };
 
   const handleUiModeChange = (mode: UiMode) => {
     setUiMode(mode);
@@ -915,6 +950,11 @@ export default function App() {
           onToggleRight={() => setRightOpen((v) => !v)}
           installedCount={installedCount}
           totalProviders={providers.length}
+          updateInfo={updateInfo}
+          onOpenUpdateModal={() => {
+            setUpdateModalOpen(true);
+            if (!updateInfo) void handleCheckUpdates(false);
+          }}
         />
 
         <div className="flex-1 flex min-h-0 overflow-hidden gap-3">
@@ -984,6 +1024,16 @@ export default function App() {
           )}
         </div>
       </div>
+
+      <UpdateModal
+        open={updateModalOpen}
+        onClose={() => setUpdateModalOpen(false)}
+        updateInfo={updateInfo}
+        checking={checkingUpdate}
+        autoCheckEnabled={autoCheckUpdates}
+        onToggleAutoCheck={handleToggleAutoCheck}
+        onCheckNow={() => handleCheckUpdates(true)}
+      />
     </div>
   );
 }

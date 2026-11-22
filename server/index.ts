@@ -49,6 +49,11 @@ import {
   saveSession,
   slugifyProjectName,
 } from './storage.ts';
+import {
+  APP_VERSION,
+  checkForUpdates,
+  runLocalGitSelfUpdate,
+} from './updater.ts';
 import type {
   CaliberPreference,
   ComplexityLevel,
@@ -104,9 +109,34 @@ app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
     name: 'CONCEPTUS',
-    version: '5.0.0',
+    version: APP_VERSION,
     uptimeSec: Math.round(process.uptime()),
   });
+});
+
+// Auto-Update Check (Zero-telemetry GitHub Releases latest version check)
+app.get('/api/update/check', async (req, res) => {
+  try {
+    const force = req.query.force === '1' || req.query.force === 'true';
+    const result = await checkForUpdates(force);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Güncelleme kontrolü başarısız oldu.' });
+  }
+});
+
+// Safe 1-Click Local Web Self-Updater (git pull --ff-only + conditional npm install + vite build)
+app.post('/api/update/self-update', async (_req, res) => {
+  try {
+    const result = await runLocalGitSelfUpdate();
+    res.status(result.ok ? 200 : 409).json(result);
+  } catch (err: any) {
+    res.status(500).json({
+      ok: false,
+      restartRequired: false,
+      message: err?.message || 'Otomatik güncelleme çalıştırılamadı.',
+    });
+  }
 });
 
 // Instant 0-Token Idea Complexity & Budget Estimator (<5ms)

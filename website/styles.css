@@ -2375,6 +2375,45 @@ a {
   display: block;
 }
 
+.release-notes-card {
+  margin-top: 16px;
+  border-radius: 16px;
+  background: #0d0e13;
+  border: 1px solid #ffffff16;
+  padding: 14px 18px;
+}
+
+.release-notes-card summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.release-notes-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.release-notes-pre {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #07080b;
+  border: 1px solid #ffffff10;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: #b7bcc8;
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
 /* Responsive */
 @media (max-width: 1080px) {
   .links {

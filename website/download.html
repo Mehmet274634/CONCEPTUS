@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CONCEPTUS — Masaüstü Stüdyosunu İndir (Windows · macOS · Linux)</title>
-  <meta name="description" content="CONCEPTUS v4.2.0 masaüstü uygulamasını Windows için tek tıkla indir veya macOS/Linux'ta açık kaynaklı olarak kur." />
+  <meta name="description" content="CONCEPTUS v5.0.0 masaüstü uygulamasını Windows için tek tıkla indir veya macOS/Linux'ta açık kaynaklı olarak kur. Uygulama içi otomatik güncelleme ve SHA-256 doğrulama dahildir." />
   <link rel="icon" type="image/png" href="icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -41,7 +41,7 @@
           <button type="button" data-lang="tr" class="active">TR</button>
         </div>
 
-        <a class="btn btn-primary btn-sm" data-href="setup" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-4.2.0.exe" data-tr="Windows .exe indir" data-en="Download .exe">Windows .exe indir</a>
+        <a class="btn btn-primary btn-sm" data-href="setup" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-5.0.0.exe" data-tr="Windows .exe indir" data-en="Download .exe">Windows .exe indir</a>
 
         <details class="mobile-menu">
           <summary class="nav-link" data-tr="Menü" data-en="Menu">Menü</summary>
@@ -72,8 +72,9 @@
         </p>
 
         <div class="req-pills enter enter-d2">
+          <span class="req-pill" data-live-sync-status data-tr="Canlı Sürüm · v5.0.0" data-en="Live Release · v5.0.0">Canlı Sürüm · v5.0.0</span>
+          <span class="req-pill" data-tr="Otomatik Güncelleme Dahil" data-en="Built-In Auto-Updater">Otomatik Güncelleme Dahil</span>
           <span class="req-pill" data-tr="Windows'ta Node.js gerekmez" data-en="No Node.js on Windows">Windows'ta Node.js gerekmez</span>
-          <span class="req-pill" data-tr="En az 1 kurulu AI CLI" data-en="1+ installed AI CLI">En az 1 kurulu AI CLI</span>
           <span class="req-pill" data-tr="SHA-256 · MIT Açık Kaynak" data-en="SHA-256 · MIT Open Source">SHA-256 · MIT Açık Kaynak</span>
         </div>
       </div>
@@ -128,16 +129,16 @@
             </div>
             <div class="dl-box">
               <div class="dl-btn-row">
-                <a class="btn btn-primary btn-lg" data-href="setup" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-4.2.0.exe">
-                  <span data-tr="Setup 4.2.0 İndir (117 MB)" data-en="Download Setup 4.2.0 (117 MB)">Setup 4.2.0 İndir (117 MB)</span>
+                <a class="btn btn-primary btn-lg" data-href="setup" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-5.0.0.exe">
+                  <span data-setup-label data-tr="Setup 5.0.0 İndir (118 MB)" data-en="Download Setup 5.0.0 (118 MB)">Setup 5.0.0 İndir (118 MB)</span>
                   <span class="arr" aria-hidden="true">↓</span>
                 </a>
-                <a class="btn btn-ghost btn-lg" data-href="portable" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-4.2.0-Portable.exe">
-                  <span data-tr="Portable .exe (107 MB)" data-en="Portable .exe (107 MB)">Portable .exe (107 MB)</span>
+                <a class="btn btn-ghost btn-lg" data-href="portable" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-5.0.0-Portable.exe">
+                  <span data-portable-label data-tr="Portable .exe (108 MB)" data-en="Portable .exe (108 MB)">Portable .exe (108 MB)</span>
                 </a>
               </div>
               <div class="dl-meta">
-                <span>v4.2.0 · </span>
+                <span data-release-version>v5.0.0</span><span> · </span>
                 <a data-href="sums" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/SHA256SUMS.txt" target="_blank" rel="noopener">SHA256SUMS.txt</a>
               </div>
             </div>
@@ -147,17 +148,17 @@
             <div class="install-step-num">02</div>
             <div class="install-step-copy">
               <h3 data-tr="SHA-256 Doğrula" data-en="Verify SHA-256">SHA-256 Doğrula</h3>
-              <p data-tr="İsteğe bağlı bütünlük kontrolü." data-en="Optional integrity check in PowerShell.">
-                İsteğe bağlı bütünlük kontrolü.
+              <p data-tr="İsteğe bağlı bütünlük kontrolü (uygulama içi güncelleyici otomatik doğrular)." data-en="Optional manual check (in-app auto-updater verifies SHA-256 automatically).">
+                İsteğe bağlı bütünlük kontrolü (uygulama içi güncelleyici otomatik doğrular).
               </p>
             </div>
             <div class="terminal">
               <div class="terminal-bar">
                 <span>PowerShell</span>
-                <button type="button" class="copy" data-copy="Get-FileHash .\CONCEPTUS-Setup-4.2.0.exe -Algorithm SHA256" data-tr="Kopyala" data-en="Copy">Kopyala</button>
+                <button type="button" class="copy" data-sha-copy data-copy="Get-FileHash .\CONCEPTUS-Setup-5.0.0.exe -Algorithm SHA256" data-tr="Kopyala" data-en="Copy">Kopyala</button>
               </div>
-              <pre class="terminal-pre"><span class="p">&gt;</span> Get-FileHash .\CONCEPTUS-Setup-4.2.0.exe -Algorithm SHA256
-<span class="ok">4B9BD872995C06055A465BCE7163183C8322E69944EA58CD206545DE0984BA72</span></pre>
+              <pre class="terminal-pre"><span class="p">&gt;</span> <span data-sha-cmd>Get-FileHash .\CONCEPTUS-Setup-5.0.0.exe -Algorithm SHA256</span>
+<span class="ok">SHA256SUMS.txt ile birebir karşılaştır</span></pre>
             </div>
           </div>
 
@@ -180,11 +181,19 @@
           </div>
 
           <div class="tip-box">
-            <strong data-tr="SmartScreen: " data-en="SmartScreen: ">SmartScreen: </strong>
-            <span data-tr="Açık kaynak topluluk derlemesi olduğu için ilk açılışta 'Ek bilgi → Yine de çalıştır' diyebilir veya SHA-256 özetini " data-en="Independent open-source build — click 'More info → Run anyway' after verifying SHA-256 via ">Açık kaynak topluluk derlemesi olduğu için ilk açılışta 'Ek bilgi → Yine de çalıştır' diyebilir veya SHA-256 özetini </span>
+            <strong data-tr="SmartScreen &amp; Otomatik Güncelleme: " data-en="SmartScreen &amp; Auto-Update: ">SmartScreen &amp; Otomatik Güncelleme: </strong>
+            <span data-tr="İlk kurulumda 'Ek bilgi → Yine de çalıştır' diyebilir veya SHA-256 özetini " data-en="On first run click 'More info → Run anyway' or verify SHA-256 via ">İlk kurulumda 'Ek bilgi → Yine de çalıştır' diyebilir veya SHA-256 özetini </span>
             <a data-href="security" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a>
-            <span data-tr=" ile doğrulayabilirsin." data-en="."> ile doğrulayabilirsin.</span>
+            <span data-tr=" ile doğrulayabilirsin. Sonraki tüm sürümler uygulama içinden tek tıkla SHA-256 doğrulanarak güncellenir." data-en=". Future versions update right inside the app with automatic SHA-256 verification."> ile doğrulayabilirsin. Sonraki tüm sürümler uygulama içinden tek tıkla SHA-256 doğrulanarak güncellenir.</span>
           </div>
+
+          <details class="release-notes-card" data-release-notes-wrap hidden>
+            <summary>
+              <span data-tr="Canlı Sürüm Notları (GitHub Releases)" data-en="Live Release Notes (GitHub Releases)">Canlı Sürüm Notları (GitHub Releases)</span>
+              <span class="mono" data-release-version>v5.0.0</span>
+            </summary>
+            <pre class="release-notes-pre" data-release-notes-body></pre>
+          </details>
         </div>
 
         <!-- macOS Panel -->
@@ -258,7 +267,7 @@
             <div class="install-step-num">02</div>
             <div class="install-step-copy">
               <h3 data-tr="Kur &amp; Doğrula" data-en="Install &amp; Test">Kur &amp; Doğrula</h3>
-              <p data-tr="14 otomatik birim testi dahil." data-en="Includes 14 automated unit tests.">14 otomatik birim testi dahil.</p>
+              <p data-tr="27 otomatik birim testi dahil." data-en="Includes 27 automated unit tests.">27 otomatik birim testi dahil.</p>
             </div>
             <div class="terminal">
               <div class="terminal-bar">
@@ -355,8 +364,8 @@
               Açık kaynak, yerel ve ücretsiz.
             </h2>
             <div class="hero-actions">
-              <a class="btn btn-primary btn-lg" data-href="setup" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-4.2.0.exe">
-                <span data-tr="Windows Setup 4.2.0 İndir" data-en="Download Windows Setup 4.2.0">Windows Setup 4.2.0 İndir</span>
+              <a class="btn btn-primary btn-lg" data-href="setup" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-5.0.0.exe">
+                <span data-setup-cta-label data-tr="Windows Setup 5.0.0 İndir" data-en="Download Windows Setup 5.0.0">Windows Setup 5.0.0 İndir</span>
                 <span class="arr" aria-hidden="true">↓</span>
               </a>
               <a class="btn btn-ghost btn-lg" data-href="repo" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener" data-tr="GitHub Deposu" data-en="GitHub Repository">GitHub Deposu</a>
@@ -416,7 +425,7 @@
 
       <div class="foot-bottom">
         <span data-tr="MIT Açık Kaynak · %100 Yerel · Sıfır Telemetri" data-en="MIT Open Source · 100% Local · Zero Telemetry">MIT Açık Kaynak · %100 Yerel · Sıfır Telemetri</span>
-        <span class="mono">CONCEPTUS v4.2.0</span>
+        <span class="mono" data-release-version-full>CONCEPTUS v5.0.0</span>
       </div>
     </div>
   </footer>

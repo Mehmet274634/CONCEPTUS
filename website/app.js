@@ -1,5 +1,8 @@
 const GITHUB_REPO = 'Mehmet274634/CONCEPTUS';
-const VERSION = '4.2.0';
+const VERSION = '5.0.0';
+const RELEASE_CACHE_KEY = 'conceptus_latest_release_v1';
+const RELEASE_CACHE_TTL_MS = 15 * 60 * 1000;
+let activeRelease = null;
 
 function setLang(lang) {
   const active = lang === 'en' ? 'en' : 'tr';
@@ -21,6 +24,10 @@ function setLang(lang) {
   document.querySelectorAll('.lang button[data-lang]').forEach((btn) => {
     btn.classList.toggle('active', btn.getAttribute('data-lang') === active);
   });
+
+  if (activeRelease) {
+    wireReleaseUrls(activeRelease);
+  }
 
   try {
     localStorage.setItem('conceptus_site_lang', active);
@@ -193,19 +200,146 @@ function initDropdownAutoClose() {
   });
 }
 
-function wireReleaseUrls() {
+function formatSizeMB(bytes) {
+  if (!bytes || bytes <= 0) return '';
+  return `${Math.round(bytes / (1024 * 1024))} MB`;
+}
+
+function wireReleaseUrls(rel) {
   const base = `https://github.com/${GITHUB_REPO}`;
-  const setup = `${base}/releases/latest/download/CONCEPTUS-Setup-${VERSION}.exe`;
-  const portable = `${base}/releases/latest/download/CONCEPTUS-${VERSION}-Portable.exe`;
-  const sums = `${base}/releases/latest/download/SHA256SUMS.txt`;
+  const ver = (rel && rel.version) || VERSION;
+  const setup = (rel && rel.setupUrl) || `${base}/releases/latest/download/CONCEPTUS-Setup-${ver}.exe`;
+  const portable = (rel && rel.portableUrl) || `${base}/releases/latest/download/CONCEPTUS-${ver}-Portable.exe`;
+  const sums = (rel && rel.sumsUrl) || `${base}/releases/latest/download/SHA256SUMS.txt`;
+  const releasePage = (rel && rel.releaseUrl) || `${base}/releases`;
 
   document.querySelectorAll('[data-href="setup"]').forEach((a) => a.setAttribute('href', setup));
   document.querySelectorAll('[data-href="portable"]').forEach((a) => a.setAttribute('href', portable));
   document.querySelectorAll('[data-href="sums"]').forEach((a) => a.setAttribute('href', sums));
   document.querySelectorAll('[data-href="repo"]').forEach((a) => a.setAttribute('href', base));
-  document.querySelectorAll('[data-href="releases"]').forEach((a) => a.setAttribute('href', `${base}/releases`));
+  document.querySelectorAll('[data-href="releases"]').forEach((a) => a.setAttribute('href', releasePage));
   document.querySelectorAll('[data-href="security"]').forEach((a) => a.setAttribute('href', `${base}/blob/main/SECURITY.md`));
   document.querySelectorAll('[data-href="license"]').forEach((a) => a.setAttribute('href', `${base}/blob/main/LICENSE`));
+
+  const isEn = document.documentElement.lang === 'en';
+  const setupMB = rel && rel.setupSize ? ` (${formatSizeMB(rel.setupSize)})` : ' (118 MB)';
+  const portableMB = rel && rel.portableSize ? ` (${formatSizeMB(rel.portableSize)})` : ' (108 MB)';
+  const setupFilename = (rel && rel.setupName) || `CONCEPTUS-Setup-${ver}.exe`;
+
+  document.querySelectorAll('[data-release-version]').forEach((el) => {
+    el.textContent = `v${ver}`;
+  });
+  document.querySelectorAll('[data-release-version-full]').forEach((el) => {
+    el.textContent = `CONCEPTUS v${ver}`;
+  });
+  document.querySelectorAll('[data-setup-label]').forEach((el) => {
+    const tr = `Setup ${ver} İndir${setupMB}`;
+    const en = `Download Setup ${ver}${setupMB}`;
+    el.setAttribute('data-tr', tr);
+    el.setAttribute('data-en', en);
+    el.textContent = isEn ? en : tr;
+  });
+  document.querySelectorAll('[data-setup-cta-label]').forEach((el) => {
+    const tr = `Windows Setup ${ver} İndir`;
+    const en = `Download Windows Setup ${ver}`;
+    el.setAttribute('data-tr', tr);
+    el.setAttribute('data-en', en);
+    el.textContent = isEn ? en : tr;
+  });
+  document.querySelectorAll('[data-portable-label]').forEach((el) => {
+    const tr = `Portable .exe${portableMB}`;
+    const en = `Portable .exe${portableMB}`;
+    el.setAttribute('data-tr', tr);
+    el.setAttribute('data-en', en);
+    el.textContent = isEn ? en : tr;
+  });
+
+  const shaCmd = `Get-FileHash .\\${setupFilename} -Algorithm SHA256`;
+  document.querySelectorAll('[data-sha-copy]').forEach((btn) => {
+    btn.setAttribute('data-copy', shaCmd);
+  });
+  document.querySelectorAll('[data-sha-cmd]').forEach((el) => {
+    el.textContent = shaCmd;
+  });
+
+  const syncBadge = document.querySelector('[data-live-sync-status]');
+  if (syncBadge && rel) {
+    const dt = rel.publishedAt
+      ? new Date(rel.publishedAt).toLocaleDateString(isEn ? 'en-US' : 'tr-TR', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      : '';
+    const tr = dt ? `Canlı Sürüm · v${ver} (${dt})` : `Canlı Sürüm · v${ver}`;
+    const en = dt ? `Live Release · v${ver} (${dt})` : `Live Release · v${ver}`;
+    syncBadge.setAttribute('data-tr', tr);
+    syncBadge.setAttribute('data-en', en);
+    syncBadge.textContent = isEn ? en : tr;
+  }
+
+  const notesWrap = document.querySelector('[data-release-notes-wrap]');
+  const notesBody = document.querySelector('[data-release-notes-body]');
+  if (notesWrap && notesBody && rel && rel.notes) {
+    notesBody.textContent = rel.notes.slice(0, 1800);
+    notesWrap.hidden = false;
+  }
+}
+
+async function syncLatestGitHubRelease() {
+  // 1. Apply cached release immediately to avoid visual flicker
+  try {
+    const raw = localStorage.getItem(RELEASE_CACHE_KEY);
+    if (raw) {
+      const cached = JSON.parse(raw);
+      if (cached && cached.data && Date.now() - cached.at < RELEASE_CACHE_TTL_MS) {
+        activeRelease = cached.data;
+        wireReleaseUrls(activeRelease);
+      }
+    }
+  } catch {
+    // ignore storage errors
+  }
+
+  // 2. Refresh live from official GitHub Releases API (zero tracking, public read-only)
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+      headers: { Accept: 'application/vnd.github+json' },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const version = String(data.tag_name || '').replace(/^v/i, '').trim() || VERSION;
+    const assets = Array.isArray(data.assets) ? data.assets : [];
+    const setupAsset = assets.find((a) => /CONCEPTUS-Setup-.*\.exe$/i.test(a.name || ''));
+    const portableAsset = assets.find((a) => /CONCEPTUS-.*Portable\.exe$/i.test(a.name || ''));
+    const sumsAsset = assets.find((a) => /^SHA256SUMS\.txt$/i.test(a.name || ''));
+
+    activeRelease = {
+      version,
+      releaseUrl: data.html_url || `https://github.com/${GITHUB_REPO}/releases`,
+      publishedAt: data.published_at || '',
+      notes: String(data.body || '').trim(),
+      setupUrl: setupAsset ? setupAsset.browser_download_url : '',
+      setupName: setupAsset ? setupAsset.name : `CONCEPTUS-Setup-${version}.exe`,
+      setupSize: setupAsset ? Number(setupAsset.size || 0) : 0,
+      portableUrl: portableAsset ? portableAsset.browser_download_url : '',
+      portableSize: portableAsset ? Number(portableAsset.size || 0) : 0,
+      sumsUrl: sumsAsset ? sumsAsset.browser_download_url : '',
+    };
+
+    try {
+      localStorage.setItem(
+        RELEASE_CACHE_KEY,
+        JSON.stringify({ at: Date.now(), data: activeRelease })
+      );
+    } catch {
+      // ignore
+    }
+
+    wireReleaseUrls(activeRelease);
+  } catch {
+    // Keep clean static fallback
+  }
 }
 
 function initHeroLightCanvas() {
@@ -480,6 +614,7 @@ function initHeroLightCanvas() {
 
 wireReleaseUrls();
 initLanguage();
+syncLatestGitHubRelease();
 initSpotlightCards();
 initScrollReveal();
 initCopyButtons();

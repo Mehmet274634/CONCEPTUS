@@ -7,6 +7,12 @@ export interface ConceptusDesktopBridge {
   version: string;
   pickFolder: (title?: string) => Promise<{ folderPath: string | null; cancelled: boolean }>;
   openFolderInExplorer: (folderPath: string) => Promise<void>;
+  downloadAndInstallUpdate?: (options: {
+    url: string;
+    filename: string;
+    checksumsUrl?: string;
+  }) => Promise<{ ok: boolean; error?: string }>;
+  onUpdateProgress?: (cb: (progress: DesktopUpdateProgress) => void) => () => void;
 }
 
 declare global {
@@ -322,6 +328,48 @@ export interface SessionSummary {
   seatCount: number;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface UpdateAsset {
+  name: string;
+  url: string;
+  sizeBytes: number;
+}
+
+export interface UpdateCheckResult {
+  status: 'up_to_date' | 'update_available' | 'offline';
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  releaseName: string;
+  releaseUrl: string;
+  publishedAt?: string;
+  releaseNotes: string;
+  setupAsset?: UpdateAsset;
+  portableAsset?: UpdateAsset;
+  macAsset?: UpdateAsset;
+  linuxAsset?: UpdateAsset;
+  checksumsUrl?: string;
+  isDesktop: boolean;
+  isGitRepo: boolean;
+  checkedAt: number;
+  error?: string;
+}
+
+export interface SelfUpdateResult {
+  ok: boolean;
+  updatedTo?: string;
+  restartRequired: boolean;
+  message: string;
+  log?: string;
+}
+
+export interface DesktopUpdateProgress {
+  stage: 'downloading' | 'verifying' | 'launching' | 'error';
+  percent: number;
+  downloadedBytes?: number;
+  totalBytes?: number;
+  message?: string;
 }
 
 export type StreamEvent =
