@@ -5,7 +5,7 @@ import {
 } from '../server/complexity.ts';
 
 describe('CONCEPTUS v5.0 — 0-Token Complexity Classifier & Budget Estimator', () => {
-  it('classifies simple single-screen tools as S while keeping Flagship caliber available by default', () => {
+  it('classifies simple single-screen tools as S with production-grade standard depth and detects missing specs', () => {
     const res = analyzeIdeaComplexity({
       idea: 'Basit bir pomodoro zamanlayıcı ve günlük odak not defteri uygulaması.',
       domain: 'app_product',
@@ -13,10 +13,11 @@ describe('CONCEPTUS v5.0 — 0-Token Complexity Classifier & Budget Estimator', 
 
     expect(res.level).toBe('S');
     expect(res.score).toBeLessThan(32);
-    // Brand promise: never downgrade quality silently; Flagship stays recommended with Economy as 1-click option
+    // Brand promise: never downgrade MD quality; Flagship + standard production depth by default
     expect(res.recommendedCaliber).toBe('flagship');
-    expect(res.recommendedDepth).toBe('concise');
+    expect(res.recommendedDepth).toBe('standard');
     expect(res.recommendedFileCount).toBe(5);
+    expect(res.missingSpecs && res.missingSpecs.length).toBeGreaterThanOrEqual(2);
     expect(res.labelTr).toContain('S');
     expect(res.labelEn).toContain('S');
   });

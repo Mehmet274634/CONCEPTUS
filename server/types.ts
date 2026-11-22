@@ -8,7 +8,29 @@ export type DomainMode =
 
 export type ProjectMode = 'new_app' | 'existing_feature';
 
+export type CodingToolId = 'antigravity' | 'claude_code' | 'cursor' | 'codex';
+
 export type IdeId = 'antigravity' | 'cursor' | 'vscode';
+
+export interface ProviderAuthStatus {
+  loggedIn: boolean;
+  planLabel?: string;
+}
+
+export interface ProviderPoolHealth {
+  pool: string;
+  provider: ProviderId;
+  label: string;
+  sampleModel: string;
+  installed: boolean;
+  status: 'ready' | 'limited' | 'auth_required' | 'unknown' | 'offline';
+  planLabel?: string;
+  latencyMs?: number;
+  detail?: string;
+  resetHint?: string;
+  checkedAt?: number;
+  expiresAt?: number;
+}
 
 export interface DetectedIde {
   id: IdeId;
@@ -47,6 +69,7 @@ export interface ProviderInfo {
   effortOptions?: EffortLevel[];
   installHint?: string;
   note?: string;
+  authStatus?: ProviderAuthStatus;
 }
 
 export interface SeatConfig {
@@ -108,6 +131,7 @@ export interface ComplexityAssessment {
   reasonTr: string;
   reasonEn: string;
   signals: string[];
+  missingSpecs?: string[];
   recommendedCaliber: CaliberPreference;
   recommendedSeatCount: number;
   recommendedDepth: BlueprintDepth;
@@ -284,6 +308,7 @@ export interface DebateSession {
   idea: string;
   domain: DomainMode;
   projectMode?: ProjectMode;
+  targetCodingTools?: CodingToolId[];
   language?: AppLang;
   complexity?: ComplexityAssessment;
   caliber?: CaliberPreference;

@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { getProvidersCachePath } from './paths.ts';
-import type { ModelOption, ProviderId, ProviderInfo } from './types.ts';
+import type { ModelOption, ProviderAuthStatus, ProviderId, ProviderInfo } from './types.ts';
 
 const execFileAsync = promisify(execFile);
 
@@ -224,6 +224,49 @@ async function readAntigravityModels(resolvedPath?: string): Promise<ModelOption
   }
 }
 
+async function readClaudeAuthStatus(
+  resolvedPath?: string
+): Promise<ProviderAuthStatus | undefined> {
+  if (!resolvedPath) return undefined;
+  try {
+    const out = await runQuickCommand(resolvedPath, ['auth', 'status'], 7500);
+    const jsonMatch = out.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return undefined;
+    const parsed = JSON.parse(jsonMatch[0]);
+    const loggedIn = Boolean(parsed?.loggedIn);
+    const rawTier = String(parsed?.planTier || parsed?.subscriptionType || '').trim();
+    const planLabel = rawTier
+      ? `Claude ${rawTier.charAt(0).toUpperCase()}${rawTier.slice(1)}`
+      : loggedIn
+        ? 'Bağlı'
+        : undefined;
+    return { loggedIn, planLabel };
+  } catch {
+    return undefined;
+  }
+}
+
+async function readCodexAuthStatus(
+  resolvedPath?: string
+): Promise<ProviderAuthStatus | undefined> {
+  if (!resolvedPath) return undefined;
+  try {
+    const out = await runQuickCommand(resolvedPath, ['login', 'status'], 7500);
+    const lower = out.toLowerCase();
+    const loggedIn = lower.includes('logged in');
+    const planLabel = lower.includes('chatgpt')
+      ? 'ChatGPT'
+      : lower.includes('api')
+        ? 'API Key'
+        : loggedIn
+          ? 'Bağlı'
+          : undefined;
+    return { loggedIn, planLabel };
+  } catch {
+    return undefined;
+  }
+}
+
 async function scanProvidersNow(): Promise<ProviderInfo[]> {
   const localAppData =
     process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
@@ -243,23 +286,33 @@ async function scanProvidersNow(): Promise<ProviderInfo[]> {
     resolveCommand('gemini', [path.join(appData, 'npm', 'gemini.cmd')]),
   ]);
 
-  const [claudeVer, agyVer, codexVer, geminiVer, agyModels, geminiModels] =
-    await Promise.all([
-      claudePath
-        ? runQuickCommand(claudePath, ['--version']).catch(() => undefined)
-        : Promise.resolve(undefined),
-      agyPath
-        ? runQuickCommand(agyPath, ['--version']).catch(() => undefined)
-        : Promise.resolve(undefined),
-      codexPath
-        ? runQuickCommand(codexPath, ['--version']).catch(() => undefined)
-        : Promise.resolve(undefined),
-      geminiPath
-        ? runQuickCommand(geminiPath, ['--version']).catch(() => undefined)
-        : Promise.resolve(undefined),
-      readAntigravityModels(agyPath),
-      readGeminiModels(geminiPath),
-    ]);
+  const [
+    claudeVer,
+    agyVer,
+    codexVer,
+    geminiVer,
+    agyModels,
+    geminiModels,
+    claudeAuth,
+    codexAuth,
+  ] = await Promise.all([
+    claudePath
+      ? runQuickCommand(claudePath, ['--version']).catch(() => undefined)
+      : Promise.resolve(undefined),
+    agyPath
+      ? runQuickCommand(agyPath, ['--version']).catch(() => undefined)
+      : Promise.resolve(undefined),
+    codexPath
+      ? runQuickCommand(codexPath, ['--version']).catch(() => undefined)
+      : Promise.resolve(undefined),
+    geminiPath
+      ? runQuickCommand(geminiPath, ['--version']).catch(() => undefined)
+      : Promise.resolve(undefined),
+    readAntigravityModels(agyPath),
+    readGeminiModels(geminiPath),
+    readClaudeAuthStatus(claudePath),
+    readCodexAuthStatus(codexPath),
+  ]);
 
   const providers: ProviderInfo[] = [
     {
@@ -274,6 +327,9 @@ async function scanProvidersNow(): Promise<ProviderInfo[]> {
       effortOptions: ['default', 'low', 'medium', 'high', 'max'],
       installHint: 'irm https://antigravity.google/cli/install.ps1 | iex',
       note: 'Google Antigravity aboneliği (Gemini, Claude, GPT-OSS havuzu).',
+      authStatus: agyPath
+        ? { loggedIn: true, planLabel: 'Antigravity' }
+        : undefined,
     },
     {
       id: 'claude',
@@ -287,6 +343,7 @@ async function scanProvidersNow(): Promise<ProviderInfo[]> {
       effortOptions: ['default', 'low', 'medium', 'high', 'max'],
       installHint: 'npm install -g @anthropic-ai/claude-code',
       note: 'Claude Pro / Max aboneliği ile sıfır ek maliyet.',
+      authStatus: claudeAuth,
     },
     {
       id: 'codex',
@@ -300,6 +357,7 @@ async function scanProvidersNow(): Promise<ProviderInfo[]> {
       effortOptions: ['default', 'low', 'medium', 'high'],
       installHint: 'npm install -g @openai/codex',
       note: 'ChatGPT / Codex hesabı. Ücretsiz planda Ekonomik Mod önerilir.',
+      authStatus: codexAuth,
     },
     {
       id: 'gemini',
@@ -312,6 +370,7 @@ async function scanProvidersNow(): Promise<ProviderInfo[]> {
       supportsEffort: false,
       installHint: 'npm install -g @google/gemini-cli',
       note: 'Kurumsal/API hesaplar için; bireysel hesaplar Antigravity CLI kullanır.',
+      authStatus: geminiPath ? { loggedIn: true, planLabel: 'Gemini CLI' } : undefined,
     },
   ];
 

@@ -566,13 +566,15 @@ export async function clarifyRawIdea(options: {
   idea: string;
   domain: DomainMode;
   language?: 'tr' | 'en';
+  missingSpecs?: string[];
   provider: ProviderId;
   model: string;
 }): Promise<{ questions: ClarifyQuestion[]; durationMs: number }> {
   const prompt = buildIdeaClarifierPrompt(
     options.idea,
     options.domain,
-    options.language || 'tr'
+    options.language || 'tr',
+    options.missingSpecs
   );
   const ctrl = new AbortController();
   const res = await runCliSeatWithFallback({

@@ -75,6 +75,39 @@ const COMPLEXITY_SIGNALS: SignalRule[] = [
 
 const SIMPLICITY_SIGNALS = /\b(basit|küçük|mini|tek\s*sayfa|landing|hesaplayıcı|calculator|todo|to-do|not\s*defteri|sayaç|timer|pomodoro|script|tek\s*ekran|simple|lightweight|minimal|single-page)\b/i;
 
+interface SpecGapRule {
+  label: string;
+  presentPattern: RegExp;
+}
+
+const CRITICAL_SPEC_GAPS: SpecGapRule[] = [
+  {
+    label: 'Hedef Platform (Web / Mobil / Masaüstü)',
+    presentPattern:
+      /\b(web|mobil|mobile|ios|android|pwa|electron|masaüstü|desktop|chrome|eklenti|extension|cli|api|react|next\.?js|flutter|swift|kotlin|tauri)\b/i,
+  },
+  {
+    label: 'Veri Saklama & Senkron (Yerel / Bulut)',
+    presentPattern:
+      /\b(local-?first|yerel|offline|indexeddb|sqlite|postgres|supabase|firebase|bulut|cloud|veritabanı|database|db|senkron|sync|json|storage|depolama)\b/i,
+  },
+  {
+    label: 'Kullanıcı & Giriş / Yetki Modeli',
+    presentPattern:
+      /\b(giriş|login|auth|hesap|kayıtsız|tek\s*kullanıcı|kişisel|ekip|team|rol|rbac|admin|tenant|oauth|anonim|multi-?user|single-?user)\b/i,
+  },
+  {
+    label: 'Bütçe / İşletme Maliyeti veya MVP Sınırı',
+    presentPattern:
+      /\b(0\s*usd|ücretsiz|maliyet|bütçe|mvp|abonelik|gelir|fiyat|saas|ücretli|free|budget|cost|hafta|kapsam)\b/i,
+  },
+  {
+    label: 'Görsel Tasarım Dili / UX Hissi',
+    presentPattern:
+      /\b(tasarım|tema|dark|light|karanlık|aydınlık|minimal|glass|sade|şık|mobil\s*öncelikli|dashboard|ui|ux|design)\b/i,
+  },
+];
+
 export function analyzeIdeaComplexity(options: {
   idea: string;
   constraints?: string;
@@ -92,6 +125,18 @@ export function analyzeIdeaComplexity(options: {
     if (rule.pattern.test(combined)) {
       score += rule.weight;
       matchedLabels.push(rule.labelTr);
+    }
+  }
+
+  const missingSpecs: string[] = [];
+  if (
+    combined.length >= 12 &&
+    (options.domain === 'app_product' || options.domain === 'tech_project' || !options.domain)
+  ) {
+    for (const gap of CRITICAL_SPEC_GAPS) {
+      if (!gap.presentPattern.test(combined)) {
+        missingSpecs.push(gap.label);
+      }
     }
   }
 
@@ -121,25 +166,24 @@ export function analyzeIdeaComplexity(options: {
 
   if (score < 32) {
     level = 'S';
-    labelTr = 'S · Basit & Odaklı';
-    labelEn = 'S · Simple & Focused';
+    labelTr = 'S · Odaklı Ürün';
+    labelEn = 'S · Focused Product';
     reasonTr =
-      'Küçük kapsamlı proje. En iyi (Amiral) ajanlarla mükemmelleştirebilir veya istersen Ekonomik kalibreyle kotanı %65 koruyabilirsin.';
+      'Odaklı kapsamlı proje. Üretim kalitesinde Standart MD paketi ve Amiral ajanlarla tek seferde hatasız inşa önerilir.';
     reasonEn =
-      'Focused small scope. Run Flagship agents for maximum polish, or optionally switch to Economy caliber to save ~65% quota.';
-    // Uphold "always best by default" promise while making Economy a 1-click option!
+      'Focused scope. Standard production-grade MD blueprint with Flagship agents recommended for zero-drift execution.';
     recommendedCaliber = 'flagship';
     recommendedSeatCount = 2;
-    recommendedDepth = 'concise';
+    recommendedDepth = 'standard';
     recommendedFileCount = 5;
   } else if (score < 58) {
     level = 'M';
     labelTr = 'M · Standart Ürün';
     labelEn = 'M · Standard Product';
     reasonTr =
-      'Çok ekranlı ürün/uygulama. Hibrit Amiral akışı (ön hazırlık hızlı, tartışma + çekirdek mimari Amiral) en ideal kalite/maliyet dengesini verir.';
+      'Çok ekranlı ürün/uygulama. Hibrit Amiral akışı ve tam şemalı Standart MD paketi en ideal kalite/hız dengesini verir.';
     reasonEn =
-      'Multi-screen product. Hybrid Flagship routing (fast prep, flagship debate & core architecture) delivers peak quality-to-cost.';
+      'Multi-screen product. Hybrid Flagship routing with full-schema Standard MDs delivers peak quality-to-speed.';
     recommendedCaliber = 'hybrid';
     recommendedSeatCount = 3;
     recommendedDepth = 'standard';
@@ -149,21 +193,21 @@ export function analyzeIdeaComplexity(options: {
     labelTr = 'L · Karmaşık Sistem';
     labelEn = 'L · Complex System';
     reasonTr =
-      'Yüksek riskli / çok katmanlı sistem tespit edildi. Tüm tartışma koltukları ve mimari MD dosyaları için Tam Amiral kalibresi önerilir.';
+      'Çok katmanlı karmaşık sistem tespit edildi. Tam Amiral ajanlar ve 6 dosyalık Derin MD paketi (ayrı API & Güvenlik kontratıyla) önerilir.';
     reasonEn =
-      'Multi-layered high-stakes system detected. Full Flagship caliber is recommended across every debate seat and blueprint file.';
+      'Multi-layered complex system detected. Full Flagship agents and a 6-file Deep MD pack (with dedicated API & Security spec) recommended.';
     recommendedCaliber = 'flagship';
     recommendedSeatCount = 4;
     recommendedDepth = 'deep';
-    recommendedFileCount = 5;
+    recommendedFileCount = 6;
   } else {
     level = 'XL';
     labelTr = 'XL · Kurumsal Mimari';
     labelEn = 'XL · Enterprise Architecture';
     reasonTr =
-      'Kurumsal ölçekli çok modüllü sistem. 4+ Amiral ajan, Red-Team güvenlik kontrolü ve 6–7 dosyalık genişletilmiş MD mimarisi önerilir.';
+      'Kurumsal ölçekli çok modüllü sistem. 4+ Amiral ajan, Red-Team güvenlik kontrolü ve 6 dosyalık Derin MD mimarisi önerilir.';
     reasonEn =
-      'Enterprise multi-module system. 4+ Flagship specialists, Red-Team risk pass, and an expanded 6–7 file Blueprint pack recommended.';
+      'Enterprise multi-module system. 4+ Flagship specialists, Red-Team risk pass, and an expanded 6-file Deep Blueprint pack recommended.';
     recommendedCaliber = 'flagship';
     recommendedSeatCount = 4;
     recommendedDepth = 'deep';
@@ -178,6 +222,7 @@ export function analyzeIdeaComplexity(options: {
     reasonTr,
     reasonEn,
     signals: matchedLabels.slice(0, 5),
+    missingSpecs: missingSpecs.slice(0, 4),
     recommendedCaliber,
     recommendedSeatCount,
     recommendedDepth,

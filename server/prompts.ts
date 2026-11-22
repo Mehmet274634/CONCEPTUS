@@ -2,6 +2,7 @@ import type {
   BlueprintAuditIssue,
   BlueprintDepth,
   BlueprintFileSpec,
+  CodingToolId,
   ComplexityLevel,
   DebateRound,
   DebateSession,
@@ -64,12 +65,47 @@ function getRoleInstruction(seat: SeatConfig): string {
   return ROLE_INSTRUCTIONS[seat.role] || ROLE_INSTRUCTIONS.general;
 }
 
+const CODING_TOOL_LABELS: Record<CodingToolId, { name: string; guidance: string }> = {
+  antigravity: {
+    name: 'Antigravity',
+    guidance:
+      'Antigravity çalışma disiplini: `PROJECT_CONTRACT.json`, `AGENTS.md` ve `.agents/rules/conceptus-blueprint.md` üzerinden katı okuma sırası, plan-önce faz adımları ve her faz sonunda çalışan terminal doğrulama komutları.',
+  },
+  claude_code: {
+    name: 'Claude Code',
+    guidance:
+      'Claude Code çalışma disiplini: kısa ve keskin `CLAUDE.md` köprüsü, `@01_PRODUCT_VISION.md` / `@03_ARCHITECTURE_AND_DATA.md` doğrudan `@` dosya referansları, Plan Mode disiplini ve net test kapıları.',
+  },
+  cursor: {
+    name: 'Cursor',
+    guidance:
+      'Cursor IDE çalışma disiplini: `.cursor/rules/conceptus-architecture.mdc` (`alwaysApply: true`) kural köprüsü, Cursor Agent/Composer için `@` dosya bağlamı ve kesin bileşen/dosya sınırları.',
+  },
+  codex: {
+    name: 'Codex',
+    guidance:
+      'OpenAI Codex çalışma disiplini: resmi `AGENTS.md` standardı, atomik küçük diff fazları ve deterministik sandbox-dostu `typecheck` + `test` + `build` doğrulama komutları.',
+  },
+};
+
+export function buildCodingToolAdaptationBlock(tools?: CodingToolId[]): string {
+  const valid = (tools || []).filter((t): t is CodingToolId => Boolean(CODING_TOOL_LABELS[t]));
+  if (valid.length === 0) return '';
+  const names = valid.map((t) => CODING_TOOL_LABELS[t].name).join(' + ');
+  const bullets = valid.map((t) => `- **${CODING_TOOL_LABELS[t].name}:** ${CODING_TOOL_LABELS[t].guidance}`);
+  return [
+    `**Hedef Kodlama Uygulaması:** ${names}`,
+    ...bullets,
+  ].join('\n');
+}
+
 function buildBaseContext(session: DebateSession): string {
   const domain = DOMAIN_LENS[session.domain] || DOMAIN_LENS.strategy_general;
   const isEn = session.language === 'en';
   const langRule = isEn
     ? '[OUTPUT LANGUAGE RULE: Write ALL headings, prose, bullet points, tables, diagrams, and JSON string values in crisp, idiomatic, senior-level ENGLISH (even if prompt instructions below are in Turkish).]'
     : '[ÇIKTI DİLİ KURALI: Tüm başlıkları, açıklamaları, tabloları ve JSON metinlerini net, akıcı, profesyonel TÜRKÇE yaz (teknik terimler ve kod/dosya adları standart İngilizce).]';
+  const toolBlock = buildCodingToolAdaptationBlock(session.targetCodingTools);
 
   const parts: string[] = [
     `[SİSTEM KURALI: Salt-okunur fikir ve doküman üretim modundasın. HİÇBİR araç/tool (dosya yazma, dosya okuma, terminal komutu, web arama vb.) ÇAĞIRMA. Yanıtını YALNIZCA doğrudan saf Markdown metni olarak yaz.]`,
@@ -78,6 +114,7 @@ function buildBaseContext(session: DebateSession): string {
     `# CONCEPTUS — FİKİR EVRİM MASASI`,
     `**Konu Modu:** ${domain.label}`,
     `**Değerlendirme Ekseni:** ${domain.criteria}`,
+    ...(toolBlock ? [toolBlock] : []),
     ...(session.projectMode === 'existing_feature'
       ? [
           `**Çalışma Modu:** MEVCUT PROJEYE ÖZELLİK / MİMARİ YÜKSELTME (Existing Codebase Evolution)`,
@@ -523,12 +560,13 @@ export function getDefaultBlueprintPlan(
     },
   ];
 
-  if (complexity === 'XL') {
+  if (complexity === 'L' || complexity === 'XL') {
     baseAppPack.splice(4, 0, {
       id: 'md_06_security_api',
       filename: '04B_API_AND_SECURITY_SPEC.md',
-      title: 'API Kontratları & Güvenlik Mimarisi',
-      purpose: 'Kurumsal düzey endpoint/auth sözleşmeleri, RBAC yetki matrisi, hız sınırı, veri şifreleme ve tehdit modeli.',
+      title: 'API Kontratları, Güvenlik & Hata Kurtarma',
+      purpose:
+        'Karmaşık sistemler için uçtan uca API/IPC sözleşmeleri, RBAC yetki matrisi, hız sınırı, idempotency/eşzamanlılık koruması, veri şifreleme ve tehdit modeli.',
       selected: true,
     });
   }
@@ -539,25 +577,31 @@ export function getDefaultBlueprintPlan(
 export function buildIdeaClarifierPrompt(
   idea: string,
   domain: DomainMode,
-  language: 'tr' | 'en' = 'tr'
+  language: 'tr' | 'en' = 'tr',
+  missingSpecs?: string[]
 ): string {
   const lens = DOMAIN_LENS[domain] || DOMAIN_LENS.app_product;
   const langLine =
     language === 'en'
-      ? '3. Write every question and every option in short, jargon-free, crisp ENGLISH (a non-technical user should understand and click within 5 seconds).'
-      : '3. Her soru çok kısa, net ve teknik jargonsuz Türkçe olsun (normal bir kullanıcı 5 saniyede anlayıp tıklayabilmeli).';
+      ? '3. Write every question and every option in short, concrete, jargon-free ENGLISH (clickable in 5 seconds, yet architecturally decisive).'
+      : '3. Her soru kısa, somut ve net Türkçe olsun (5 saniyede tıklanabilsin ama mimari kararları %100 kilitlesin).';
+  const gapsLine =
+    missingSpecs && missingSpecs.length > 0
+      ? `\nÖn Analizde Tespit Edilen Eksik Kritik Boyutlar: ${missingSpecs.join(' · ')}\n`
+      : '';
   return [
     '[SİSTEM KURALI: HİÇBİR araç/tool ÇAĞIRMA. Sadece geçerli tek bir JSON dizisi döndür, başka hiçbir metin ekleme.]',
     '',
-    '# GÖREV — HAM FİKRİ KESKİNLEŞTİRMEK İÇİN 3–4 HIZLI SORU ÜRET',
+    '# GÖREV — KIDEMLİ ÜRÜN MİMARI OLARAK FİKİRDEKİ EN KRİTİK 3–4 BOŞLUĞU NETLEŞTİR',
     `Konu Modu: ${lens.label}`,
+    gapsLine,
     `Kullanıcının Ham Fikri:\n"""\n${idea.trim()}\n"""`,
     '',
     'Kurallar:',
-    '1. Kullanıcının metninde ZATEN açıkça belirttiği şeyleri tekrar sorma.',
-    '2. Fikri gerçekten profesyonel bir uygulama/çözüm haline getirmek için en kritik **3 veya 4 eksik boşluğu** seç (örn: Platform, Hedef Kullanıcı, Tasarım/Deneyim Hissi, Kapsam/Gelir/Bütçe).',
+    '1. Kullanıcının metninde ZATEN açıkça belirttiği şeyleri ASLA tekrar sorma.',
+    '2. Yüzeysel sorular yerine, cevaplanmazsa AI kodlama ajanının yanlış mimari kurmasına veya halüsinasyon yapmasına yol açacak en kritik **3 veya 4 mimari/ürün yol ayrımını** sor (örn: Hedef Platform, Veri Saklama/Offline-Bulut, Kullanıcı/Yetki Modeli, Karmaşık Çekirdek Özelliğin Çalışma Biçimi veya v1 MVP Sınırı).',
     langLine,
-    '4. Her soru için 3 ila 4 kısa seçenek ver.',
+    '4. Her soru için 3 ila 4 birbirinden net ayrışan somut seçenek ver.',
     '',
     'SADECE şu formatta JSON dizisi döndür:',
     '[',
@@ -740,50 +784,65 @@ export function buildBlueprintFilePrompt(
 
   const depthRules: Record<BlueprintDepth, string> = {
     concise:
-      'UZUNLUK & YOĞUNLUK KURALI (HIZLI & KESKİN): Toplam **700–1.050 kelime (~6–9 KB)** aralığında kal! Sıfır tekrar, sıfır dolgu metni; kodlama ajanları için maksimum sinyal yoğunluğu.',
+      'UZUNLUK & YOĞUNLUK KURALI (HIZLI & KESKİN): Toplam **900–1.300 kelime (~8–11 KB)** aralığında kal! Sıfır tekrar, sıfır dolgu metni; kodlama ajanları için maksimum sinyal yoğunluğu.',
     standard:
-      'UZUNLUK & YOĞUNLUK KURALI (STANDART): Toplam **1.200–1.750 kelime (~10–14 KB)** aralığında kal! Eksiksiz mühendislik detayları ver ama diğer dosyalardaki listeleri kopyalayıp şişirme.',
+      'UZUNLUK & YOĞUNLUK KURALI (ÜRETİM STANDARTI): Toplam **1.400–2.050 kelime (~12–17 KB)** aralığında kal! Eksiksiz, uygulanabilir mühendislik detayları, kabul kriterleri ve şema ver; başka dosyalardaki listeleri tekrarlayıp şişirme.',
     deep:
-      'UZUNLUK & YOĞUNLUK KURALI (KAPSAMLI AMA SIKI — DRY): Toplam **1.800–2.600 kelime (~15–22 KB, kesinlikle 28 KB üstüne taşma!)** aralığında kal! Tam şema, uç durum ve spesifikasyon ver ama başka dosyada tanımlı kuralları tekrar tekrar kopyalayarak bağlam penceresini (context window) şişirme.',
+      'UZUNLUK & YOĞUNLUK KURALI (KARMAŞIK PROJE / DERİN MİMARİ — DRY): Toplam **2.000–2.900 kelime (~17–25 KB, kesinlikle 32 KB üstüne taşma!)** aralığında kal! Karmaşık sistemlerin tek seferde hatasız inşa edilmesi için tam veri şeması, API/IPC kontratları, durum geçişleri ve uç durum matrisini eksiksiz ver; ama başka dosyada tanımlı kuralları kopyalamadan DRY kal.',
   };
 
   const upperName = target.filename.toUpperCase();
+  const targetToolNames = (session.targetCodingTools || [])
+    .map((id) => CODING_TOOL_LABELS[id]?.name)
+    .filter(Boolean);
   const roleSpecificRules: string[] = [];
   if (/VISION|PRODUCT|PRD/.test(upperName)) {
     roleSpecificRules.push(
-      '7. TEK SAHİPLİK (DRY) KURALI: Problem, personalar, kullanıcı yolculukları, MVP kabul kriterleri ve Non-Goals listesini yaz; SQL şeması, UI token tablosu veya faz faz terminal komutları yazıp diğer dosyalara taşma.'
+      '7. ZORUNLU KABUL KRİTERLERİ (GIVEN / WHEN / THEN): Her çekirdek kullanıcı yolculuğu için test edilebilir **`Given / When / Then` Kabul Kriterleri** yaz! Net **MVP vs v2 Kapsam Tablosu**, iş kuralları/limitleri ve ölçülebilir başarı metrikleri ekle.',
+      '8. TEK SAHİPLİK (DRY) KURALI: SQL şeması, UI token tablosu veya faz faz terminal komutları yazıp diğer dosyalara taşma.'
     );
   } else if (/UX|DESIGN|SCREEN/.test(upperName)) {
     roleSpecificRules.push(
       '7. GÖRSEL AKIŞ KURALI: Ekranlar arası geçişi gösteren geçerli, sade 1 adet ```mermaid (`flowchart LR`) diyagramı ekle (özel karakter içeren etiketleri çift tırnak içine al).',
-      '8. UÇ DURUM MATRİSİ (ZORUNLU): Kritik ekranlar için `Loading | Empty | Error & Retry | Validation` durumlarını tek bir net Markdown tablosunda tanımla.',
-      '9. BİLEŞEN & SABİT EŞLEME KURALI: Kanonik Proje Sözleşmesindeki `sharedComponents` ve `sharedConstants` adlarını/eşiklerini BİREBİR kullan; farklı bileşen adı veya çelişen MB/format eşiği uydurma.'
+      '8. 5-DURUMLU UÇ DURUM MATRİSİ (ZORUNLU): Kritik ekranlar için `Loading | Empty | Error & Retry | Validation | Offline/Edge` durumlarını net bir Markdown tablosunda tanımla; renk/tipografi/spacing tasarım token tablosu ve klavye/mobil erişilebilirlik kurallarını ekle.',
+      '9. BİLEŞEN & SABİT EŞLEME KURALI: Kanonik Proje Sözleşmesindeki `sharedComponents` ve `sharedConstants` adlarını/eşiklerini BİREBİR kullan; farklı bileşen adı veya çelişen eşik uydurma.'
+    );
+  } else if (/API_AND_SECURITY|SECURITY_SPEC/.test(upperName)) {
+    roleSpecificRules.push(
+      '7. UÇTAN UCA KONTRAT & YETKİ MATRİSİ (ZORUNLU): Tüm kritik API/IPC uç noktaları için Request/Response TypeScript veya JSON şemaları, HTTP/hata kodları, RBAC yetki matrisi, hız sınırı, idempotency/eşzamanlılık koruması, şifreleme ve tehdit modeli tablosunu somutça yaz.'
     );
   } else if (/ARCH|DATA|SCHEMA/.test(upperName)) {
     roleSpecificRules.push(
       '7. MİMARİ DİYAGRAM KURALI: Sistem veri akışını veya veri modelini gösteren geçerli, sade 1 adet ```mermaid (`flowchart TD` veya `erDiagram`) diyagramı ekle (özel karakter içeren etiketleri çift tırnak içine al).',
-      '8. UÇ DURUM & GÜVENLİK KURALI: Çalışır veri şeması (DDL/TypeScript tipleri), hata/retry stratejisi, girdi doğrulama sınırları ve güvenlik tehdit tedbirlerini somut tablo/kurallarla yaz; `sharedComponents` ve `sharedConstants` adlarını sözleşmeyle %100 aynı tut.'
+      '8. ÇALIŞIR VERİ ŞEMASI & SERVİS KONTRATI (ZORUNLU): En az 1 adet doğrudan koda geçirilebilir ```typescript (interface/type) veya ```sql (`CREATE TABLE`) veri şeması bloğu yaz! Kritik servis/API kontratlarını (girdi, çıktı, hata kodları, retry/timeout), durum makinesi (state transitions) ve güvenlik/doğrulama sınırlarını somut tablolarla ver; `sharedComponents` ve `sharedConstants` adlarını sözleşmeyle %100 aynı tut.'
     );
   } else if (/ROADMAP|ACTION|PLAYBOOK/.test(upperName)) {
     roleSpecificRules.push(
-      '7. FAZ KİLİDİ & YÜRÜTÜLEBİLİR DOĞRULAMA KAPILARI (ZORUNLU): Kanonik Proje Sözleşmesindeki `phases` listesini BİREBİR aynı numara ve sırayla (`Faz 1`, `Faz 2`, ...) kullan! Her fazın altına kodlama ajanının çalıştırıp doğrulayacağı somut kabul kriterleri ve terminal/test kontrol komutları (`npm run typecheck`, `npm test` vb.) ekle.'
+      '7. FAZ KİLİDİ & YÜRÜTÜLEBİLİR DOĞRULAMA KAPILARI (ZORUNLU): Kanonik Proje Sözleşmesindeki `phases` listesini BİREBİR aynı numara ve sırayla (`Faz 1`, `Faz 2`, ...) kullan! Her fazın altında: (a) oluşturulacak/düzenlenecek kesin dosya yolları, (b) kodlama ajanının çalıştıracağı somut doğrulama komutları (`npm run typecheck`, `npm test`, `npm run build` vb.), (c) "Bitti" tanımı (Definition of Done) ve (d) o fazdaki en kritik hata tuzağı mutlaka bulunsun.'
     );
   } else if (/CHANGE_PROPOSAL/.test(upperName)) {
     roleSpecificRules.push(
-      '7. MEVCUT KOD TABANI UYUM KURALI: Sıfırdan uygulama anlatma; yalnızca mevcut projeye eklenecek/değiştirilecek özelliği, etkilenen mevcut modülleri, kapsam dışını (Non-Goals) ve kırılmaması gereken mevcut davranışları (Regresyon Sınırları) net tablo hâlinde yaz.'
+      '7. MEVCUT KOD TABANI UYUM & KABUL KRİTERİ KURALI: Sıfırdan uygulama anlatma; yalnızca mevcut projeye eklenecek/değiştirilecek özelliği, `Given / When / Then` kabul kriterlerini, etkilenen mevcut modülleri, kapsam dışını (Non-Goals) ve kırılmaması gereken mevcut davranışları (Regresyon Sınırları) net tablo hâlinde yaz.'
     );
   } else if (/MIGRATION|DIFF/.test(upperName)) {
     roleSpecificRules.push(
-      '7. MİMARİ FARK & DİYAGRAM KURALI: Mevcut mimariye yeni özelliğin nasıl bağlandığını gösteren geçerli, sade 1 adet ```mermaid (`flowchart LR` veya `flowchart TD`) diyagramı ekle.',
+      '7. MİMARİ FARK & DİYAGRAM KURALI: Mevcut mimariye yeni özelliğin nasıl bağlandığını gösteren geçerli, sade 1 adet ```mermaid (`flowchart LR` veya `flowchart TD`) diyagramı ve çalışır TypeScript/SQL şema farkı bloğu ekle.',
       '8. CERRAHİ DOSYA PLANI & ROLLBACK (ZORUNLU): "Düzenlenecek Mevcut Dosyalar", "Eklenecek Yeni Dosyalar" ve "Geri Alma (Rollback) Adımları"nı net tablo/madde listesiyle tanımla; mevcut bağımlılıklar ve tiplerle %100 uyumlu kal.'
     );
   } else if (/AGENTS|START_HERE|BRIEF/.test(upperName)) {
     const isEvo = session.projectMode === 'existing_feature';
+    const toolTailorRule = targetToolNames.length
+      ? `Hedef Kodlama Aracı (${targetToolNames.join(' + ')}) için özel çalışma disiplini: ${
+          session.targetCodingTools?.includes('claude_code') || session.targetCodingTools?.includes('cursor')
+            ? 'başlangıç promptlarında `@PROJECT_CONTRACT.json`, `@01_PRODUCT_VISION.md` gibi doğrudan `@` dosya referans sözdizimini kullan ve '
+            : ''
+        }yalnızca seçilen araç(lar)a uygun iş akışı ve doğrulama kapılarını yaz.`
+      : 'Evrensel AI kodlama ajanları (`AGENTS.md` + `PROJECT_CONTRACT.json`) ile %100 uyumlu yaz.';
     roleSpecificRules.push(
       isEvo
-        ? '7. MEVCUT REPO OKUMA SIRASI & FAZ UYUMU (ZORUNLU): Okuma sırası MUTLAKA `0. PROJECT_CONTRACT.json` ile başlasın, ardından `01_CHANGE_PROPOSAL.md` ve `02_MIGRATION_AND_ARCH_DIFF.md` gelsin. Mevcut çalışan özellikleri ve testleri koruyan doğrulama komutlarını açıkça yaz.'
-        : '7. OKUMA SIRASI & FAZ UYUMU (ZORUNLU): Okuma sırası MUTLAKA `0. PROJECT_CONTRACT.json` ile başlasın (`AGENTS.md` ile %100 uyumlu). Dalga 1 özetindeki `04_BUILD_ROADMAP.md` faz numaraları, faz başlıkları ve doğrulama komutlarıyla BİREBİR örtüş — asla farklı faz kapsamı uydurma!',
-      '8. DRY & KISA BAŞLATMA PROMPTLARI (ZORUNLU): Hard Invariants listesini belgede YALNIZCA 1 KEZ (Bölüm 3) yaz! En sondaki **Faz 1 Başlangıç Promptu** ve **Faz 2 Devam Promptu** kod bloklarında tüm Hard Invariants listesini tekrar kopyalama; bunun yerine "`PROJECT_CONTRACT.json` ve bu kılavuzun §3 kurallarına %100 uy" diyerek her promptu 12–18 satırlık keskin, kopyala-yapıştır hazır talimat olarak yaz (bu dosya toplamda 14 KB\'ı geçmesin!).'
+        ? `7. MEVCUT REPO OKUMA SIRASI & FAZ UYUMU (ZORUNLU): Okuma sırası MUTLAKA \`0. PROJECT_CONTRACT.json\` ile başlasın, ardından \`01_CHANGE_PROPOSAL.md\` ve \`02_MIGRATION_AND_ARCH_DIFF.md\` gelsin. ${toolTailorRule} Mevcut çalışan özellikleri ve testleri koruyan doğrulama komutlarını açıkça yaz.`
+        : `7. OKUMA SIRASI & FAZ UYUMU (ZORUNLU): Okuma sırası MUTLAKA \`0. PROJECT_CONTRACT.json\` ile başlasın (\`AGENTS.md\` ile %100 uyumlu). Dalga 1 özetindeki \`04_BUILD_ROADMAP.md\` faz numaraları, faz başlıkları ve doğrulama komutlarıyla BİREBİR örtüş! ${toolTailorRule}`,
+      '8. DRY, ANTI-PATTERN LİSTESİ & HAZIR FAZ PROMPTLARI (ZORUNLU): Hard Invariants listesini belgede YALNIZCA 1 KEZ (Bölüm 3) yaz; hemen altına kısa bir **Yasak Anti-Pattern’ler (ASLA Yapma)** listesi ekle. En sondaki **Faz 1 Başlangıç Promptu** ve **Faz 2 Devam Promptu** kod bloklarında Hard Invariants listesini tekrar kopyalama; "`PROJECT_CONTRACT.json` ve bu kılavuzun §3 kurallarına %100 uy" diyerek her promptu 12–18 satırlık keskin, kopyala-yapıştır hazır talimat olarak yaz (bu dosya toplamda 15 KB\'ı geçmesin!).'
     );
   }
 

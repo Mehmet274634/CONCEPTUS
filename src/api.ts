@@ -6,6 +6,7 @@ import type {
   BlueprintPack,
   CaliberPreference,
   ClarifyQuestion,
+  CodingToolId,
   ComplexityAssessment,
   ComplexityLevel,
   DebateSession,
@@ -21,6 +22,7 @@ import type {
   ProjectMode,
   ProviderId,
   ProviderInfo,
+  ProviderPoolHealth,
   RepoSnapshotMeta,
   SeatConfig,
   SelfUpdateResult,
@@ -49,11 +51,13 @@ export async function fetchProvidersState(refresh = false): Promise<{
   providers: ProviderInfo[];
   cooldowns: PoolCooldown[];
   fallbackPolicy: FallbackPolicy;
+  poolHealth: ProviderPoolHealth[];
 }> {
   const data = await requestJson<{
     providers: ProviderInfo[];
     cooldowns?: PoolCooldown[];
     fallbackPolicy?: FallbackPolicy;
+    poolHealth?: ProviderPoolHealth[];
   }>(`/api/providers${refresh ? '?refresh=1' : ''}`);
   return {
     providers: data.providers,
@@ -62,6 +66,24 @@ export async function fetchProvidersState(refresh = false): Promise<{
       mode: 'quality_auto',
       preventDowngrade: true,
     },
+    poolHealth: data.poolHealth || [],
+  };
+}
+
+export async function probeProviderPoolsClient(pools?: string[]): Promise<{
+  poolHealth: ProviderPoolHealth[];
+  cooldowns: PoolCooldown[];
+}> {
+  const data = await requestJson<{
+    poolHealth?: ProviderPoolHealth[];
+    cooldowns?: PoolCooldown[];
+  }>('/api/providers/probe', {
+    method: 'POST',
+    body: JSON.stringify(pools ? { pools } : {}),
+  });
+  return {
+    poolHealth: data.poolHealth || [],
+    cooldowns: data.cooldowns || [],
   };
 }
 
@@ -78,12 +100,18 @@ export async function updateFallbackPolicy(
   return data.fallbackPolicy;
 }
 
-export async function resetQuotaCooldowns(): Promise<PoolCooldown[]> {
-  const data = await requestJson<{ cooldowns: PoolCooldown[] }>(
-    '/api/providers/reset-cooldowns',
-    { method: 'POST' }
-  );
-  return data.cooldowns || [];
+export async function resetQuotaCooldowns(): Promise<{
+  cooldowns: PoolCooldown[];
+  poolHealth: ProviderPoolHealth[];
+}> {
+  const data = await requestJson<{
+    cooldowns: PoolCooldown[];
+    poolHealth?: ProviderPoolHealth[];
+  }>('/api/providers/reset-cooldowns', { method: 'POST' });
+  return {
+    cooldowns: data.cooldowns || [],
+    poolHealth: data.poolHealth || [],
+  };
 }
 
 export async function fetchProviders(refresh = false): Promise<ProviderInfo[]> {
@@ -219,6 +247,7 @@ export async function createSession(payload: {
   idea: string;
   domain: DomainMode;
   projectMode?: ProjectMode;
+  targetCodingTools?: CodingToolId[];
   language?: 'tr' | 'en';
   caliber?: CaliberPreference;
   constraints: string;
@@ -483,6 +512,7 @@ export async function saveBlueprintToLocalFolder(
     subfolder?: string;
     includeClaudeMd?: boolean;
     includeCursorRules?: boolean;
+    includeAntigravityRules?: boolean;
   }
 ): Promise<{ folderPath: string; fileCount: number }> {
   return requestJson<{ folderPath: string; fileCount: number }>(
@@ -520,11 +550,22 @@ export function getExportUrl(sessionId: string): string {
 
 export function getBlueprintZipUrl(
   sessionId: string,
-  options?: { includeClaudeMd?: boolean; includeCursorRules?: boolean }
+  options?: {
+    includeClaudeMd?: boolean;
+    includeCursorRules?: boolean;
+    includeAntigravityRules?: boolean;
+  }
 ): string {
   const params = new URLSearchParams();
-  if (options?.includeClaudeMd) params.set('claude', '1');
-  if (options?.includeCursorRules) params.set('cursor', '1');
+  if (options?.includeClaudeMd !== undefined) {
+    params.set('claude', options.includeClaudeMd ? '1' : '0');
+  }
+  if (options?.includeCursorRules !== undefined) {
+    params.set('cursor', options.includeCursorRules ? '1' : '0');
+  }
+  if (options?.includeAntigravityRules !== undefined) {
+    params.set('antigravity', options.includeAntigravityRules ? '1' : '0');
+  }
   const qs = params.toString();
   return `/api/sessions/${sessionId}/blueprint.zip${qs ? `?${qs}` : ''}`;
 }

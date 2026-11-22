@@ -18,6 +18,7 @@ import {
   setFallbackPolicy,
 } from './fallback.ts';
 import { detectInstalledIdes, openFolderInIde } from './ideLauncher.ts';
+import { getProviderPoolsHealth, probeProviderPools } from './quotaProbe.ts';
 import {
   abortSessionRun,
   clarifyRawIdea,
@@ -57,6 +58,7 @@ import {
 } from './updater.ts';
 import type {
   CaliberPreference,
+  CodingToolId,
   ComplexityLevel,
   DebateSession,
   DecisionGate,
@@ -165,7 +167,7 @@ app.post('/api/idea/analyze', (req, res) => {
   res.json({ complexity, budget });
 });
 
-// Providers & Models (instant cached boot + active quota cooldowns + fallback policy)
+// Providers & Models (instant cached boot + active quota cooldowns + fallback policy + pool health)
 app.get('/api/providers', async (req, res) => {
   try {
     const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
@@ -174,9 +176,40 @@ app.get('/api/providers', async (req, res) => {
       providers,
       cooldowns: listActiveCooldowns(),
       fallbackPolicy: getFallbackPolicy(),
+      poolHealth: getProviderPoolsHealth(providers),
     });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Sağlayıcılar okunamadı.' });
+  }
+});
+
+// 0-Token instant snapshot of all quota pools (auth + cooldown + recent probe)
+app.get('/api/providers/health', async (_req, res) => {
+  try {
+    const providers = await discoverProviders(false);
+    res.json({
+      poolHealth: getProviderPoolsHealth(providers),
+      cooldowns: listActiveCooldowns(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Kota sağlığı okunamadı.' });
+  }
+});
+
+// Live parallel 1-word quota probe across installed pools
+app.post('/api/providers/probe', async (req, res) => {
+  try {
+    const providers = await discoverProviders(false);
+    const pools = Array.isArray(req.body?.pools)
+      ? req.body.pools.map((x: unknown) => String(x))
+      : undefined;
+    const poolHealth = await probeProviderPools(providers, pools);
+    res.json({
+      poolHealth,
+      cooldowns: listActiveCooldowns(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Kota testi çalıştırılamadı.' });
   }
 });
 
@@ -191,9 +224,14 @@ app.put('/api/settings/fallback', (req, res) => {
 });
 
 // Clear quota circuit-breaker cooldowns manually (e.g., after quota resets)
-app.post('/api/providers/reset-cooldowns', (_req, res) => {
+app.post('/api/providers/reset-cooldowns', async (_req, res) => {
   clearAllCooldowns();
-  res.json({ ok: true, cooldowns: [] });
+  const providers = await discoverProviders(false).catch(() => []);
+  res.json({
+    ok: true,
+    cooldowns: [],
+    poolHealth: getProviderPoolsHealth(providers),
+  });
 });
 
 // Fast Idea Clarifier (3-4 crisp multiple-choice questions for raw user thoughts)
@@ -234,7 +272,15 @@ app.post('/api/idea/clarify', async (req, res) => {
       }
     }
 
-    const result = await clarifyRawIdea({ idea, domain, language, provider, model });
+    const preAnalysis = analyzeIdeaComplexity({ idea, domain });
+    const result = await clarifyRawIdea({
+      idea,
+      domain,
+      language,
+      missingSpecs: preAnalysis.missingSpecs,
+      provider,
+      model,
+    });
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err?.message || 'Fikir netleştirme soruları üretilemedi.' });
@@ -355,6 +401,7 @@ app.post('/api/sessions', (req, res) => {
       idea,
       domain = 'app_product',
       projectMode = 'new_app',
+      targetCodingTools,
       language = 'tr',
       caliber,
       constraints = '',
@@ -366,6 +413,7 @@ app.post('/api/sessions', (req, res) => {
       idea?: string;
       domain?: DomainMode;
       projectMode?: ProjectMode;
+      targetCodingTools?: CodingToolId[];
       language?: 'tr' | 'en';
       caliber?: CaliberPreference;
       constraints?: string;
@@ -391,12 +439,24 @@ app.post('/api/sessions', (req, res) => {
       domain,
     });
 
+    const allowedTools: CodingToolId[] = ['antigravity', 'claude_code', 'cursor', 'codex'];
+    const cleanCodingTools = Array.isArray(targetCodingTools)
+      ? Array.from(
+          new Set(
+            targetCodingTools.filter((t): t is CodingToolId =>
+              allowedTools.includes(t as CodingToolId)
+            )
+          )
+        )
+      : undefined;
+
     const session: DebateSession = {
       id: `cpt_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`,
       title: cleanTitle,
       idea: idea.trim(),
       domain,
       projectMode: projectMode === 'existing_feature' ? 'existing_feature' : 'new_app',
+      targetCodingTools: cleanCodingTools && cleanCodingTools.length > 0 ? cleanCodingTools : undefined,
       language: language === 'en' ? 'en' : 'tr',
       complexity,
       caliber: caliber || complexity.recommendedCaliber,
@@ -734,11 +794,24 @@ app.get('/api/sessions/:id/blueprint.zip', async (req, res) => {
       res.status(404).json({ error: 'Oturum bulunamadı.' });
       return;
     }
-    const includeClaudeMd = req.query.claude === '1' || req.query.ide === '1';
-    const includeCursorRules = req.query.cursor === '1' || req.query.ide === '1';
+    const includeClaudeMd =
+      req.query.claude !== undefined
+        ? req.query.claude === '1'
+        : req.query.ide === '1'
+          ? true
+          : undefined;
+    const includeCursorRules =
+      req.query.cursor !== undefined
+        ? req.query.cursor === '1'
+        : req.query.ide === '1'
+          ? true
+          : undefined;
+    const includeAntigravityRules =
+      req.query.antigravity !== undefined ? req.query.antigravity === '1' : undefined;
     const buf = await buildBlueprintZipBuffer(session, {
       includeClaudeMd,
       includeCursorRules,
+      includeAntigravityRules,
     });
     const slug = slugifyProjectName(session.title);
     res.setHeader('Content-Type', 'application/zip');
@@ -766,11 +839,26 @@ app.post('/api/sessions/:id/blueprint/save-folder', (req, res) => {
         ? path.join(session.repoMeta.folderPath, sub)
         : session.repoMeta.folderPath;
     }
-    const includeClaudeMd = Boolean(req.body?.includeClaudeMd ?? req.body?.includeIdeRules ?? false);
-    const includeCursorRules = Boolean(req.body?.includeCursorRules ?? req.body?.includeIdeRules ?? false);
+    const includeClaudeMd =
+      req.body?.includeClaudeMd !== undefined
+        ? Boolean(req.body.includeClaudeMd)
+        : req.body?.includeIdeRules !== undefined
+          ? Boolean(req.body.includeIdeRules)
+          : undefined;
+    const includeCursorRules =
+      req.body?.includeCursorRules !== undefined
+        ? Boolean(req.body.includeCursorRules)
+        : req.body?.includeIdeRules !== undefined
+          ? Boolean(req.body.includeIdeRules)
+          : undefined;
+    const includeAntigravityRules =
+      req.body?.includeAntigravityRules !== undefined
+        ? Boolean(req.body.includeAntigravityRules)
+        : undefined;
     const result = saveBlueprintToFolder(session, targetPath, {
       includeClaudeMd,
       includeCursorRules,
+      includeAntigravityRules,
     });
     res.json(result);
   } catch (err: any) {

@@ -8,6 +8,7 @@ import {
   fetchProvidersState,
   fetchSession,
   fetchSessions,
+  probeProviderPoolsClient,
   removeSession,
   resetQuotaCooldowns,
   saveDecisionGates,
@@ -34,27 +35,30 @@ import { SetupStage } from './components/SetupStage.tsx';
 import { TopBar, type StageTab } from './components/TopBar.tsx';
 import { UpdateModal } from './components/UpdateModal.tsx';
 import { useI18n } from './i18n.tsx';
-import type {
-  BlueprintDepth,
-  BlueprintFileSpec,
-  CaliberPreference,
-  DebateSession,
-  DecisionGate,
-  DetectedIde,
-  DomainMode,
-  FallbackPolicy,
-  GeneratedMdFile,
-  PoolCooldown,
-  ProjectMode,
-  ProviderId,
-  ProviderInfo,
-  RepoSnapshotMeta,
-  SeatConfig,
-  SessionSummary,
-  SimplePresetId,
-  StreamEvent,
-  UiMode,
-  UpdateCheckResult,
+import {
+  getQuotaPoolKey,
+  type BlueprintDepth,
+  type BlueprintFileSpec,
+  type CaliberPreference,
+  type CodingToolId,
+  type DebateSession,
+  type DecisionGate,
+  type DetectedIde,
+  type DomainMode,
+  type FallbackPolicy,
+  type GeneratedMdFile,
+  type PoolCooldown,
+  type ProjectMode,
+  type ProviderId,
+  type ProviderInfo,
+  type ProviderPoolHealth,
+  type RepoSnapshotMeta,
+  type SeatConfig,
+  type SessionSummary,
+  type SimplePresetId,
+  type StreamEvent,
+  type UiMode,
+  type UpdateCheckResult,
 } from './types.ts';
 
 function pickFrom(info: ProviderInfo | undefined, candidates: string[], fallback: string): string {
@@ -202,6 +206,8 @@ function pickDefaultJudge(
 export default function App() {
   const { lang } = useI18n();
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
+  const [poolHealth, setPoolHealth] = useState<ProviderPoolHealth[]>([]);
+  const [probingPools, setProbingPools] = useState(false);
   const [detectedIdes, setDetectedIdes] = useState<DetectedIde[]>([]);
   const [cooldowns, setCooldowns] = useState<PoolCooldown[]>([]);
   const [fallbackPolicy, setFallbackPolicy] = useState<FallbackPolicy>({
@@ -289,6 +295,7 @@ export default function App() {
       setProviders(state.providers);
       setCooldowns(state.cooldowns);
       setFallbackPolicy(state.fallbackPolicy);
+      setPoolHealth(state.poolHealth);
       setDraftSeats((prev) =>
         prev.length === 0 ? buildSeatsForPreset(state.providers, activePreset) : prev
       );
@@ -297,6 +304,44 @@ export default function App() {
     }
   }, []);
 
+  const handleProbePools = async () => {
+    setProbingPools(true);
+    try {
+      const res = await probeProviderPoolsClient();
+      setPoolHealth(res.poolHealth);
+      setCooldowns(res.cooldowns);
+    } finally {
+      setProbingPools(false);
+    }
+  };
+
+  const handleSwitchToHealthySeats = () => {
+    const blockedPools = new Set(
+      poolHealth
+        .filter((h) => h.status === 'limited' || h.status === 'auth_required' || h.status === 'offline')
+        .map((h) => h.pool)
+    );
+    const healthyPool = poolHealth.find(
+      (h) => h.installed && (h.status === 'ready' || h.status === 'unknown')
+    );
+    setDraftSeats((prev) => {
+      const updated = prev.map((seat) => {
+        if (!seat.enabled) return seat;
+        const pool = getQuotaPoolKey(seat.provider, seat.model);
+        if (!blockedPools.has(pool)) return seat;
+        if (healthyPool) {
+          return {
+            ...seat,
+            provider: healthyPool.provider,
+            model: healthyPool.sampleModel,
+          };
+        }
+        return { ...seat, enabled: false };
+      });
+      return updated;
+    });
+  };
+
   const handleUpdateFallbackPolicy = async (patch: Partial<FallbackPolicy>) => {
     const updated = await updateFallbackPolicy(patch);
     setFallbackPolicy(updated);
@@ -304,7 +349,8 @@ export default function App() {
 
   const handleResetCooldowns = async () => {
     const next = await resetQuotaCooldowns();
-    setCooldowns(next);
+    setCooldowns(next.cooldowns);
+    setPoolHealth(next.poolHealth);
   };
 
   const loadSessionsList = useCallback(async () => {
@@ -684,6 +730,7 @@ export default function App() {
     idea: string;
     domain: DomainMode;
     projectMode?: ProjectMode;
+    targetCodingTools?: CodingToolId[];
     caliber?: CaliberPreference;
     constraints: string;
     contextText: string;
@@ -698,6 +745,7 @@ export default function App() {
         idea: payload.idea,
         domain: payload.domain,
         projectMode: payload.projectMode || 'new_app',
+        targetCodingTools: payload.targetCodingTools,
         language: lang,
         caliber: payload.caliber,
         constraints: payload.constraints,
@@ -1012,6 +1060,10 @@ export default function App() {
             ) : (
               <SetupStage
                 providers={providers}
+                poolHealth={poolHealth}
+                probingPools={probingPools}
+                onProbePools={handleProbePools}
+                onSwitchToHealthySeats={handleSwitchToHealthySeats}
                 loadingProviders={loadingProviders}
                 onRefreshProviders={() => void loadProviders(true)}
                 uiMode={uiMode}

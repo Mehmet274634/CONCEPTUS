@@ -195,6 +195,71 @@ export function lintBlueprintPack(session: DebateSession): BlueprintLintReport {
     } else {
       passedChecks++;
     }
+
+    // Check F: Engineering Substance Depth Gates (v5.3 — ensures complex projects get runnable specs, not prose!)
+    const isSoftwarePack = session.domain === 'app_product' || session.domain === 'tech_project';
+    if (isSoftwarePack) {
+      if (/VISION|PRODUCT|PRD|CHANGE_PROPOSAL/.test(upper)) {
+        totalChecks++;
+        if (!/given\b|when\b|then\b|kabul\s*kriter|acceptance\s*criteria|başarı\s*kriter/i.test(content)) {
+          pushIssue({
+            severity: 'medium',
+            file: file.filename,
+            description: `${file.filename} içinde test edilebilir kabul kriterleri (Given/When/Then veya Kabul Kriterleri) eksik.`,
+            fixInstruction: 'Temel kullanıcı yolculukları için somut Given / When / Then kabul kriterleri ekle.',
+          });
+        } else {
+          passedChecks++;
+        }
+      } else if (/UX|DESIGN|SCREEN/.test(upper)) {
+        totalChecks++;
+        const hasLoading = /loading|yükleniyor/i.test(content);
+        const hasEmpty = /empty|boş\s*durum/i.test(content);
+        const hasError = /error|hata|retry|yeniden\s*dene/i.test(content);
+        if (!(hasLoading && hasEmpty && hasError)) {
+          pushIssue({
+            severity: 'medium',
+            file: file.filename,
+            description: `${file.filename} içinde Loading / Empty / Error uç durum matrisi eksik.`,
+            fixInstruction: 'Kritik ekranlar için Loading, Empty, Error & Retry ve Validation durumlarını tek tabloda tanımla.',
+          });
+        } else {
+          passedChecks++;
+        }
+      } else if (/ARCH|DATA|SCHEMA/.test(upper)) {
+        totalChecks++;
+        const hasSchemaCode =
+          /```(?:ts|typescript|sql|prisma|json|graphql|zod|dart|python|go|rust)[\s\S]*?(?:interface\s+\w+|type\s+\w+|CREATE\s+TABLE|model\s+\w+|schema|class\s+\w+|"\w+":)/i.test(
+            content
+          );
+        if (!hasSchemaCode) {
+          pushIssue({
+            severity: 'medium',
+            file: file.filename,
+            description: `${file.filename} içinde koda doğrudan geçirilebilir veri şeması/tip bloğu (TypeScript interface veya SQL DDL) eksik.`,
+            fixInstruction: 'Kanonik veri varlıkları için çalışır TypeScript interface veya SQL CREATE TABLE şema bloğu ekle.',
+          });
+        } else {
+          passedChecks++;
+        }
+      } else if (/ROADMAP|ACTION|PLAYBOOK/.test(upper)) {
+        totalChecks++;
+        const hasVerifyCmd =
+          /`[^`]*(?:npm\s+|npx\s+|pnpm\s+|yarn\s+|vitest|jest|pytest|tsc\b|cargo\s+|go\s+test|flutter\s+|gradle|dotnet\s+)[^`]*`/i.test(
+            content
+          );
+        if (!hasVerifyCmd) {
+          pushIssue({
+            severity: 'medium',
+            file: file.filename,
+            description: `${file.filename} içinde yürütülebilir faz doğrulama komutu (örn. \`npm run typecheck\`, \`npm test\`) eksik.`,
+            fixInstruction: 'Her fazın altına kodlama ajanının çalıştırıp doğrulayacağı somut terminal/test komutları ekle.',
+          });
+        } else {
+          passedChecks++;
+        }
+      }
+    }
   }
 
   // 3. Canonical PROJECT_CONTRACT consistency checks across the whole pack

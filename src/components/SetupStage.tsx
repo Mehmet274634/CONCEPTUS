@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  Activity,
+  AlertTriangle,
   ArrowRight,
   Check,
   ChevronDown,
@@ -23,13 +25,17 @@ import {
 import { analyzeIdeaClient, clarifyIdea, pickLocalFolder, scanRepoFolder } from '../api.ts';
 import { useI18n } from '../i18n.tsx';
 import {
+  CODING_TOOL_OPTIONS,
   DOMAIN_OPTIONS,
+  getQuotaPoolKey,
   type CaliberPreference,
   type ClarifyQuestion,
+  type CodingToolId,
   type ComplexityAssessment,
   type DomainMode,
   type ProjectMode,
   type ProviderInfo,
+  type ProviderPoolHealth,
   type RepoSnapshotMeta,
   type SeatConfig,
   type SimplePresetId,
@@ -39,6 +45,10 @@ import { SeatEditorList } from './SeatEditorList.tsx';
 
 interface SetupStageProps {
   providers: ProviderInfo[];
+  poolHealth: ProviderPoolHealth[];
+  probingPools: boolean;
+  onProbePools: () => Promise<void>;
+  onSwitchToHealthySeats: () => void;
   loadingProviders: boolean;
   onRefreshProviders: () => void;
   uiMode: UiMode;
@@ -51,6 +61,7 @@ interface SetupStageProps {
     idea: string;
     domain: DomainMode;
     projectMode: ProjectMode;
+    targetCodingTools: CodingToolId[];
     caliber?: CaliberPreference;
     constraints: string;
     contextText: string;
@@ -127,6 +138,10 @@ const DESIGN_PRESETS = [
 
 export function SetupStage({
   providers,
+  poolHealth,
+  probingPools,
+  onProbePools,
+  onSwitchToHealthySeats,
   loadingProviders,
   onRefreshProviders,
   uiMode,
@@ -142,6 +157,15 @@ export function SetupStage({
   const [idea, setIdea] = useState('');
   const [domain, setDomain] = useState<DomainMode>('app_product');
   const [projectMode, setProjectMode] = useState<ProjectMode>('new_app');
+  const [targetCodingTools, setTargetCodingTools] = useState<CodingToolId[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('conceptus_target_coding_tools') || '[]');
+      if (Array.isArray(saved) && saved.length > 0) return saved as CodingToolId[];
+    } catch {
+      // ignore
+    }
+    return ['antigravity'];
+  });
   const [constraints, setConstraints] = useState('');
   const [contextText, setContextText] = useState('');
   const [showExtras, setShowExtras] = useState(false);
@@ -182,6 +206,29 @@ export function SetupStage({
   const fileRef = useRef<HTMLInputElement>(null);
 
   const activeSeatCount = seats.filter((s) => s.enabled).length;
+
+  const installedPools = poolHealth.filter((p) => p.installed);
+  const blockedPoolSet = new Set(
+    poolHealth
+      .filter((p) => p.status === 'limited' || p.status === 'auth_required')
+      .map((p) => p.pool)
+  );
+  const seatsOnBlockedPools = seats.filter(
+    (s) => s.enabled && blockedPoolSet.has(getQuotaPoolKey(s.provider, s.model))
+  );
+
+  const toggleCodingTool = (toolId: CodingToolId) => {
+    setTargetCodingTools((prev) => {
+      const exists = prev.includes(toolId);
+      const next = exists
+        ? prev.length > 1
+          ? prev.filter((x) => x !== toolId)
+          : prev
+        : [...prev, toolId];
+      localStorage.setItem('conceptus_target_coding_tools', JSON.stringify(next));
+      return next;
+    });
+  };
 
   const handleSelectCaliber = (next: CaliberPreference) => {
     setCaliber(next);
@@ -357,6 +404,7 @@ export function SetupStage({
         idea,
         domain,
         projectMode,
+        targetCodingTools,
         caliber,
         constraints: mergedConstraints,
         contextText: mergedContext,
@@ -587,66 +635,127 @@ export function SetupStage({
               </div>
             )}
 
-            {/* Unified Single-Line Quality Caliber & Live Complexity Strip */}
-            <div className="flex items-center justify-between flex-wrap gap-2.5 pt-2 border-t border-white/[0.06]">
-              <div className="flex items-center gap-2 flex-wrap text-[11px] text-zinc-400">
-                {complexity ? (
-                  <>
-                    <span
-                      title={lang === 'en' ? complexity.reasonEn : complexity.reasonTr}
-                      className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
-                        complexity.level === 'XL' || complexity.level === 'L'
-                          ? 'bg-[#7c74ff]/15 text-[#cbc7ff] border-[#7c74ff]/40'
-                          : complexity.level === 'M'
-                            ? 'bg-[#3fd0c9]/15 text-[#88ece7] border-[#3fd0c9]/35'
-                            : 'bg-[#4cc58a]/15 text-[#8ae3b7] border-[#4cc58a]/35'
-                      }`}
-                    >
-                      <Cpu className="w-3 h-3" />
-                      {lang === 'en' ? complexity.labelEn : complexity.labelTr}
-                    </span>
-                    {budget && (
-                      <span className="font-mono text-[10.5px] text-zinc-500">
-                        {t(
-                          `~${budget.totalCalls} çağrı · %${budget.deltaSavingsPct} tasarruf`,
-                          `~${budget.totalCalls} calls · ${budget.deltaSavingsPct}% saved`
-                        )}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-zinc-500">
-                    {t('Ajan Kalitesi (En iyi modeller otomatik seçilir)', 'Agent Caliber (Best models auto-assigned)')}
+            {/* Unified Single-Line Target Coding Tool + Quality Caliber & Live Complexity Strip */}
+            <div className="space-y-2.5 pt-2.5 border-t border-white/[0.06]">
+              {/* Row A: Which coding tool(s) will execute these MDs? (Multi-select) */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-medium text-zinc-400 mr-1">
+                    {t('Hedef Kodlama Aracı:', 'Target Coding Tool:')}
                   </span>
-                )}
+                  {CODING_TOOL_OPTIONS.map((tool) => {
+                    const active = targetCodingTools.includes(tool.id);
+                    return (
+                      <button
+                        key={tool.id}
+                        type="button"
+                        onClick={() => toggleCodingTool(tool.id)}
+                        title={`${tool.label} için özel MD & kural köprüsü (${tool.bridgeNote})`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border transition cursor-pointer ${
+                          active
+                            ? 'bg-[#7c74ff]/20 text-[#e1dfff] border-[#7c74ff]/50'
+                            : 'bg-white/[0.025] text-zinc-400 border-white/[0.07] hover:text-zinc-200 hover:bg-white/[0.06]'
+                        }`}
+                      >
+                        {active && <Check className="w-2.5 h-2.5 text-[#b9b4ff]" />}
+                        {tool.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="text-[10.5px] text-zinc-500 hidden sm:inline">
+                  {t(
+                    'Yalnızca seçili araç(lar)a özel format & kural dosyası üretilir',
+                    'Tailors prompts & bridge files exclusively for selected tool(s)'
+                  )}
+                </span>
               </div>
 
-              <div className="inline-flex items-center gap-0.5 rounded-full bg-black/40 border border-white/[0.08] p-0.5">
-                {(
-                  [
-                    { id: 'flagship', tr: 'Amiral', en: 'Flagship', hint: 'En güçlü modeller (maksimum derinlik)' },
-                    { id: 'hybrid', tr: 'Hibrit', en: 'Hybrid', hint: 'Önerilen kalite / hız dengesi' },
-                    { id: 'economy', tr: 'Ekonomik', en: 'Economy', hint: 'Basit fikirler için %65 kota tasarrufu' },
-                  ] as const
-                ).map((opt) => {
-                  const active = caliber === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      title={opt.hint}
-                      onClick={() => handleSelectCaliber(opt.id)}
-                      className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
-                        active
-                          ? 'bg-[#f7f8f8] text-[#060709] font-semibold'
-                          : 'text-zinc-400 hover:text-zinc-100'
-                      }`}
-                    >
-                      {lang === 'en' ? opt.en : opt.tr}
-                    </button>
-                  );
-                })}
+              {/* Row B: Complexity + Caliber */}
+              <div className="flex items-center justify-between flex-wrap gap-2.5">
+                <div className="flex items-center gap-2 flex-wrap text-[11px] text-zinc-400">
+                  {complexity ? (
+                    <>
+                      <span
+                        title={lang === 'en' ? complexity.reasonEn : complexity.reasonTr}
+                        className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+                          complexity.level === 'XL' || complexity.level === 'L'
+                            ? 'bg-[#7c74ff]/15 text-[#cbc7ff] border-[#7c74ff]/40'
+                            : complexity.level === 'M'
+                              ? 'bg-[#3fd0c9]/15 text-[#88ece7] border-[#3fd0c9]/35'
+                              : 'bg-[#4cc58a]/15 text-[#8ae3b7] border-[#4cc58a]/35'
+                        }`}
+                      >
+                        <Cpu className="w-3 h-3" />
+                        {lang === 'en' ? complexity.labelEn : complexity.labelTr}
+                      </span>
+                      {budget && (
+                        <span className="font-mono text-[10.5px] text-zinc-500">
+                          {t(
+                            `${complexity.recommendedFileCount} MD · ~${budget.totalCalls} çağrı`,
+                            `${complexity.recommendedFileCount} MDs · ~${budget.totalCalls} calls`
+                          )}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-zinc-500">
+                      {t('Ajan Kalitesi (En iyi modeller otomatik seçilir)', 'Agent Caliber (Best models auto-assigned)')}
+                    </span>
+                  )}
+                </div>
+
+                <div className="inline-flex items-center gap-0.5 rounded-full bg-black/40 border border-white/[0.08] p-0.5">
+                  {(
+                    [
+                      { id: 'flagship', tr: 'Amiral', en: 'Flagship', hint: 'En güçlü modeller (karmaşık projelerde en yüksek MD kalitesi)' },
+                      { id: 'hybrid', tr: 'Hibrit', en: 'Hybrid', hint: 'Önerilen kalite / hız dengesi' },
+                      { id: 'economy', tr: 'Ekonomik', en: 'Economy', hint: 'Düşük kota kullanımı' },
+                    ] as const
+                  ).map((opt) => {
+                    const active = caliber === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        title={opt.hint}
+                        onClick={() => handleSelectCaliber(opt.id)}
+                        className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                          active
+                            ? 'bg-[#f7f8f8] text-[#060709] font-semibold'
+                            : 'text-zinc-400 hover:text-zinc-100'
+                        }`}
+                      >
+                        {lang === 'en' ? opt.en : opt.tr}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* Row C: 0-Token Missing Critical Specs Radar (only when idea is typed & gaps remain) */}
+              {complexity?.missingSpecs && complexity.missingSpecs.length > 0 && clarifyQuestions.length === 0 && (
+                <div className="flex items-center justify-between flex-wrap gap-2 rounded-xl bg-[#f0b44c]/[0.06] border border-[#f0b44c]/20 px-3 py-1.5 text-[11px]">
+                  <div className="flex items-center gap-1.5 flex-wrap text-[#f7cf86]">
+                    <AlertTriangle className="w-3 h-3 shrink-0" />
+                    <span className="font-medium">
+                      {t('Eksik mimari netlik:', 'Missing spec clarity:')}
+                    </span>
+                    <span className="text-zinc-300">
+                      {complexity.missingSpecs.slice(0, 3).join(' · ')}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleClarifyIdea}
+                    disabled={clarifying}
+                    className="text-[11px] font-semibold text-[#cbc7ff] hover:text-white inline-flex items-center gap-1 cursor-pointer shrink-0 disabled:opacity-50"
+                  >
+                    <Wand2 className="w-3 h-3" />
+                    {clarifying ? t('Hazırlanıyor...', 'Clarifying...') : t('Hızlı Netleştir', 'Clarify Now')}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Inline Smart Idea Clarifier Panel (3-4 Fast Clickable Questions) */}
@@ -1041,6 +1150,94 @@ export function SetupStage({
           {error && (
             <div className="rounded-2xl bg-[#ff7a6e]/10 border border-[#ff7a6e]/30 px-4 py-3 text-xs text-[#ffb0a8]">
               {error}
+            </div>
+          )}
+
+          {/* Compact Real-Time Agent & Quota Readiness Bar (See which pools are open BEFORE starting!) */}
+          {installedPools.length > 0 && (
+            <div className="glass-panel rounded-2xl px-4 py-2.5 flex items-center justify-between flex-wrap gap-2.5">
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-400 shrink-0">
+                  <Activity className="w-3.5 h-3.5 text-[#3fd0c9]" />
+                  {t('Kota & Ajan Durumu:', 'Quota & Agents:')}
+                </span>
+                {installedPools.map((pool) => {
+                  const isReady = pool.status === 'ready';
+                  const isLimited = pool.status === 'limited';
+                  const isAuth = pool.status === 'auth_required';
+                  return (
+                    <span
+                      key={pool.pool}
+                      title={
+                        [pool.label, pool.planLabel, pool.detail, pool.resetHint]
+                          .filter(Boolean)
+                          .join(' · ')
+                      }
+                      className={`inline-flex items-center gap-1.5 text-[10.5px] px-2.5 py-0.5 rounded-full border ${
+                        isReady
+                          ? 'bg-[#4cc58a]/12 text-[#93ebb8] border-[#4cc58a]/30'
+                          : isLimited
+                            ? 'bg-[#ff7a6e]/12 text-[#ffb4ad] border-[#ff7a6e]/35'
+                            : isAuth
+                              ? 'bg-[#f0b44c]/12 text-[#f7cf86] border-[#f0b44c]/35'
+                              : 'bg-white/[0.03] text-zinc-300 border-white/[0.08]'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                          isReady
+                            ? 'bg-[#4cc58a]'
+                            : isLimited
+                              ? 'bg-[#ff7a6e]'
+                              : isAuth
+                                ? 'bg-[#f0b44c]'
+                                : 'bg-zinc-400'
+                        }`}
+                      />
+                      <span className="font-medium">{pool.label}</span>
+                      <span className="font-mono text-[10px] opacity-80">
+                        {isReady
+                          ? pool.latencyMs
+                            ? `Açık ${(pool.latencyMs / 1000).toFixed(1)}s`
+                            : 'Açık'
+                          : isLimited
+                            ? pool.resetHint || 'Kota Dolu'
+                            : isAuth
+                              ? 'Oturum Gerekli'
+                              : pool.planLabel || 'Hazır'}
+                      </span>
+                    </span>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {seatsOnBlockedPools.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={onSwitchToHealthySeats}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#f0b44c]/18 hover:bg-[#f0b44c]/28 text-[#fde3a7] border border-[#f0b44c]/40 transition cursor-pointer"
+                  >
+                    {t('Sağlıklı Ajanlara Geç', 'Switch to Healthy')}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void onProbePools()}
+                  disabled={probingPools}
+                  title="Kurulu tüm ajan havuzlarına 1 kelimelik canlı kota testi atar (~4 sn)"
+                  className="glass-pill inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full text-zinc-300 hover:text-white cursor-pointer disabled:opacity-50"
+                >
+                  {probingPools ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-[#3fd0c9]" />
+                  ) : (
+                    <RefreshCw className="w-3 h-3" />
+                  )}
+                  {probingPools
+                    ? t('Test ediliyor...', 'Probing...')
+                    : t('Kotaları Test Et', 'Probe Quotas')}
+                </button>
+              </div>
             </div>
           )}
 

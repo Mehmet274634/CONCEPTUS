@@ -196,6 +196,12 @@ export function clearAllCooldowns() {
   saveCooldownsToDisk();
 }
 
+export function clearPoolCooldown(pool: string) {
+  if (cooldowns.delete(pool)) {
+    saveCooldownsToDisk();
+  }
+}
+
 /**
  * Classifies a model's professional caliber so high-stakes work (Master Karar,
  * core architecture/UX blueprints, flagship debates) is NEVER silently downgraded

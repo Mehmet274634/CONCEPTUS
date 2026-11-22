@@ -31,7 +31,7 @@ function makeCleanSession(contract?: ProjectContract): DebateSession {
           status: 'done',
           provider: 'antigravity',
           model: 'gemini-4-neon-high',
-          content: `# 01 Ürün Vizyonu\n\nTaskEntity ve FocusSession varlıkları nettir. ${fillerWords(200)}\n\`\`\`ts\n// TODO inside fenced code block must NOT be flagged\nconst ok = true;\n\`\`\``,
+          content: `# 01 Ürün Vizyonu\n\n## Kabul Kriterleri\nGiven kullanıcı odak başlattığında When süre dolunca Then FocusSession kaydedilir.\nTaskEntity ve FocusSession varlıkları nettir. ${fillerWords(200)}\n\`\`\`ts\n// TODO inside fenced code block must NOT be flagged\nconst ok = true;\n\`\`\``,
         },
         {
           id: 'f2',
@@ -41,7 +41,7 @@ function makeCleanSession(contract?: ProjectContract): DebateSession {
           status: 'done',
           provider: 'antigravity',
           model: 'gemini-4-neon-high',
-          content: `# 02 UX & Ekran Akışı\n\nGiriş alanlarında input placeholder rengi #6b7280 kullanılır.\n\n\`\`\`mermaid\nflowchart LR\n  A["Ana Ekran"] --> B["Odak Oturumu"]\n\`\`\`\n\n${fillerWords(200)}`,
+          content: `# 02 UX & Ekran Akışı\n\nGiriş alanlarında input placeholder rengi #6b7280 kullanılır.\n\n## Uç Durum Matrisi\n| Loading | Empty | Error & Retry |\n| Spinner | Boş görev listesi | Hata kartı ve Yeniden Dene |\n\n\`\`\`mermaid\nflowchart LR\n  A["Ana Ekran"] --> B["Odak Oturumu"]\n\`\`\`\n\n${fillerWords(200)}`,
         },
         {
           id: 'f3',
@@ -51,7 +51,7 @@ function makeCleanSession(contract?: ProjectContract): DebateSession {
           status: 'done',
           provider: 'codex',
           model: 'gpt-6-luna',
-          content: `# 03 Mimari & Veri\n\nTaskEntity ve FocusSession tabloları yerel IndexedDB içinde saklanır.\n\n\`\`\`mermaid\nerDiagram\n  TaskEntity ||--o{ FocusSession : tracks\n\`\`\`\n\n${fillerWords(200)}`,
+          content: `# 03 Mimari & Veri\n\nTaskEntity ve FocusSession tabloları yerel IndexedDB içinde saklanır.\n\n\`\`\`typescript\nexport interface TaskEntity { id: string; title: string; }\nexport interface FocusSession { id: string; taskId: string; durationSec: number; }\n\`\`\`\n\n\`\`\`mermaid\nerDiagram\n  TaskEntity ||--o{ FocusSession : tracks\n\`\`\`\n\n${fillerWords(200)}`,
         },
         {
           id: 'f4',
@@ -142,5 +142,21 @@ describe('CONCEPTUS v5.0 — 0-Token Deterministic Local Blueprint Linter', () =
     expect(phaseIssue).toBeDefined();
     expect(phaseIssue?.severity).toBe('high');
     expect(phaseIssue?.conflictWith).toBe('04_BUILD_ROADMAP.md');
+  });
+
+  it('v5.3: catches missing engineering depth gates (acceptance criteria, edge-state matrix, runnable schema, verify commands)', () => {
+    const session = makeCleanSession();
+    // Strip engineering blocks from files 01..04 while keeping length > 180 words & Mermaid valid
+    session.blueprint!.files[0].content = `# 01 Ürün Vizyonu\nSadece hikaye anlatımı. ${fillerWords(200)}`;
+    session.blueprint!.files[1].content = `# 02 UX\n\`\`\`mermaid\nflowchart LR\nA --> B\n\`\`\`\n${fillerWords(200)}`;
+    session.blueprint!.files[2].content = `# 03 Mimari\n\`\`\`mermaid\nerDiagram\nA ||--o{ B : has\n\`\`\`\n${fillerWords(200)}`;
+    session.blueprint!.files[3].content = `# 04 Yol Haritası\n## Faz 1 — Kurulum\n${fillerWords(200)}`;
+
+    const report = lintBlueprintPack(session);
+    const descs = report.issues.map((i) => i.description).join('\n');
+    expect(descs).toContain('kabul kriterleri');
+    expect(descs).toContain('Loading / Empty / Error');
+    expect(descs).toContain('veri şeması');
+    expect(descs).toContain('doğrulama komutu');
   });
 });

@@ -61,7 +61,12 @@ export function extractPhasePrompts(session: DebateSession): PhasePromptItem[] {
     files.find((f) => /AGENTS|START_HERE|EXECUTION_GUIDE|BRIEF/i.test(f.filename)) ||
     files[files.length - 1];
   const fileNames = files.map((f) => f.filename);
-  const readOrder = ['PROJECT_CONTRACT.json', ...fileNames].join(' -> ');
+  const useAtRefs = Boolean(
+    session.targetCodingTools?.some((t) => t === 'claude_code' || t === 'cursor')
+  );
+  const readOrder = ['PROJECT_CONTRACT.json', ...fileNames]
+    .map((n) => (useAtRefs ? `@${n}` : n))
+    .join(' -> ');
 
   const extractedByPhase = new Map<number, PhasePromptItem>();
 

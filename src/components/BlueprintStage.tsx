@@ -132,7 +132,7 @@ export function BlueprintStage({
 }: BlueprintStageProps) {
   const { t } = useI18n();
   const [depth, setDepth] = useState<BlueprintDepth>(
-    session.blueprint?.depth || session.complexity?.recommendedDepth || 'concise'
+    session.blueprint?.depth || session.complexity?.recommendedDepth || 'standard'
   );
   const initialWriter = useMemo(
     () => pickWriterForDepth(providers, depth),
@@ -165,8 +165,15 @@ export function BlueprintStage({
   const [newFilename, setNewFilename] = useState('');
   const [newPurpose, setNewPurpose] = useState('');
   const [showBuildPrompt, setShowBuildPrompt] = useState(false);
-  const [includeClaudeMd, setIncludeClaudeMd] = useState(false);
-  const [includeCursorRules, setIncludeCursorRules] = useState(false);
+  const [includeAntigravityRules, setIncludeAntigravityRules] = useState(() =>
+    Boolean(session.targetCodingTools?.includes('antigravity'))
+  );
+  const [includeClaudeMd, setIncludeClaudeMd] = useState(() =>
+    Boolean(session.targetCodingTools?.includes('claude_code'))
+  );
+  const [includeCursorRules, setIncludeCursorRules] = useState(() =>
+    Boolean(session.targetCodingTools?.includes('cursor'))
+  );
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [linting, setLinting] = useState(false);
   const [activeInfoTab, setActiveInfoTab] = useState<'none' | 'contract' | 'lint' | 'qa'>('none');
@@ -210,11 +217,14 @@ export function BlueprintStage({
   };
 
   useEffect(() => {
-    const d = session.blueprint?.depth || session.complexity?.recommendedDepth || 'concise';
+    const d = session.blueprint?.depth || session.complexity?.recommendedDepth || 'standard';
     setDepth(d);
     const tierWriter = pickWriterForDepth(providers, d, cooldowns);
     setGenProvider(tierWriter.provider);
     setGenModel(tierWriter.model);
+    setIncludeAntigravityRules(Boolean(session.targetCodingTools?.includes('antigravity')));
+    setIncludeClaudeMd(Boolean(session.targetCodingTools?.includes('claude_code')));
+    setIncludeCursorRules(Boolean(session.targetCodingTools?.includes('cursor')));
   }, [session.id, session.complexity?.recommendedDepth, providers.length]);
 
   useEffect(() => {
@@ -476,6 +486,7 @@ export function BlueprintStage({
       const res = await saveBlueprintToLocalFolder(session.id, {
         useLinkedRepo: true,
         subfolder: 'docs',
+        includeAntigravityRules,
         includeClaudeMd,
         includeCursorRules,
       });
@@ -498,6 +509,7 @@ export function BlueprintStage({
       if (picked.folderPath) {
         const res = await saveBlueprintToLocalFolder(session.id, {
           folderPath: picked.folderPath,
+          includeAntigravityRules,
           includeClaudeMd,
           includeCursorRules,
         });
@@ -531,6 +543,7 @@ export function BlueprintStage({
         const res = await saveBlueprintToLocalFolder(session.id, {
           useLinkedRepo: true,
           subfolder: 'docs',
+          includeAntigravityRules,
           includeClaudeMd,
           includeCursorRules,
         });
@@ -542,6 +555,7 @@ export function BlueprintStage({
         if (picked.folderPath) {
           const res = await saveBlueprintToLocalFolder(session.id, {
             folderPath: picked.folderPath,
+            includeAntigravityRules,
             includeClaudeMd,
             includeCursorRules,
           });
@@ -750,6 +764,7 @@ export function BlueprintStage({
 
                         <a
                           href={getBlueprintZipUrl(session.id, {
+                            includeAntigravityRules,
                             includeClaudeMd,
                             includeCursorRules,
                           })}
@@ -763,8 +778,20 @@ export function BlueprintStage({
 
                         <div className="border-t border-white/[0.08] my-1.5 pt-2 px-3 pb-1 space-y-2">
                           <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
-                            {t('İsteğe Bağlı Ek Dosyalar', 'Optional Tool Files')}
+                            {t('Hedef Araç Kural Dosyaları', 'Target Tool Rule Files')}
                           </div>
+                          <label className="flex items-center gap-2 text-[11px] text-zinc-300 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={includeAntigravityRules}
+                              onChange={(e) => setIncludeAntigravityRules(e.target.checked)}
+                              className="accent-[#7c74ff] rounded cursor-pointer"
+                            />
+                            <span>
+                              <code className="font-mono text-zinc-200">.agents/rules</code>{' '}
+                              <span className="text-zinc-500">(Antigravity)</span>
+                            </span>
+                          </label>
                           <label className="flex items-center gap-2 text-[11px] text-zinc-300 cursor-pointer select-none">
                             <input
                               type="checkbox"

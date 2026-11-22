@@ -4,7 +4,10 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { lintBlueprintPack } from '../server/blueprintLinter.ts';
 import { openFolderInIde } from '../server/ideLauncher.ts';
-import { getDefaultBlueprintPlan } from '../server/prompts.ts';
+import { buildCodingToolAdaptationBlock, getDefaultBlueprintPlan } from '../server/prompts.ts';
+import { extractResetHint, getProviderPoolsHealth } from '../server/quotaProbe.ts';
+import { buildBlueprintZipBuffer } from '../server/storage.ts';
+import JSZip from 'jszip';
 import type { DebateRound, DebateSession, GeneratedMdFile } from '../src/types.ts';
 import {
   collectFileIssueCounts,
@@ -309,5 +312,95 @@ describe('v5.2.0 Visual Overview, Phase Prompts & Highlights', () => {
 
     const badIdeRes = await openFolderInIde(os.tmpdir(), 'malicious_cmd' as any);
     expect(badIdeRes.ok).toBe(false);
+  });
+
+  it('v5.3: adapts Blueprint export, 6-file complex plan, and @-ref phase prompts to selected targetCodingTools', async () => {
+    const complexPlan = getDefaultBlueprintPlan('app_product', 'L', 'new_app');
+    expect(complexPlan).toHaveLength(6);
+    expect(complexPlan.some((f) => f.filename === '04B_API_AND_SECURITY_SPEC.md')).toBe(true);
+
+    const adaptText = buildCodingToolAdaptationBlock(['antigravity', 'claude_code']);
+    expect(adaptText).toContain('Antigravity');
+    expect(adaptText).toContain('Claude Code');
+
+    const session = makeBaseSession({
+      targetCodingTools: ['antigravity', 'claude_code'],
+      blueprint: {
+        provider: 'antigravity',
+        model: 'gemini-4-neon-high',
+        depth: 'deep',
+        startedAt: Date.now(),
+        contract: {
+          projectName: 'NeylePiser',
+          stack: ['React'],
+          entities: ['Recipe'],
+          routes: ['/'],
+          folderTree: ['src/'],
+          phases: ['Faz 1: İskelet'],
+          hardInvariants: ['0 USD'],
+          nonGoals: ['Sosyal ağ'],
+          rawJson: '{}',
+        },
+        files: [
+          {
+            id: 'f1',
+            filename: '01_PRODUCT_VISION.md',
+            title: 'Vizyon',
+            purpose: 'Vizyon',
+            status: 'done',
+            content: '# Vizyon',
+            provider: 'antigravity',
+            model: 'm',
+          },
+        ],
+      },
+    });
+
+    // Claude Code selected -> synthesized phase prompt uses @file syntax
+    const prompts = extractPhasePrompts(session);
+    expect(prompts[0].prompt).toContain('@PROJECT_CONTRACT.json');
+    expect(prompts[0].prompt).toContain('@01_PRODUCT_VISION.md');
+
+    // ZIP export includes ONLY Antigravity + Claude Code bridge files — NO .cursor folder!
+    const zipBuf = await buildBlueprintZipBuffer(session as any);
+    const zip = await JSZip.loadAsync(zipBuf);
+    const paths = Object.keys(zip.files);
+    expect(paths.some((p) => p.endsWith('/.agents/rules/conceptus-blueprint.md'))).toBe(true);
+    expect(paths.some((p) => p.endsWith('/CLAUDE.md'))).toBe(true);
+    expect(paths.some((p) => p.includes('.cursor'))).toBe(false);
+  });
+
+  it('v5.3: computes real provider pool health and extracts reset hints accurately', () => {
+    expect(extractResetHint('Rate limit hit. Resets in 2h 15m.')).toBe('Yenilenme: 2h 15m');
+    expect(extractResetHint('Weekly limit reached')).toBe('Haftalık limit doldu');
+
+    const health = getProviderPoolsHealth([
+      {
+        id: 'claude',
+        name: 'Claude Code',
+        command: 'claude',
+        installed: true,
+        models: [{ id: 'sonnet', label: 'Sonnet' }],
+        supportsEffort: true,
+        authStatus: { loggedIn: false },
+      },
+      {
+        id: 'codex',
+        name: 'Codex CLI',
+        command: 'codex',
+        installed: true,
+        models: [{ id: 'gpt-6-luna', label: 'GPT-6' }],
+        supportsEffort: true,
+        authStatus: { loggedIn: true, planLabel: 'ChatGPT' },
+      },
+    ]);
+
+    const claudePool = health.find((p) => p.pool === 'claude:all');
+    const codexPool = health.find((p) => p.pool === 'codex:all');
+    const agyPool = health.find((p) => p.pool === 'antigravity:gemini');
+    expect(claudePool?.status).toBe('auth_required');
+    expect(codexPool?.status).toBe('unknown');
+    expect(codexPool?.planLabel).toBe('ChatGPT');
+    expect(agyPool?.status).toBe('offline');
   });
 });
