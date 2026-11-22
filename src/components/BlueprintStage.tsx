@@ -962,6 +962,37 @@ export function BlueprintStage({
                       </div>
                     </div>
                   )}
+                  {session.blueprint.contract.sharedComponents &&
+                    session.blueprint.contract.sharedComponents.length > 0 && (
+                      <div className="md:col-span-2">
+                        <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
+                          Kanonik UI Bileşenleri
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {session.blueprint.contract.sharedComponents.map((c, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 rounded-full bg-[#3fd0c9]/12 text-[#88ece7] font-mono text-[10px]"
+                            >
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  {session.blueprint.contract.phases &&
+                    session.blueprint.contract.phases.length > 0 && (
+                      <div className="md:col-span-2">
+                        <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
+                          Kilitli İnşa Fazları (04 ↔ 05 Eşli)
+                        </div>
+                        <ol className="list-decimal pl-4 space-y-0.5 text-zinc-300">
+                          {session.blueprint.contract.phases.map((p, idx) => (
+                            <li key={idx}>{p}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
                   {session.blueprint.contract.hardInvariants.length > 0 && (
                     <div className="md:col-span-2">
                       <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">

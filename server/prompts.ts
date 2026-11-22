@@ -591,7 +591,7 @@ export function buildProjectContractPrompt(session: DebateSession): string {
     '[SİSTEM KURALI: HİÇBİR araç/tool ÇAĞIRMA. Sadece geçerli tek bir JSON nesnesi döndür; başka hiçbir açıklama veya markdown bloğu ekleme.]',
     '',
     '# GÖREV — DALGA 0: KANONİK PROJE SÖZLEŞMESİ (PROJECT_CONTRACT.json)',
-    'Paralel üretilecek tüm `.md` dosyalarının %100 aynı teknoloji, rota, varlık, klasör ve kırmızı çizgileri kullanması için projenin **değiştirilemez teknik anayasasını** çıkar.',
+    'Üretilecek tüm `.md` dosyalarının %100 aynı teknoloji, rota, varlık, bileşen adı, sabit eşik, faz sırası ve kırmızı çizgileri kullanması için projenin **değiştirilemez teknik anayasasını** çıkar.',
     '',
     ...(locked ? [locked, ''] : []),
     '## KAYNAK MASTER KARAR',
@@ -600,10 +600,13 @@ export function buildProjectContractPrompt(session: DebateSession): string {
     'SADECE şu şemada tek bir geçerli JSON nesnesi döndür:',
     '{',
     '  "projectName": "Kısa proje adı",',
-    '  "stack": ["Örn: React 19 + TypeScript + Vite", "IndexedDB (Dexie)", "Tailwind CSS"],',
+    '  "stack": ["Örn: React 19 + TypeScript + Vite", "SQLite / IndexedDB", "Tailwind CSS"],',
     '  "entities": ["Veri varlığı veya model adı #1 (PascalCase)", "Model #2", "Model #3"],',
     '  "routes": ["/ (Ana Ekran)", "/ekran-2 (Açıklama)", "/ayarlar (Açıklama)"],',
-    '  "folderTree": ["src/components/", "src/stores/", "src/lib/", "tests/"],',
+    '  "folderTree": ["src/components/", "src/features/", "src/services/", "src/db/"],',
+    '  "sharedComponents": ["Paylaşımlı UI bileşen adı #1 (PascalCase)", "Bileşen #2", "Bileşen #3"],',
+    '  "sharedConstants": ["Eşik, format veya maskeleme sabiti #1 (örn: MIN_FREE_STORAGE_MB=200)", "Sabit #2 (örn: PII_TOKENS=[MASKED_TC]/[MASKED_TEL])"],',
+    '  "phases": ["Faz 1: Proje İskeleti, Kalite Kapıları ve Temel Kurulum", "Faz 2: Veri Katmanı & Çekirdek Model", "Faz 3: Ana Özellik Dikey Dilimi", "Faz 4: Entegrasyon, Güvenlik ve Doğrulama"],',
     '  "hardInvariants": ["Asla bozulmayacak kural #1", "Kural #2", "Kural #3"],',
     '  "nonGoals": ["v1 kapsamında kesinlikle yapılmayacak #1", "Non-Goal #2"]',
     '}',
@@ -613,17 +616,64 @@ export function buildProjectContractPrompt(session: DebateSession): string {
 function buildContractLockBlock(contract?: ProjectContract): string {
   if (!contract) return '';
   return [
-    '## KANONİK PROJE SÖZLEŞMESİ (DALGA 0 KİLİDİ — TÜM DOSYALARDA BİREBİR AYNI İSİMLERİ KULLAN!)',
+    '## KANONİK PROJE SÖZLEŞMESİ (DALGA 0 KİLİDİ — TÜM DOSYALARDA BİREBİR AYNI İSİMLERİ, SABİTLERİ VE FAZ SIRASINI KULLAN!)',
     `- **Proje:** ${contract.projectName}`,
     ...(contract.stack.length ? [`- **Teknoloji Yığını:** ${contract.stack.join(' · ')}`] : []),
     ...(contract.entities.length ? [`- **Kanonik Veri Varlıkları:** ${contract.entities.join(', ')}`] : []),
     ...(contract.routes.length ? [`- **Kanonik Ekran/Rotalar:** ${contract.routes.join(' · ')}`] : []),
     ...(contract.folderTree.length ? [`- **Klasör Ağacı:** ${contract.folderTree.join(', ')}`] : []),
+    ...(contract.sharedComponents?.length
+      ? [`- **Kanonik UI Bileşen Adları (02 & 03'te BİREBİR kullan):** ${contract.sharedComponents.join(', ')}`]
+      : []),
+    ...(contract.sharedConstants?.length
+      ? [`- **Kanonik Sabitler / Formatlar / Maske Tokenları (01, 02, 03'te BİREBİR kullan):** ${contract.sharedConstants.join(' · ')}`]
+      : []),
+    ...(contract.phases?.length
+      ? [`- **Kanonik İnşa Fazları (04 & 05'te BİREBİR aynı numara ve kapsamla kullan):**\n${contract.phases.map((p) => `  - ${p}`).join('\n')}`]
+      : []),
     ...(contract.hardInvariants.length
       ? [`- **Hard Invariants (Kırmızı Çizgiler):**\n${contract.hardInvariants.map((x) => `  - ${x}`).join('\n')}`]
       : []),
     ...(contract.nonGoals.length ? [`- **v1 Kapsam Dışı (Non-Goals):** ${contract.nonGoals.join(' · ')}`] : []),
   ].join('\n');
+}
+
+/**
+ * Extracts a compact, authoritative Wave 1 digest (real headings, exact 04_BUILD_ROADMAP phases,
+ * and real verification commands) so Wave 2 (`05_AGENTS_START_HERE.md`) has ZERO cross-file drift!
+ */
+export function buildWave1Digest(files: Array<{ filename: string; content: string; status: string }>): string {
+  const done = files.filter((f) => f.status === 'done' && f.content.trim().length > 0 && !/AGENTS|START_HERE|BRIEF/i.test(f.filename));
+  if (done.length === 0) return '';
+
+  const lines: string[] = [
+    '## DALGA 1 GERÇEK ÇIKTI ÖZETİ (05 DOSYASINI BUNLARLA %100 EŞLEŞTİR — FAZ NUMARASINI ASLA DEĞİŞTİRME!)',
+  ];
+
+  for (const f of done) {
+    const headings = f.content
+      .split(/\r?\n/)
+      .filter((l) => /^#{2,3}\s+/.test(l))
+      .slice(0, 14)
+      .map((h) => h.trim());
+    lines.push(`### ${f.filename}`);
+    if (headings.length) {
+      lines.push(headings.join('\n'));
+    }
+
+    if (/ROADMAP|ACTION|PLAYBOOK/i.test(f.filename)) {
+      const cmdMatches = Array.from(
+        new Set(
+          (f.content.match(/`(?:npm run [a-zA-Z0-9:_-]+|npx [a-zA-Z0-9:_-]+)`/g) || []).slice(0, 12)
+        )
+      );
+      if (cmdMatches.length) {
+        lines.push(`Doğrulama komutları: ${cmdMatches.join(', ')}`);
+      }
+    }
+  }
+
+  return lines.join('\n').slice(0, 3600);
 }
 
 export function buildBlueprintFilePrompt(
@@ -632,7 +682,8 @@ export function buildBlueprintFilePrompt(
   allSelected: BlueprintFileSpec[],
   depth: BlueprintDepth = 'concise',
   revision?: { note?: string; previousContent?: string },
-  contract?: ProjectContract
+  contract?: ProjectContract,
+  wave1Digest?: string
 ): string {
   const master = session.synthesis?.content?.trim();
   const latestRound = session.rounds[session.rounds.length - 1];
@@ -652,32 +703,38 @@ export function buildBlueprintFilePrompt(
 
   const depthRules: Record<BlueprintDepth, string> = {
     concise:
-      'UZUNLUK & HIZ KURALI (HIZLI & KESKİN): Toplam **700–1.100 kelime (~5–8 KB)** aralığında kal! Ultra yoğun, cerrahi netlikte, sıfır tekrar ve sıfır dolgu metni olsun. Kodlama ajanları için en ideal yoğunlukta tablolar, veri şemaları ve kesin kurallar ver.',
+      'UZUNLUK & YOĞUNLUK KURALI (HIZLI & KESKİN): Toplam **700–1.050 kelime (~6–9 KB)** aralığında kal! Sıfır tekrar, sıfır dolgu metni; kodlama ajanları için maksimum sinyal yoğunluğu.',
     standard:
-      'UZUNLUK KURALI (STANDART): Toplam **1.300–2.000 kelime (~10–15 KB)** aralığında dengeli, somut ve eksiksiz bir mühendislik dokümanı yaz.',
+      'UZUNLUK & YOĞUNLUK KURALI (STANDART): Toplam **1.200–1.750 kelime (~10–14 KB)** aralığında kal! Eksiksiz mühendislik detayları ver ama diğer dosyalardaki listeleri kopyalayıp şişirme.',
     deep:
-      'UZUNLUK KURALI (KAPSAMLI): Tam detaylı kurumsal dokümantasyon yaz (uç durumlar, tam şemalar ve kapsamlı spesifikasyonlar).',
+      'UZUNLUK & YOĞUNLUK KURALI (KAPSAMLI AMA SIKI — DRY): Toplam **1.800–2.600 kelime (~15–22 KB, kesinlikle 28 KB üstüne taşma!)** aralığında kal! Tam şema, uç durum ve spesifikasyon ver ama başka dosyada tanımlı kuralları tekrar tekrar kopyalayarak bağlam penceresini (context window) şişirme.',
   };
 
   const upperName = target.filename.toUpperCase();
   const roleSpecificRules: string[] = [];
-  if (/UX|DESIGN|SCREEN/.test(upperName)) {
+  if (/VISION|PRODUCT|PRD/.test(upperName)) {
+    roleSpecificRules.push(
+      '7. TEK SAHİPLİK (DRY) KURALI: Problem, personalar, kullanıcı yolculukları, MVP kabul kriterleri ve Non-Goals listesini yaz; SQL şeması, UI token tablosu veya faz faz terminal komutları yazıp diğer dosyalara taşma.'
+    );
+  } else if (/UX|DESIGN|SCREEN/.test(upperName)) {
     roleSpecificRules.push(
       '7. GÖRSEL AKIŞ KURALI: Ekranlar arası geçişi gösteren geçerli, sade 1 adet ```mermaid (`flowchart LR`) diyagramı ekle (özel karakter içeren etiketleri çift tırnak içine al).',
-      '8. UÇ DURUM MATRİSİ (ZORUNLU): Kritik ekranlar için `Loading | Empty | Error & Retry | Validation` durumlarını tek bir net Markdown tablosunda tanımla.'
+      '8. UÇ DURUM MATRİSİ (ZORUNLU): Kritik ekranlar için `Loading | Empty | Error & Retry | Validation` durumlarını tek bir net Markdown tablosunda tanımla.',
+      '9. BİLEŞEN & SABİT EŞLEME KURALI: Kanonik Proje Sözleşmesindeki `sharedComponents` ve `sharedConstants` adlarını/eşiklerini BİREBİR kullan; farklı bileşen adı veya çelişen MB/format eşiği uydurma.'
     );
   } else if (/ARCH|DATA|SCHEMA/.test(upperName)) {
     roleSpecificRules.push(
       '7. MİMARİ DİYAGRAM KURALI: Sistem veri akışını veya veri modelini gösteren geçerli, sade 1 adet ```mermaid (`flowchart TD` veya `erDiagram`) diyagramı ekle (özel karakter içeren etiketleri çift tırnak içine al).',
-      '8. UÇ DURUM & GÜVENLİK KURALI: Hata/retry stratejisi, girdi doğrulama sınırları ve güvenlik tehdit tedbirlerini somut tablo/kurallarla yaz.'
+      '8. UÇ DURUM & GÜVENLİK KURALI: Çalışır veri şeması (DDL/TypeScript tipleri), hata/retry stratejisi, girdi doğrulama sınırları ve güvenlik tehdit tedbirlerini somut tablo/kurallarla yaz; `sharedComponents` ve `sharedConstants` adlarını sözleşmeyle %100 aynı tut.'
     );
   } else if (/ROADMAP|ACTION|PLAYBOOK/.test(upperName)) {
     roleSpecificRules.push(
-      '7. YÜRÜTÜLEBİLİR DOĞRULAMA KAPILARI (ZORUNLU): Her fazın altına kodlama ajanının çalıştırıp doğrulayacağı somut kabul kriterleri ve terminal/test kontrol komutları (örn. typecheck, unit test, smoke check) ekle.'
+      '7. FAZ KİLİDİ & YÜRÜTÜLEBİLİR DOĞRULAMA KAPILARI (ZORUNLU): Kanonik Proje Sözleşmesindeki `phases` listesini BİREBİR aynı numara ve sırayla (`Faz 1`, `Faz 2`, ...) kullan! Her fazın altına kodlama ajanının çalıştırıp doğrulayacağı somut kabul kriterleri ve terminal/test kontrol komutları (`npm run typecheck`, `npm test` vb.) ekle.'
     );
   } else if (/AGENTS|START_HERE|BRIEF/.test(upperName)) {
     roleSpecificRules.push(
-      '7. FAZ FAZ HAZIR BAŞLANGIÇ PROMPTLARI (ZORUNLU): En sona kodlama ajanına (`Antigravity`, `Cursor`, `Claude Code`, `Codex`) kopyala-yapıştır verilebilecek **Faz 1 Başlangıç Promptu** ve **Faz 2 Devam Promptu** kod blokları ekle; tüm Hard Invariants kurallarını açıkça listele.'
+      '7. OKUMA SIRASI & FAZ UYUMU (ZORUNLU): Okuma sırası MUTLAKA `0. PROJECT_CONTRACT.json` ile başlasın (`AGENTS.md` ile %100 uyumlu). Dalga 1 özetindeki `04_BUILD_ROADMAP.md` faz numaraları, faz başlıkları ve doğrulama komutlarıyla BİREBİR örtüş — asla farklı faz kapsamı uydurma!',
+      '8. DRY & KISA BAŞLATMA PROMPTLARI (ZORUNLU): Hard Invariants listesini belgede YALNIZCA 1 KEZ (Bölüm 3) yaz! En sondaki **Faz 1 Başlangıç Promptu** ve **Faz 2 Devam Promptu** kod bloklarında tüm Hard Invariants listesini tekrar kopyalama; bunun yerine "`PROJECT_CONTRACT.json` ve `05_AGENTS_START_HERE.md §3` kurallarına %100 uy" diyerek her promptu 12–18 satırlık keskin, kopyala-yapıştır hazır talimat olarak yaz (bu dosya toplamda 14 KB\'ı geçmesin!).'
     );
   }
 
@@ -698,6 +755,7 @@ export function buildBlueprintFilePrompt(
     '',
     ...(lockedDecisions ? [lockedDecisions, ''] : []),
     ...(contractBlock ? [contractBlock, ''] : []),
+    ...(wave1Digest ? ['', wave1Digest] : []),
     '---',
     sourceOfTruth,
     '',
@@ -715,7 +773,7 @@ export function buildBlueprintFilePrompt(
     '1. DİSKE DOSYA YAZMA ve HİÇBİR ARAÇ/TOOL ÇAĞIRMA! İçeriği doğrudan bu yanıt metni olarak `# ...` başlığıyla yaz (başta/sonda sohbet cümlesi ekleme).',
     '2. Master Karar, Kanonik Proje Sözleşmesi ve KESİN KULLANICI KARARLARI zaten kilitlidir; alternatifleri yeniden tartışma veya "TBD / TODO / karar verilecek" bırakma.',
     `3. ${depthRules[depth]}`,
-    '4. Paketteki diğer `.md` dosyalarının konusuna taşma; yalnızca kendi dosyanın sorumluluğunu %100 tutarlı şekilde yaz.',
+    '4. Paketteki diğer `.md` dosyalarının konusuna taşma ve aynı listeleri tekrarlayıp bağlamı şişirme; yalnızca kendi dosyanın sorumluluğunu %100 tutarlı şekilde yaz.',
     '5. Soyut açıklamalar yerine somut kurallar, net mimari/şema, kısa tablolar ve uygulanabilir maddeler kullan.',
     session.language === 'en'
       ? '6. Language: Crisp, professional English throughout.'

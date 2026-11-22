@@ -68,7 +68,7 @@ export function UpdateModal({
 
   if (!open) return null;
 
-  const currentVersion = updateInfo?.currentVersion || '5.0.1';
+  const currentVersion = updateInfo?.currentVersion || '5.1.0';
   const latestVersion = updateInfo?.latestVersion || currentVersion;
   const available = Boolean(updateInfo?.updateAvailable);
   const offline = updateInfo?.status === 'offline';

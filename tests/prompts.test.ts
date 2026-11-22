@@ -6,6 +6,7 @@ import {
   buildProjectContractPrompt,
   buildRedTeamPrompt,
   buildTargetedChallengePrompt,
+  buildWave1Digest,
   getDefaultBlueprintPlan,
 } from '../server/prompts.ts';
 import type { DebateRound, DebateSession, ProjectContract, SeatConfig } from '../server/types.ts';
@@ -104,6 +105,9 @@ describe('CONCEPTUS Prompt & Blueprint Standards', () => {
     const contractPrompt = buildProjectContractPrompt(session);
     expect(contractPrompt).toContain('PROJECT_CONTRACT.json');
     expect(contractPrompt).toContain('hardInvariants');
+    expect(contractPrompt).toContain('sharedComponents');
+    expect(contractPrompt).toContain('sharedConstants');
+    expect(contractPrompt).toContain('phases');
 
     const contract: ProjectContract = {
       projectName: 'TestApp',
@@ -111,6 +115,9 @@ describe('CONCEPTUS Prompt & Blueprint Standards', () => {
       entities: ['PantryItem', 'RecipeDraft'],
       routes: ['/pantry', '/recipes'],
       folderTree: ['src/features/pantry'],
+      sharedComponents: ['GlassCard', 'RecipePill'],
+      sharedConstants: ['MIN_STORAGE_MB=200'],
+      phases: ['Faz 1: Proje İskeleti', 'Faz 2: IndexedDB Veri Katmanı'],
       hardInvariants: ['Sıfır sunucu bağımlılığı'],
       nonGoals: ['Sosyal paylaşım yok'],
       rawJson: '{}',
@@ -120,15 +127,29 @@ describe('CONCEPTUS Prompt & Blueprint Standards', () => {
 
     const uxPrompt = buildBlueprintFilePrompt(session, specs[1], specs, 'standard', undefined, contract);
     expect(uxPrompt).toContain('PantryItem');
+    expect(uxPrompt).toContain('GlassCard');
     expect(uxPrompt).toContain('Loading');
     expect(uxPrompt).toContain('Empty');
 
     const roadmapPrompt = buildBlueprintFilePrompt(session, specs[3], specs, 'standard', undefined, contract);
     expect(roadmapPrompt).toContain('YÜRÜTÜLEBİLİR DOĞRULAMA KAPILARI');
+    expect(roadmapPrompt).toContain('Faz 2: IndexedDB Veri Katmanı');
 
-    const agentsPrompt = buildBlueprintFilePrompt(session, specs[4], specs, 'standard', undefined, contract);
+    const wave1Digest = buildWave1Digest([
+      {
+        filename: '04_BUILD_ROADMAP.md',
+        status: 'done',
+        content: '# 04\n## Faz 1 — Proje İskeleti\n## Faz 2 — IndexedDB Veri Katmanı\n`npm run typecheck` `npm run db:verify`',
+      },
+    ]);
+    expect(wave1Digest).toContain('Faz 2 — IndexedDB Veri Katmanı');
+    expect(wave1Digest).toContain('npm run db:verify');
+
+    const agentsPrompt = buildBlueprintFilePrompt(session, specs[4], specs, 'standard', undefined, contract, wave1Digest);
     expect(agentsPrompt).toContain('Faz 1 Başlangıç Promptu');
     expect(agentsPrompt).toContain('Sıfır sunucu bağımlılığı');
+    expect(agentsPrompt).toContain('0. PROJECT_CONTRACT.json');
+    expect(agentsPrompt).toContain('Faz 2 — IndexedDB Veri Katmanı');
   });
 
   it('v5.0: uses Delta-Only conflict protocol in Round 2+ and supports Red-Team & Targeted @Seat interventions', () => {

@@ -15,6 +15,7 @@ import {
   buildRedTeamPrompt,
   buildRound1Prompt,
   buildTargetedChallengePrompt,
+  buildWave1Digest,
 } from './prompts.ts';
 import { loadSession, saveSession } from './storage.ts';
 import type {
@@ -734,9 +735,12 @@ function sanitizeContract(raw: any, fallbackTitle: string): ProjectContract | un
   const contract: ProjectContract = {
     projectName: String(raw.projectName || fallbackTitle).trim() || fallbackTitle,
     stack: arr(raw.stack, 10),
-    entities: arr(raw.entities, 12),
-    routes: arr(raw.routes, 12),
-    folderTree: arr(raw.folderTree, 12),
+    entities: arr(raw.entities, 14),
+    routes: arr(raw.routes, 14),
+    folderTree: arr(raw.folderTree, 14),
+    sharedComponents: arr(raw.sharedComponents, 12),
+    sharedConstants: arr(raw.sharedConstants, 12),
+    phases: arr(raw.phases, 10),
     hardInvariants: arr(raw.hardInvariants, 8),
     nonGoals: arr(raw.nonGoals, 8),
     generatedAt: Date.now(),
@@ -755,6 +759,9 @@ function sanitizeContract(raw: any, fallbackTitle: string): ProjectContract | un
       entities: contract.entities,
       routes: contract.routes,
       folderTree: contract.folderTree,
+      ...(contract.sharedComponents?.length ? { sharedComponents: contract.sharedComponents } : {}),
+      ...(contract.sharedConstants?.length ? { sharedConstants: contract.sharedConstants } : {}),
+      ...(contract.phases?.length ? { phases: contract.phases } : {}),
       hardInvariants: contract.hardInvariants,
       nonGoals: contract.nonGoals,
     },
@@ -875,8 +882,7 @@ export async function startBlueprintGeneration(
         broadcast(sessionId, { type: 'autopilot_stage', stage: '' });
       }
 
-      // Wave 1: Full single-wave parallel execution (up to 6 files simultaneously, all anchored to Wave 0 contract!)
-      await runWithConcurrency(normalizedSpecs, 6, async (spec) => {
+      const runSpec = async (spec: BlueprintFileSpec, wave1Digest?: string) => {
         if (controller.signal.aborted) return;
         const target = pack.files.find((f) => f.id === spec.id);
         if (!target) return;
@@ -891,7 +897,8 @@ export async function startBlueprintGeneration(
           normalizedSpecs,
           depth,
           undefined,
-          pack.contract
+          pack.contract,
+          wave1Digest
         );
         try {
           const result = await runCliSeatWithFallback({
@@ -948,7 +955,24 @@ export async function startBlueprintGeneration(
 
         saveSession(session);
         broadcast(sessionId, { type: 'blueprint_file_completed', file: target });
-      });
+      };
+
+      // Smart 2-Wave Dependency Split (0 extra LLM calls!):
+      // Wave 1: All core specs (01..04, 04B) run in parallel anchored to Wave 0 contract.
+      // Wave 2: 05_AGENTS_START_HERE.md runs right after Wave 1 so it sees the REAL 04_BUILD_ROADMAP phases & scripts (0% phase drift!).
+      const isHandoffSpec = (spec: BlueprintFileSpec) =>
+        /AGENTS|START_HERE|BRIEF/i.test(spec.filename);
+      const wave1Specs = normalizedSpecs.filter((s) => !isHandoffSpec(s));
+      const wave2Specs = normalizedSpecs.filter((s) => isHandoffSpec(s));
+
+      if (wave1Specs.length > 0) {
+        await runWithConcurrency(wave1Specs, 6, (spec) => runSpec(spec));
+      }
+
+      if (wave2Specs.length > 0 && !controller.signal.aborted) {
+        const digest = buildWave1Digest(pack.files);
+        await runWithConcurrency(wave2Specs, 2, (spec) => runSpec(spec, digest));
+      }
 
       // Instant 0-Token Deterministic Local Linter (<15ms!)
       const lint = lintBlueprintPack(session);
@@ -1023,6 +1047,9 @@ export async function regenerateBlueprintFile(
 
   void (async () => {
     try {
+      const isHandoff = /AGENTS|START_HERE|BRIEF/i.test(targetSpec.filename);
+      const digest =
+        isHandoff && session.blueprint ? buildWave1Digest(session.blueprint.files) : undefined;
       const prompt = buildBlueprintFilePrompt(
         session,
         targetSpec,
@@ -1030,7 +1057,9 @@ export async function regenerateBlueprintFile(
         depth,
         options.revisionNote?.trim()
           ? { note: options.revisionNote.trim(), previousContent }
-          : undefined
+          : undefined,
+        session.blueprint?.contract,
+        digest
       );
       const result = await runCliSeatWithFallback({
         provider: options.provider,
@@ -1359,7 +1388,18 @@ export async function retryFailedBlueprintFiles(
         }
 
         try {
-          const prompt = buildBlueprintFilePrompt(session, spec, allSpecs, depth);
+          const isHandoff = /AGENTS|START_HERE|BRIEF/i.test(spec.filename);
+          const digest =
+            isHandoff && session.blueprint ? buildWave1Digest(session.blueprint.files) : undefined;
+          const prompt = buildBlueprintFilePrompt(
+            session,
+            spec,
+            allSpecs,
+            depth,
+            undefined,
+            session.blueprint?.contract,
+            digest
+          );
           const result = await runCliSeatWithFallback({
             provider: target.provider,
             model: target.model,

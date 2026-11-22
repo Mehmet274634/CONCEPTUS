@@ -199,7 +199,7 @@ export function TopBar({
           <span>
             {updateInfo?.updateAvailable
               ? `v${updateInfo.latestVersion}`
-              : `v${updateInfo?.currentVersion || '5.0.1'}`}
+              : `v${updateInfo?.currentVersion || '5.1.0'}`}
           </span>
         </button>
 

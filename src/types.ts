@@ -141,6 +141,9 @@ export interface ProjectContract {
   entities: string[];
   routes: string[];
   folderTree: string[];
+  sharedComponents?: string[];
+  sharedConstants?: string[];
+  phases?: string[];
   hardInvariants: string[];
   nonGoals: string[];
   generatedBy?: string;

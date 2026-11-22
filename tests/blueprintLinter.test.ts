@@ -54,6 +54,16 @@ function makeCleanSession(contract?: ProjectContract): DebateSession {
           content: `# 03 Mimari & Veri\n\nTaskEntity ve FocusSession tabloları yerel IndexedDB içinde saklanır.\n\n\`\`\`mermaid\nerDiagram\n  TaskEntity ||--o{ FocusSession : tracks\n\`\`\`\n\n${fillerWords(200)}`,
         },
         {
+          id: 'f4',
+          filename: '04_BUILD_ROADMAP.md',
+          title: 'Yol Haritası',
+          purpose: 'Faz planı',
+          status: 'done',
+          provider: 'codex',
+          model: 'gpt-6-luna',
+          content: `# 04 Yol Haritası\n\n## Faz 1 — Proje İskeleti ve Kurulum\n\`npm run typecheck\`\n\n## Faz 2 — Yerel Veri Temeli ve FTS5\n\`npm run db:verify\`\n\n${fillerWords(200)}`,
+        },
+        {
           id: 'f5',
           filename: '05_AGENTS_START_HERE.md',
           title: 'Başlangıç',
@@ -61,7 +71,7 @@ function makeCleanSession(contract?: ProjectContract): DebateSession {
           status: 'done',
           provider: 'claude',
           model: 'claude-opus-4-6',
-          content: `# 05 Ajan Başlangıç\n\n## Değiştirilemez Kurallar (Hard Invariants)\n- Offline çalışmalı, harici telemetry yasak.\n\n${fillerWords(200)}`,
+          content: `# 05 Ajan Başlangıç\n\n0. \`PROJECT_CONTRACT.json\` dosyasını oku.\n\n## Değiştirilemez Kurallar (Hard Invariants)\n- Offline çalışmalı, harici telemetry yasak.\n\n### Faz 2 — Yerel Veri Temeli ve FTS5\n${fillerWords(200)}`,
         },
       ],
     },
@@ -107,7 +117,7 @@ describe('CONCEPTUS v5.0 — 0-Token Deterministic Local Blueprint Linter', () =
     // Corrupt files intentionally
     session.blueprint!.files[0].content = 'Başlıksız çok kısa TBD karar verilecek taslak.';
     session.blueprint!.files[1].content = `# 02 UX\n\n\`\`\`mermaid\nflowchart LR\n  A["Kapatılmamış tırnak] --> B\n\`\`\`\n\n${fillerWords(200)}`;
-    session.blueprint!.files[3].content = `# 05 Başlangıç\n\nSadece genel giriş metni. ${fillerWords(200)}`;
+    session.blueprint!.files[4].content = `# 05 Başlangıç\n\nSadece genel giriş metni. ${fillerWords(200)}`;
 
     const report = lintBlueprintPack(session);
     expect(report.score).toBeLessThan(70);
@@ -119,5 +129,18 @@ describe('CONCEPTUS v5.0 — 0-Token Deterministic Local Blueprint Linter', () =
     expect(descs).toContain('Mermaid');
     expect(descs).toContain('InvoiceLedger');
     expect(descs).toContain('Hard Invariants');
+    expect(descs).toContain('PROJECT_CONTRACT.json');
+  });
+
+  it('v5.1: catches cross-file Phase 2 drift between 04_BUILD_ROADMAP.md and 05_AGENTS_START_HERE.md', () => {
+    const session = makeCleanSession();
+    // 04 has "Faz 2 — Yerel Veri Temeli ve FTS5", intentionally mismatch 05 to "Faz 2 — Native Ses Kaydı"
+    session.blueprint!.files[4].content = `# 05 Ajan Başlangıç\n\n0. \`PROJECT_CONTRACT.json\`\n## Hard Invariants\n- Offline\n### Faz 2 — Native Arka Plan Ses Kaydı ve İçe Aktarma\n${fillerWords(200)}`;
+
+    const report = lintBlueprintPack(session);
+    const phaseIssue = report.issues.find((i) => i.description.includes('Faz 2'));
+    expect(phaseIssue).toBeDefined();
+    expect(phaseIssue?.severity).toBe('high');
+    expect(phaseIssue?.conflictWith).toBe('04_BUILD_ROADMAP.md');
   });
 });

@@ -167,10 +167,37 @@ export function lintBlueprintPack(session: DebateSession): BlueprintLintReport {
         }
       }
     }
+
+    // Check E: Context-window budget guard (prevent bloated >38KB files or >22KB handoff briefs)
+    const sizeKB = Buffer.byteLength(content, 'utf8') / 1024;
+    const isHandoff = /AGENTS|START_HERE|BRIEF/.test(upper);
+    totalChecks++;
+    if (isHandoff && sizeKB > 22) {
+      pushIssue({
+        severity: 'low',
+        file: file.filename,
+        description: `${file.filename} fazla şişkin (${sizeKB.toFixed(1)} KB); Hard Invariants tekrar kopyalanmış olabilir.`,
+        fixInstruction: 'Hard Invariants listesini yalnızca 1 kez yaz, başlangıç promptlarını kısa referanslarla sadeleştir.',
+      });
+    } else if (!isHandoff && sizeKB > 38) {
+      pushIssue({
+        severity: 'low',
+        file: file.filename,
+        description: `${file.filename} çok büyük (${sizeKB.toFixed(1)} KB); kodlama ajanının bağlam penceresini gereksiz doldurabilir.`,
+        fixInstruction: 'Diğer dosyalarda tanımlı tekrar listeleri silip yalnızca bu dosyanın çekirdek sorumluluğunu tut.',
+      });
+    } else {
+      passedChecks++;
+    }
   }
 
   // 3. Canonical PROJECT_CONTRACT consistency checks across the whole pack
   const contract = session.blueprint?.contract;
+  const agentsFile = files.find((f) => /AGENTS|START_HERE|BRIEF/i.test(f.filename));
+  const roadmapFile = files.find((f) => /ROADMAP|ACTION|PLAYBOOK/i.test(f.filename));
+  const uxFile = files.find((f) => /UX|DESIGN|SCREEN/i.test(f.filename));
+  const archFile = files.find((f) => /ARCH|DATA|SCHEMA/i.test(f.filename));
+
   if (contract && files.length > 0) {
     const fullPackLower = files.map((f) => f.content).join('\n').toLowerCase();
 
@@ -192,9 +219,28 @@ export function lintBlueprintPack(session: DebateSession): BlueprintLintReport {
       }
     }
 
+    if (contract.sharedComponents && contract.sharedComponents.length > 0 && uxFile && archFile) {
+      totalChecks++;
+      const uxLower = uxFile.content.toLowerCase();
+      const archLower = archFile.content.toLowerCase();
+      const missingInBoth = contract.sharedComponents.filter(
+        (c) => c.trim().length >= 3 && !uxLower.includes(c.trim().toLowerCase()) && !archLower.includes(c.trim().toLowerCase())
+      );
+      if (missingInBoth.length > Math.ceil(contract.sharedComponents.length * 0.5)) {
+        pushIssue({
+          severity: 'medium',
+          file: uxFile.filename,
+          conflictWith: archFile.filename,
+          description: `Kanonik UI bileşen adları UX/Mimari dosyalarında kullanılmamış: ${missingInBoth.slice(0, 4).join(', ')}.`,
+          fixInstruction: '02_UX ve 03_ARCH dosyalarında PROJECT_CONTRACT.json içindeki bileşen adlarını birebir kullan.',
+        });
+      } else {
+        passedChecks++;
+      }
+    }
+
     if (contract.hardInvariants.length > 0) {
       totalChecks++;
-      const agentsFile = files.find((f) => /AGENTS|START_HERE|BRIEF/i.test(f.filename));
       if (!agentsFile || !/invariant|kırmızı çizgi|değiştirilemez|kurallar|must not|never/i.test(agentsFile.content)) {
         pushIssue({
           severity: 'medium',
@@ -202,6 +248,52 @@ export function lintBlueprintPack(session: DebateSession): BlueprintLintReport {
           conflictWith: 'PROJECT_CONTRACT.json',
           description: 'Başlangıç talimatı dosyasında değiştirilemez kurallar (Hard Invariants) açıkça vurgulanmamış.',
           fixInstruction: '05_AGENTS_START_HERE.md içine PROJECT_CONTRACT içindeki tüm Hard Invariants kurallarını net madde listesi olarak ekle.',
+        });
+      } else {
+        passedChecks++;
+      }
+    }
+
+    // Check F: Reading order sync — 05_AGENTS_START_HERE must reference PROJECT_CONTRACT.json
+    if (agentsFile) {
+      totalChecks++;
+      if (!/PROJECT_CONTRACT\.json/i.test(agentsFile.content)) {
+        pushIssue({
+          severity: 'low',
+          file: agentsFile.filename,
+          conflictWith: 'AGENTS.md',
+          description: `${agentsFile.filename} okuma sırasında \`PROJECT_CONTRACT.json\` dosyasını referans göstermiyor.`,
+          fixInstruction: 'Okuma sırasının en başına `0. PROJECT_CONTRACT.json` adımını ekle.',
+        });
+      } else {
+        passedChecks++;
+      }
+    }
+  }
+
+  // Check G: Cross-file phase alignment between 04_BUILD_ROADMAP.md and 05_AGENTS_START_HERE.md
+  if (roadmapFile && agentsFile) {
+    const extractPhase2Tokens = (md: string): string[] => {
+      const m = md.match(/^#{2,4}\s+[^\n]*(?:Faz|Phase)\s*2\b([^\n]*)/im);
+      if (!m) return [];
+      return m[1]
+        .toLowerCase()
+        .replace(/[^a-zçğıöşü0-9\s]/gi, ' ')
+        .split(/\s+/)
+        .filter((w) => w.length >= 4 && !/kapsam|kapsamı|faz|phase|devam|promptu|uygulama/.test(w));
+    };
+    const r2 = extractPhase2Tokens(roadmapFile.content);
+    const a2 = extractPhase2Tokens(agentsFile.content);
+    if (r2.length >= 2 && a2.length >= 2) {
+      totalChecks++;
+      const overlap = a2.some((tok) => r2.some((rt) => rt.startsWith(tok.slice(0, 4)) || tok.startsWith(rt.slice(0, 4))));
+      if (!overlap) {
+        pushIssue({
+          severity: 'high',
+          file: agentsFile.filename,
+          conflictWith: roadmapFile.filename,
+          description: `${agentsFile.filename} içindeki Faz 2 başlığı ile ${roadmapFile.filename} içindeki Faz 2 kapsamı birbiriyle uyuşmuyor.`,
+          fixInstruction: `${agentsFile.filename} dosyasını ${roadmapFile.filename} içindeki gerçek Faz 1 ve Faz 2 başlıklarıyla birebir hizala.`,
         });
       } else {
         passedChecks++;
