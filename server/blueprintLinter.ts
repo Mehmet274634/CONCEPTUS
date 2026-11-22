@@ -120,12 +120,18 @@ export function lintBlueprintPack(session: DebateSession): BlueprintLintReport {
     }
 
     // Check C: Uncertainty / TBD / TODO leakage outside code fences
+    // Ignore lines that explicitly PROHIBIT TBDs/TODOs (e.g. "TBD veya TODO eklenemez")
     totalChecks++;
-    const proseOnly = stripFencedCode(content);
+    const PROHIBITION_LINE_RE =
+      /eklenemez|bırakma|bırakılamaz|yasaktır|yasak|kullanma|olamaz|içeremez|never\s+leave|do\s+not\s+leave|must\s+not|prohibited|forbidden/i;
+    const proseLines = stripFencedCode(content)
+      .split(/\r?\n/)
+      .filter((line) => !PROHIBITION_LINE_RE.test(line))
+      .join('\n');
     const hits: string[] = [];
     for (const p of UNCERTAINTY_PATTERNS) {
       p.re.lastIndex = 0;
-      if (p.re.test(proseOnly)) hits.push(p.label);
+      if (p.re.test(proseLines)) hits.push(p.label);
     }
     if (hits.length > 0) {
       pushIssue({
@@ -142,7 +148,7 @@ export function lintBlueprintPack(session: DebateSession): BlueprintLintReport {
     const mermaidBlocks = extractMermaidBlocks(content);
     const requiresMermaid =
       (session.domain === 'app_product' || session.domain === 'tech_project') &&
-      (/UX|DESIGN|SCREEN|ARCH|DATA|SCHEMA/.test(upper));
+      (/UX|DESIGN|SCREEN|ARCH|DATA|SCHEMA|MIGRATION|DIFF/.test(upper));
 
     if (requiresMermaid || mermaidBlocks.length > 0) {
       totalChecks++;

@@ -1,5 +1,7 @@
 import {
   ArrowUpCircle,
+  CheckCircle2,
+  ChevronRight,
   FileCode2,
   PanelLeftOpen,
   PanelRightClose,
@@ -109,64 +111,68 @@ export function TopBar({
         )}
       </div>
 
-      {/* Center: Clean 3-Stage Studio Pills when in a Session */}
+      {/* Center: Guided 3-Stage Pipeline Rail when in a Session */}
       {activeSession && (
-        <nav className="desktop-no-drag hidden md:flex items-center gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.07]">
+        <nav className="desktop-no-drag hidden md:flex items-center gap-0.5 p-1 rounded-full bg-white/[0.03] border border-white/[0.07]">
           <button
             onClick={() => onSelectStage('debate')}
             className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${
               activeStage === 'debate'
-                ? 'bg-white/[0.12] text-white'
+                ? 'bg-white/[0.13] text-white shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                hasDebate
-                  ? 'bg-[#4cc58a]'
-                  : hasRounds
-                    ? 'bg-[#7c74ff]'
-                    : 'bg-zinc-600'
-              }`}
-            />
-            {t('1. Fikir & Tartışma', '1. Idea & Debate')}
+            {hasDebate ? (
+              <CheckCircle2 className="w-3 h-3 text-[#4cc58a]" />
+            ) : (
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  hasRounds ? 'bg-[#7c74ff]' : 'bg-zinc-600'
+                }`}
+              />
+            )}
+            <span>{t('1. Tartışma', '1. Debate')}</span>
             <span className="text-[10px] font-mono text-zinc-400">
-              ({activeSession.rounds.length})
+              {activeSession.rounds.length}
             </span>
           </button>
+
+          <ChevronRight className="w-3 h-3 text-zinc-600 shrink-0" />
 
           <button
             onClick={() => onSelectStage('synthesis')}
             className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${
               activeStage === 'synthesis'
-                ? 'bg-white/[0.12] text-white'
+                ? 'bg-white/[0.13] text-white shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <Sparkles
-              className={`w-3 h-3 ${
-                hasMaster ? 'text-[#3fd0c9]' : 'text-zinc-500'
-              }`}
-            />
-            {t('2. Master Karar', '2. Master Decision')}
+            {hasMaster ? (
+              <CheckCircle2 className="w-3 h-3 text-[#3fd0c9]" />
+            ) : (
+              <Sparkles className="w-3 h-3 text-zinc-500" />
+            )}
+            <span>{t('2. Karar & Kilit', '2. Decision & Lock')}</span>
           </button>
+
+          <ChevronRight className="w-3 h-3 text-zinc-600 shrink-0" />
 
           <button
             onClick={() => onSelectStage('blueprint')}
             className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer flex items-center gap-1.5 ${
               activeStage === 'blueprint'
-                ? 'bg-white/[0.12] text-white'
+                ? 'bg-white/[0.13] text-white shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <FileCode2
-              className={`w-3 h-3 ${
-                blueprintCount > 0 ? 'text-[#958fff]' : 'text-zinc-500'
-              }`}
-            />
-            {t('3. MD Paketi', '3. MD Blueprints')}
+            {blueprintCount > 0 ? (
+              <CheckCircle2 className="w-3 h-3 text-[#958fff]" />
+            ) : (
+              <FileCode2 className="w-3 h-3 text-zinc-500" />
+            )}
+            <span>{t('3. MD Beyni', '3. MD Brain')}</span>
             {blueprintCount > 0 && (
-              <span className="text-[10px] font-mono text-[#958fff]">
+              <span className="text-[10px] font-mono text-[#cbc7ff]">
                 {blueprintCount}
               </span>
             )}
@@ -199,7 +205,7 @@ export function TopBar({
           <span>
             {updateInfo?.updateAvailable
               ? `v${updateInfo.latestVersion}`
-              : `v${updateInfo?.currentVersion || '5.1.2'}`}
+              : `v${updateInfo?.currentVersion || '5.2.0'}`}
           </span>
         </button>
 

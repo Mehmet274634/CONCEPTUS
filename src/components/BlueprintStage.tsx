@@ -15,6 +15,7 @@ import {
   FolderDown,
   FolderGit2,
   FolderOpen,
+  LayoutDashboard,
   Loader2,
   Lock,
   OctagonX,
@@ -24,6 +25,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  Terminal,
   Trash2,
   Wand2,
   Wrench,
@@ -33,6 +35,7 @@ import {
   fetchDefaultBlueprintPlan,
   getBlueprintZipUrl,
   isDesktopApp,
+  openFolderInIde,
   openLocalFolderInExplorer,
   pickLocalFolder,
   saveBlueprintFileContent,
@@ -46,13 +49,19 @@ import {
   type BlueprintDepth,
   type BlueprintFileSpec,
   type DebateSession,
+  type DetectedIde,
   type FallbackPolicy,
   type GeneratedMdFile,
+  type IdeId,
   type PoolCooldown,
   type ProviderId,
   type ProviderInfo,
   type UiMode,
 } from '../types.ts';
+import {
+  collectFileIssueCounts,
+  extractPhasePrompts,
+} from '../utils/blueprintOverview.ts';
 import {
   autoAssignSpecialistModels,
   DEPTH_OPTIONS,
@@ -60,11 +69,15 @@ import {
   pickSmartHealthyBackup,
   pickWriterForDepth,
 } from '../utils/blueprintRouting.ts';
+import { BlueprintOverview } from './BlueprintOverview.tsx';
 import { MarkdownView } from './MarkdownView.tsx';
+
+const OVERVIEW_ID = '__overview__';
 
 interface BlueprintStageProps {
   session: DebateSession;
   providers: ProviderInfo[];
+  detectedIdes: DetectedIde[];
   cooldowns: PoolCooldown[];
   fallbackPolicy: FallbackPolicy;
   uiMode: UiMode;
@@ -103,6 +116,7 @@ interface BlueprintStageProps {
 export function BlueprintStage({
   session,
   providers,
+  detectedIdes,
   cooldowns,
   fallbackPolicy,
   uiMode,
@@ -134,9 +148,10 @@ export function BlueprintStage({
   const [showPlanner, setShowPlanner] = useState<boolean>(!session.blueprint);
   const [suggesting, setSuggesting] = useState(false);
   const [auditing, setAuditing] = useState(false);
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(
-    session.blueprint?.files[0]?.id || null
-  );
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(() => {
+    const hasDone = session.blueprint?.files.some((f) => f.status === 'done');
+    return hasDone ? OVERVIEW_ID : session.blueprint?.files[0]?.id || null;
+  });
   const [editMode, setEditMode] = useState(false);
   const [draftContent, setDraftContent] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
@@ -208,11 +223,13 @@ export function BlueprintStage({
     const tierWriter = pickWriterForDepth(providers, currentDepth, cooldowns);
 
     if (session.blueprint?.files.length) {
+      const hasDone = session.blueprint.files.some((f) => f.status === 'done');
       if (
         !selectedFileId ||
-        !session.blueprint.files.some((f) => f.id === selectedFileId)
+        (selectedFileId !== OVERVIEW_ID &&
+          !session.blueprint.files.some((f) => f.id === selectedFileId))
       ) {
-        setSelectedFileId(session.blueprint.files[0].id);
+        setSelectedFileId(hasDone && !activeRun ? OVERVIEW_ID : session.blueprint.files[0].id);
       }
       setPlanFiles(
         session.blueprint.files.map((f) => ({
@@ -228,7 +245,11 @@ export function BlueprintStage({
       setShowPlanner(false);
     } else {
       setShowPlanner(true);
-      void fetchDefaultBlueprintPlan(session.domain, session.complexity?.level)
+      void fetchDefaultBlueprintPlan(
+        session.domain,
+        session.complexity?.level,
+        session.projectMode
+      )
         .then((files) =>
           setPlanFiles(
             autoAssignSpecialistModels(files, providers, currentDepth, tierWriter, cooldowns)
@@ -236,15 +257,29 @@ export function BlueprintStage({
         )
         .catch(() => {});
     }
-  }, [session.id, session.domain, session.complexity?.level, Boolean(session.blueprint), providers.length, cooldowns.length]);
+  }, [session.id, session.domain, session.projectMode, session.complexity?.level, Boolean(session.blueprint), providers.length, cooldowns.length]);
 
   const genProviderInfo = providers.find((p) => p.id === genProvider);
+  const isOverviewSelected = selectedFileId === OVERVIEW_ID;
   const activeFile = useMemo(
     () =>
-      session.blueprint?.files.find((f) => f.id === selectedFileId) ||
-      session.blueprint?.files[0] ||
-      null,
-    [session.blueprint, selectedFileId]
+      isOverviewSelected
+        ? null
+        : session.blueprint?.files.find((f) => f.id === selectedFileId) ||
+          session.blueprint?.files[0] ||
+          null,
+    [session.blueprint, selectedFileId, isOverviewSelected]
+  );
+
+  const fileIssueCounts = useMemo(
+    () => collectFileIssueCounts(session),
+    [session.blueprint?.lint, session.blueprint?.audit]
+  );
+
+  const phasePrompts = useMemo(() => extractPhasePrompts(session), [session]);
+  const installedIdes = useMemo(
+    () => detectedIdes.filter((i) => i.installed),
+    [detectedIdes]
   );
 
   useEffect(() => {
@@ -475,6 +510,60 @@ export function BlueprintStage({
     }
   };
 
+  /**
+   * Unified 1-Click Handoff ("Son 1 Metreyi Kapat"):
+   * Copies the selected Phase prompt AND ensures files are saved cleanly into a single target folder
+   * (never creating duplicate root + docs/ copies).
+   */
+  const handleSaveAndCopyPrompt = async (promptText: string) => {
+    setError(null);
+    try {
+      await navigator.clipboard.writeText(promptText);
+    } catch {
+      // clipboard non-fatal
+    }
+
+    if (savedFolder) return;
+
+    setSavingFolder(true);
+    try {
+      if (session.repoMeta) {
+        const res = await saveBlueprintToLocalFolder(session.id, {
+          useLinkedRepo: true,
+          subfolder: 'docs',
+          includeClaudeMd,
+          includeCursorRules,
+        });
+        setSavedFolder(res.folderPath);
+      } else {
+        const picked = await pickLocalFolder(
+          'CONCEPTUS — MD Paketinin Kaydedileceği Proje Klasörünü Seç'
+        );
+        if (picked.folderPath) {
+          const res = await saveBlueprintToLocalFolder(session.id, {
+            folderPath: picked.folderPath,
+            includeClaudeMd,
+            includeCursorRules,
+          });
+          setSavedFolder(res.folderPath);
+        }
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Klasöre kaydedilemedi.');
+    } finally {
+      setSavingFolder(false);
+    }
+  };
+
+  const handleOpenInIde = async (ide: IdeId | 'explorer') => {
+    if (!savedFolder) return;
+    setError(null);
+    const res = await openFolderInIde(savedFolder, ide);
+    if (!res.ok && res.error) {
+      setError(res.error);
+    }
+  };
+
   const handleSaveEdit = async () => {
     if (!activeFile) return;
     setSavingEdit(true);
@@ -497,6 +586,9 @@ export function BlueprintStage({
   const openAuditIssues = (audit?.issues || []).filter((i) => !i.fixed);
 
   const starterBuildPrompt = useMemo(() => {
+    if (phasePrompts[0]?.prompt) {
+      return phasePrompts[0].prompt;
+    }
     const doneFiles = (session.blueprint?.files || [])
       .filter((f) => f.status === 'done')
       .map((f) => f.filename);
@@ -513,7 +605,7 @@ export function BlueprintStage({
       `${folderNote} Önce \`AGENTS.md\` dosyasını, ardından sırasıyla ${fileListStr} dosyalarını eksiksiz oku.`,
       `Özellikle${contractHint} %100 sadık kalarak; yol haritasındaki Faz 1'den başlayıp "${session.title}" projesini temiz, modüler ve her fazın doğrulama kapısını (Verification Gate) geçirerek inşa et.`,
     ].join('\n\n');
-  }, [session.blueprint?.files, session.blueprint?.contract, session.title, savedFolder]);
+  }, [phasePrompts, session.blueprint?.files, session.blueprint?.contract, session.title, savedFolder]);
 
   return (
     <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-5">
@@ -894,20 +986,32 @@ export function BlueprintStage({
                 )}
               </div>
 
-              {/* Right Inline Saved Status */}
+              {/* Right Inline Saved Status + Quick IDE Launchers */}
               {savedFolder && (
-                <div className="flex items-center gap-2 text-[11px] text-[#8ae3b7] min-w-0">
+                <div className="flex items-center gap-1.5 text-[11px] text-[#8ae3b7] min-w-0 flex-wrap">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate max-w-[220px] font-mono text-zinc-300" title={savedFolder}>
+                  <span className="truncate max-w-[180px] font-mono text-zinc-300" title={savedFolder}>
                     {savedFolder.split(/[\\/]/).slice(-2).join('/')}
                   </span>
-                  {isDesktopApp() && (
+                  {installedIdes.slice(0, 2).map((ide) => (
+                    <button
+                      key={ide.id}
+                      type="button"
+                      onClick={() => void handleOpenInIde(ide.id)}
+                      title={`${ide.name} ile proje klasörünü aç`}
+                      className="inline-flex items-center gap-1 text-[10.5px] font-medium px-2 py-0.5 rounded-full bg-[#7c74ff]/20 hover:bg-[#7c74ff]/35 text-[#dbd8ff] border border-[#7c74ff]/35 cursor-pointer shrink-0"
+                    >
+                      <Terminal className="w-2.5 h-2.5" />
+                      {ide.name}
+                    </button>
+                  ))}
+                  {(isDesktopApp() || installedIdes.length === 0) && (
                     <button
                       type="button"
                       onClick={() => void openLocalFolderInExplorer(savedFolder)}
                       className="text-[10.5px] font-medium px-2 py-0.5 rounded-full bg-[#4cc58a]/20 hover:bg-[#4cc58a]/30 text-white cursor-pointer shrink-0"
                     >
-                      Aç
+                      Klasör
                     </button>
                   )}
                 </div>
@@ -1496,8 +1600,39 @@ export function BlueprintStage({
                   </span>
                 </div>
 
+                {/* 00 · Görsel Mimari Özet (Visual Architectural Overview Dashboard) */}
+                {doneCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFileId(OVERVIEW_ID);
+                      setEditMode(false);
+                      setRegenOpen(false);
+                    }}
+                    className={`w-full text-left rounded-xl px-3 py-2.5 border transition cursor-pointer ${
+                      isOverviewSelected
+                        ? 'bg-gradient-to-r from-[#7c74ff]/20 to-[#3fd0c9]/10 border-[#7c74ff]/50 text-white'
+                        : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] text-zinc-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white">
+                        <LayoutDashboard className="w-3.5 h-3.5 text-[#958fff] shrink-0" />
+                        00 · Mimari Özet
+                      </span>
+                      <span className="text-[9.5px] font-mono px-1.5 py-0.5 rounded-full bg-[#3fd0c9]/15 text-[#88ece7]">
+                        Özet
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-zinc-400 mt-0.5 truncate">
+                      Sözleşme · Diyagramlar · Faz Promptları & IDE
+                    </p>
+                  </button>
+                )}
+
                 {session.blueprint.files.map((file) => {
-                  const isSelected = activeFile?.id === file.id;
+                  const isSelected = !isOverviewSelected && activeFile?.id === file.id;
+                  const fileIssues = fileIssueCounts[file.filename];
                   return (
                     <button
                       key={file.id}
@@ -1516,18 +1651,28 @@ export function BlueprintStage({
                         <span className="text-xs font-mono font-semibold truncate text-[#88ece7]">
                           {file.filename}
                         </span>
-                        {file.status === 'running' && (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#958fff] shrink-0" />
-                        )}
-                        {file.status === 'pending' && (
-                          <span className="text-[10px] text-zinc-500">sıra</span>
-                        )}
-                        {file.status === 'done' && (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#4cc58a] shrink-0" />
-                        )}
-                        {file.status === 'error' && (
-                          <AlertTriangle className="w-3.5 h-3.5 text-[#ff7a6e] shrink-0" />
-                        )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {fileIssues && fileIssues.total > 0 && (
+                            <span
+                              title={`${fileIssues.total} açık Lint/QA bulgusu`}
+                              className={`w-2 h-2 rounded-full ${
+                                fileIssues.high > 0 ? 'bg-[#ff7a6e]' : 'bg-[#f0b44c]'
+                              }`}
+                            />
+                          )}
+                          {file.status === 'running' && (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#958fff] shrink-0" />
+                          )}
+                          {file.status === 'pending' && (
+                            <span className="text-[10px] text-zinc-500">sıra</span>
+                          )}
+                          {file.status === 'done' && (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#4cc58a] shrink-0" />
+                          )}
+                          {file.status === 'error' && (
+                            <AlertTriangle className="w-3.5 h-3.5 text-[#ff7a6e] shrink-0" />
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center justify-between gap-2 mt-0.5">
                         <div className="flex items-center gap-1.5 min-w-0">
@@ -1557,9 +1702,25 @@ export function BlueprintStage({
                 })}
               </div>
 
-              {/* Right Preview / Editor */}
+              {/* Right Preview / Visual Overview / Editor */}
               <div className="lg:col-span-8 glass-panel rounded-2xl overflow-hidden min-h-[520px] flex flex-col">
-                {activeFile ? (
+                {isOverviewSelected && doneCount > 0 ? (
+                  <div className="p-4 sm:p-5 overflow-y-auto">
+                    <BlueprintOverview
+                      session={session}
+                      detectedIdes={detectedIdes}
+                      savedFolder={savedFolder}
+                      savingFolder={savingFolder}
+                      onSaveAndCopyPrompt={handleSaveAndCopyPrompt}
+                      onOpenInIde={handleOpenInIde}
+                      onSelectFile={(fileId) => {
+                        setSelectedFileId(fileId);
+                        setEditMode(false);
+                        setRegenOpen(false);
+                      }}
+                    />
+                  </div>
+                ) : activeFile ? (
                   <>
                     <div className="px-5 py-3.5 border-b border-white/[0.08] flex items-center justify-between flex-wrap gap-2 bg-white/[0.02]">
                       <div className="min-w-0">

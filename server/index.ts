@@ -17,6 +17,7 @@ import {
   reloadFallbackStateFromDisk,
   setFallbackPolicy,
 } from './fallback.ts';
+import { detectInstalledIdes, openFolderInIde } from './ideLauncher.ts';
 import {
   abortSessionRun,
   clarifyRawIdea,
@@ -60,6 +61,8 @@ import type {
   DebateSession,
   DecisionGate,
   DomainMode,
+  IdeId,
+  ProjectMode,
   RepoSnapshotMeta,
   SeatConfig,
 } from './types.ts';
@@ -288,6 +291,33 @@ app.post('/api/system/pick-folder', async (req, res) => {
   }
 });
 
+// Detect locally installed AI coding IDEs (Antigravity, Cursor, VS Code) — read-only
+app.get('/api/system/ides', async (req, res) => {
+  try {
+    const force = req.query.refresh === '1';
+    const ides = await detectInstalledIdes(force);
+    res.json({ ides });
+  } catch {
+    res.json({ ides: [] });
+  }
+});
+
+// Open a validated local directory in an allowlisted IDE or OS Explorer
+app.post('/api/system/open-ide', async (req, res) => {
+  try {
+    const folderPath = String(req.body?.folderPath || '').trim();
+    const ide = String(req.body?.ide || 'explorer').trim() as IdeId | 'explorer';
+    const result = await openFolderInIde(folderPath, ide);
+    if (!result.ok) {
+      res.status(400).json({ error: result.error || 'IDE açılamadı.' });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'IDE açılamadı.' });
+  }
+});
+
 // Local Repo Context Scanner (read-only + secret filtered)
 app.post('/api/repo/scan', (req, res) => {
   try {
@@ -303,11 +333,13 @@ app.post('/api/repo/scan', (req, res) => {
   }
 });
 
-// Default MD Blueprint plan per domain (+ optional XL complexity expansion)
+// Default MD Blueprint plan per domain (+ optional XL complexity or existing_feature mode)
 app.get('/api/blueprint/defaults/:domain', (req, res) => {
   const domain = req.params.domain as DomainMode;
   const complexity = req.query.complexity as ComplexityLevel | undefined;
-  res.json({ files: getDefaultBlueprintPlan(domain, complexity) });
+  const projectMode: ProjectMode =
+    req.query.mode === 'existing_feature' ? 'existing_feature' : 'new_app';
+  res.json({ files: getDefaultBlueprintPlan(domain, complexity, projectMode) });
 });
 
 // List sessions
@@ -322,6 +354,7 @@ app.post('/api/sessions', (req, res) => {
       title,
       idea,
       domain = 'app_product',
+      projectMode = 'new_app',
       language = 'tr',
       caliber,
       constraints = '',
@@ -332,6 +365,7 @@ app.post('/api/sessions', (req, res) => {
       title?: string;
       idea?: string;
       domain?: DomainMode;
+      projectMode?: ProjectMode;
       language?: 'tr' | 'en';
       caliber?: CaliberPreference;
       constraints?: string;
@@ -362,6 +396,7 @@ app.post('/api/sessions', (req, res) => {
       title: cleanTitle,
       idea: idea.trim(),
       domain,
+      projectMode: projectMode === 'existing_feature' ? 'existing_feature' : 'new_app',
       language: language === 'en' ? 'en' : 'tr',
       complexity,
       caliber: caliber || complexity.recommendedCaliber,

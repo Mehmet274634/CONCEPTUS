@@ -11,11 +11,14 @@ import type {
   DebateSession,
   DecisionGate,
   DesktopUpdateProgress,
+  DetectedIde,
   DomainMode,
   EffortLevel,
   FallbackPolicy,
   GeneratedMdFile,
+  IdeId,
   PoolCooldown,
+  ProjectMode,
   ProviderId,
   ProviderInfo,
   RepoSnapshotMeta,
@@ -106,6 +109,40 @@ export function isDesktopApp(): boolean {
 export async function openLocalFolderInExplorer(folderPath: string): Promise<void> {
   if (typeof window !== 'undefined' && window.conceptusDesktop?.openFolderInExplorer) {
     await window.conceptusDesktop.openFolderInExplorer(folderPath);
+    return;
+  }
+  await requestJson('/api/system/open-ide', {
+    method: 'POST',
+    body: JSON.stringify({ folderPath, ide: 'explorer' }),
+  }).catch(() => {});
+}
+
+export async function fetchDetectedIdes(refresh = false): Promise<DetectedIde[]> {
+  try {
+    const data = await requestJson<{ ides: DetectedIde[] }>(
+      `/api/system/ides${refresh ? '?refresh=1' : ''}`
+    );
+    return data.ides || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function openFolderInIde(
+  folderPath: string,
+  ide: IdeId | 'explorer'
+): Promise<{ ok: boolean; error?: string }> {
+  if (typeof window !== 'undefined' && window.conceptusDesktop?.openFolderInIde) {
+    return window.conceptusDesktop.openFolderInIde(folderPath, ide);
+  }
+  try {
+    await requestJson<{ ok: boolean }>('/api/system/open-ide', {
+      method: 'POST',
+      body: JSON.stringify({ folderPath, ide }),
+    });
+    return { ok: true };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'IDE açılamadı.' };
   }
 }
 
@@ -159,9 +196,13 @@ export async function analyzeIdeaClient(payload: {
 
 export async function fetchDefaultBlueprintPlan(
   domain: DomainMode,
-  complexity?: ComplexityLevel
+  complexity?: ComplexityLevel,
+  projectMode?: ProjectMode
 ): Promise<BlueprintFileSpec[]> {
-  const qs = complexity ? `?complexity=${encodeURIComponent(complexity)}` : '';
+  const params = new URLSearchParams();
+  if (complexity) params.set('complexity', complexity);
+  if (projectMode) params.set('mode', projectMode);
+  const qs = params.toString() ? `?${params.toString()}` : '';
   const data = await requestJson<{ files: BlueprintFileSpec[] }>(
     `/api/blueprint/defaults/${domain}${qs}`
   );
@@ -177,6 +218,7 @@ export async function createSession(payload: {
   title?: string;
   idea: string;
   domain: DomainMode;
+  projectMode?: ProjectMode;
   language?: 'tr' | 'en';
   caliber?: CaliberPreference;
   constraints: string;

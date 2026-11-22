@@ -33,6 +33,7 @@ import {
   type DebateRound,
   type DebateSession,
   type DecisionGate,
+  type DetectedIde,
   type FallbackPolicy,
   type GeneratedMdFile,
   type PoolCooldown,
@@ -42,6 +43,7 @@ import {
   type SeatResponse,
   type UiMode,
 } from '../types.ts';
+import { extractRoundHighlights } from '../utils/blueprintOverview.ts';
 import { BlueprintStage } from './BlueprintStage.tsx';
 import { MarkdownView } from './MarkdownView.tsx';
 import { SeatEditorList } from './SeatEditorList.tsx';
@@ -51,6 +53,7 @@ import type { StageTab } from './TopBar.tsx';
 interface DebateStageProps {
   session: DebateSession;
   providers: ProviderInfo[];
+  detectedIdes: DetectedIde[];
   cooldowns: PoolCooldown[];
   fallbackPolicy: FallbackPolicy;
   uiMode: UiMode;
@@ -127,12 +130,21 @@ function LiveTimer({
 
 const ResponseCard = memo(function ResponseCard({
   response,
+  compact = false,
 }: {
   response: SeatResponse;
+  compact?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const meta = PROVIDER_META[response.provider];
   const roleLabel = getRoleDisplayLabel(response.role, response.customRoleTitle);
+  const shouldClamp =
+    compact && !expanded && response.status !== 'running' && response.content.length > 480;
+
+  useEffect(() => {
+    if (!compact) setExpanded(false);
+  }, [compact]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(response.content);
@@ -211,7 +223,11 @@ const ResponseCard = memo(function ResponseCard({
         </div>
       </div>
 
-      <div className="p-4 sm:p-5 flex-1 overflow-y-auto max-h-[60vh]">
+      <div
+        className={`p-4 sm:p-5 flex-1 relative ${
+          shouldClamp ? 'max-h-[250px] overflow-hidden' : 'overflow-y-auto max-h-[60vh]'
+        }`}
+      >
         {response.status === 'error' ? (
           <div className="rounded-xl bg-[#ff7a6e]/10 border border-[#ff7a6e]/25 p-3.5 text-xs text-[#ffb4ad] space-y-1">
             <p className="font-semibold">Bu ajan yanıt üretemedi</p>
@@ -226,6 +242,30 @@ const ResponseCard = memo(function ResponseCard({
             <MarkdownView content={response.content} />
             {response.status === 'running' && (
               <span className="inline-block w-2 h-4 ml-1 bg-[#958fff] animate-pulse align-middle rounded-sm" />
+            )}
+            {shouldClamp && (
+              <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0b0c10] via-[#0b0c10]/90 to-transparent flex items-end justify-center pb-2.5">
+                <button
+                  type="button"
+                  onClick={() => setExpanded(true)}
+                  className="glass-pill inline-flex items-center gap-1 text-[11px] font-medium px-3 py-1 rounded-full text-zinc-200 hover:text-white cursor-pointer shadow-lg"
+                >
+                  Tamamını Oku
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+            {compact && expanded && response.content.length > 480 && (
+              <div className="pt-3 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setExpanded(false)}
+                  className="text-[11px] text-zinc-400 hover:text-white inline-flex items-center gap-1 cursor-pointer"
+                >
+                  Daralt
+                  <ChevronUp className="w-3 h-3" />
+                </button>
+              </div>
             )}
           </>
         ) : (
@@ -242,6 +282,7 @@ const ResponseCard = memo(function ResponseCard({
 export function DebateStage({
   session,
   providers,
+  detectedIdes,
   cooldowns,
   fallbackPolicy,
   uiMode,
@@ -271,6 +312,7 @@ export function DebateStage({
     session.rounds[session.rounds.length - 1]?.roundNumber || 1
   );
   const [layout, setLayout] = useState<'grid' | 'focus'>('grid');
+  const [viewDensity, setViewDensity] = useState<'compact' | 'full'>('compact');
   const [focusedSeatId, setFocusedSeatId] = useState<string | null>(null);
   const [showIdeaBox, setShowIdeaBox] = useState(false);
   const [showSeatEditor, setShowSeatEditor] = useState(false);
@@ -341,6 +383,11 @@ export function DebateStage({
     return activeRound.responses;
   }, [activeRound, layout, focusedSeatId]);
 
+  const roundHighlights = useMemo(
+    () => (activeRound ? extractRoundHighlights(activeRound) : []),
+    [activeRound]
+  );
+
   const handleNextRound = async () => {
     setActionError(null);
     try {
@@ -407,6 +454,7 @@ export function DebateStage({
       <BlueprintStage
         session={session}
         providers={providers}
+        detectedIdes={detectedIdes}
         cooldowns={cooldowns}
         fallbackPolicy={fallbackPolicy}
         uiMode={uiMode}
@@ -518,6 +566,36 @@ export function DebateStage({
                   Odak
                 </button>
               </div>
+
+              {layout === 'grid' && (
+                <div
+                  className="flex items-center rounded-full bg-white/[0.04] border border-white/[0.08] p-0.5"
+                  title="Özet kart görünümü (hızlı tarama) veya tam metin"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setViewDensity('compact')}
+                    className={`px-2.5 py-1 rounded-full text-[11px] transition cursor-pointer ${
+                      viewDensity === 'compact'
+                        ? 'bg-white/12 text-white'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    Özet
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewDensity('full')}
+                    className={`px-2.5 py-1 rounded-full text-[11px] transition cursor-pointer ${
+                      viewDensity === 'full'
+                        ? 'bg-white/12 text-white'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    Tam Metin
+                  </button>
+                </div>
+              )}
             </>
           )}
 
@@ -621,6 +699,55 @@ export function DebateStage({
               )}
             </div>
 
+            {/* 0-Token Round Verdict / Highlights Strip — Scan the whole round in 3 seconds */}
+            {roundHighlights.length > 1 &&
+              roundHighlights.some((h) => h.status === 'done') && (
+                <div
+                  className={`grid gap-2 ${
+                    roundHighlights.length === 2
+                      ? 'grid-cols-1 sm:grid-cols-2'
+                      : 'grid-cols-1 md:grid-cols-3'
+                  }`}
+                >
+                  {roundHighlights.map((h) => {
+                    const pMeta =
+                      PROVIDER_META[h.provider as ProviderId] ||
+                      PROVIDER_META.antigravity;
+                    return (
+                      <button
+                        key={h.seatId}
+                        type="button"
+                        onClick={() => {
+                          setFocusedSeatId(h.seatId);
+                          setLayout('focus');
+                        }}
+                        title="Bu ajanı odak görünümünde aç"
+                        className="text-left rounded-xl bg-white/[0.025] hover:bg-white/[0.055] border border-white/[0.07] hover:border-white/[0.15] px-3 py-2 transition cursor-pointer group"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${pMeta.dot}`}
+                            />
+                            <span className="text-[11px] font-semibold text-zinc-200 group-hover:text-white truncate">
+                              {h.seatLabel}
+                            </span>
+                          </div>
+                          {h.score && (
+                            <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-md bg-[#4cc58a]/15 text-[#8ae3b7] border border-[#4cc58a]/25 shrink-0">
+                              {h.score}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-zinc-400 line-clamp-2 mt-1 leading-snug">
+                          {h.headline}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
             <div
               className={`grid gap-4 ${
                 layout === 'focus' || visibleResponses.length === 1
@@ -634,6 +761,7 @@ export function DebateStage({
                 <ResponseCard
                   key={`${activeRound.roundNumber}-${resp.seatId}`}
                   response={resp}
+                  compact={layout === 'grid' && viewDensity === 'compact' && visibleResponses.length > 1}
                 />
               ))}
             </div>

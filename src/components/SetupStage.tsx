@@ -28,6 +28,7 @@ import {
   type ClarifyQuestion,
   type ComplexityAssessment,
   type DomainMode,
+  type ProjectMode,
   type ProviderInfo,
   type RepoSnapshotMeta,
   type SeatConfig,
@@ -49,6 +50,7 @@ interface SetupStageProps {
     title: string;
     idea: string;
     domain: DomainMode;
+    projectMode: ProjectMode;
     caliber?: CaliberPreference;
     constraints: string;
     contextText: string;
@@ -139,6 +141,7 @@ export function SetupStage({
   const [title, setTitle] = useState('');
   const [idea, setIdea] = useState('');
   const [domain, setDomain] = useState<DomainMode>('app_product');
+  const [projectMode, setProjectMode] = useState<ProjectMode>('new_app');
   const [constraints, setConstraints] = useState('');
   const [contextText, setContextText] = useState('');
   const [showExtras, setShowExtras] = useState(false);
@@ -353,6 +356,7 @@ export function SetupStage({
         title,
         idea,
         domain,
+        projectMode,
         caliber,
         constraints: mergedConstraints,
         contextText: mergedContext,
@@ -454,6 +458,54 @@ export function SetupStage({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Calm 2-Way Project Scope Selector: New App vs Existing Codebase Evolution */}
+          <div className="flex items-center justify-between flex-wrap gap-2.5">
+            <div className="inline-flex items-center p-1 rounded-full bg-white/[0.035] border border-white/[0.08]">
+              <button
+                type="button"
+                onClick={() => setProjectMode('new_app')}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+                  projectMode === 'new_app'
+                    ? 'bg-[#f7f8f8] text-[#060709] shadow-sm font-semibold'
+                    : 'text-zinc-400 hover:text-zinc-100'
+                }`}
+              >
+                {t('Yeni Uygulama (5 MD)', 'New App (5 MDs)')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProjectMode('existing_feature');
+                  if (domain === 'strategy_general') setDomain('tech_project');
+                }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer inline-flex items-center gap-1.5 ${
+                  projectMode === 'existing_feature'
+                    ? 'bg-[#f7f8f8] text-[#060709] shadow-sm font-semibold'
+                    : 'text-zinc-400 hover:text-zinc-100'
+                }`}
+              >
+                <FolderGit2 className="w-3.5 h-3.5" />
+                {t('Mevcut Projeye Özellik (3 MD)', 'Existing Repo Feature (3 MDs)')}
+              </button>
+            </div>
+
+            {projectMode === 'existing_feature' && !repoMeta && (
+              <button
+                type="button"
+                onClick={() => void handleNativePickFolder()}
+                disabled={pickingFolder || scanningRepo}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#3fd0c9]/15 text-[#88ece7] border border-[#3fd0c9]/40 hover:bg-[#3fd0c9]/25 transition cursor-pointer disabled:opacity-50"
+              >
+                {pickingFolder || scanningRepo ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <FolderOpen className="w-3.5 h-3.5" />
+                )}
+                {t('Mevcut Proje Klasörünü Bağla', 'Link Existing Project Folder')}
+              </button>
+            )}
+          </div>
+
           {/* Frosted Glass Idea Composer */}
           <div className="glass-panel rounded-3xl p-5 sm:p-6 space-y-4">
             {/* Mode Pills + Optional Title */}
@@ -500,10 +552,17 @@ export function SetupStage({
               value={idea}
               onChange={(e) => setIdea(e.target.value)}
               rows={4}
-              placeholder={t(
-                "Aklındaki ham uygulama fikrini veya çözmek istediğin problemi basitçe yaz... Örn: 'Dolaptaki malzemeleri yazınca tarif öneren basit bir uygulama istiyorum'",
-                "Write your raw app idea or problem simply... e.g. 'An ultra-clean app that turns fridge ingredients into recipes and adds missing items to a shopping list'"
-              )}
+              placeholder={
+                projectMode === 'existing_feature'
+                  ? t(
+                      "Mevcut projene eklemek istediğin özelliği, ekranı veya mimari yükseltmeyi anlat... (Örn: 'Kullanıcı profiline PDF dışa aktarım ve karanlık tema senkronizasyonu eklemek istiyorum; mevcut veri yapısını bozmadan')",
+                      "Describe the feature or architectural upgrade to add to your existing repo without breaking current behavior..."
+                    )
+                  : t(
+                      "Aklındaki ham uygulama fikrini veya çözmek istediğin problemi basitçe yaz... Örn: 'Dolaptaki malzemeleri yazınca tarif öneren basit bir uygulama istiyorum'",
+                      "Write your raw app idea or problem simply... e.g. 'An ultra-clean app that turns fridge ingredients into recipes and adds missing items to a shopping list'"
+                    )
+              }
               className="w-full bg-transparent text-[15px] text-[#f7f8f8] placeholder:text-zinc-600 focus:outline-none resize-y leading-relaxed"
             />
 

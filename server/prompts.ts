@@ -8,6 +8,7 @@ import type {
   DomainMode,
   GeneratedMdFile,
   ProjectContract,
+  ProjectMode,
   SeatConfig,
   SeatRole,
 } from './types.ts';
@@ -77,6 +78,12 @@ function buildBaseContext(session: DebateSession): string {
     `# CONCEPTUS — FİKİR EVRİM MASASI`,
     `**Konu Modu:** ${domain.label}`,
     `**Değerlendirme Ekseni:** ${domain.criteria}`,
+    ...(session.projectMode === 'existing_feature'
+      ? [
+          `**Çalışma Modu:** MEVCUT PROJEYE ÖZELLİK / MİMARİ YÜKSELTME (Existing Codebase Evolution)`,
+          `> Sıfırdan yeni uygulama kurma! Mevcut kod tabanıyla, kullanılan paketlerle, dizin yapısıyla ve var olan testlerle %100 uyumlu, regresyon oluşturmayan en temiz entegrasyon ve migrasyon tasarımını üret.`,
+        ]
+      : []),
     ``,
     `## KULLANICININ FİKRİ / PROBLEMİ`,
     session.idea.trim(),
@@ -373,8 +380,38 @@ export function buildExtractGatesPrompt(session: DebateSession): string {
 
 export function getDefaultBlueprintPlan(
   domain: DomainMode,
-  complexity?: ComplexityLevel
+  complexity?: ComplexityLevel,
+  projectMode?: ProjectMode
 ): BlueprintFileSpec[] {
+  if (projectMode === 'existing_feature') {
+    return [
+      {
+        id: 'md_evo_01_proposal',
+        filename: '01_CHANGE_PROPOSAL.md',
+        title: 'Özellik & Değişiklik Önerisi',
+        purpose:
+          'Mevcut projeye eklenecek özelliğin kesin kapsamı, kullanıcı akışı, etkilenen mevcut ekranlar/modüller ve regresyon sınırları (nelerin değişmeyeceği).',
+        selected: true,
+      },
+      {
+        id: 'md_evo_02_migration',
+        filename: '02_MIGRATION_AND_ARCH_DIFF.md',
+        title: 'Mimari Fark & Migrasyon Planı',
+        purpose:
+          'Mevcut kod tabanına eklenecek/güncellenecek kesin dosya yolları, veri/API farkları, görsel akış diyagramı (Mermaid), geriye dönük uyumluluk ve rollback planı.',
+        selected: true,
+      },
+      {
+        id: 'md_evo_03_agents',
+        filename: '03_AGENTS_EXECUTION_GUIDE.md',
+        title: 'AI Kodlama Ajanı Uygulama Kılavuzu',
+        purpose:
+          'Mevcut repoda sıfır regresyonla inşa etmek için okuma sırası, Hard Invariants, faz faz doğrulama komutları ve kopyalanabilir Faz 1 / Faz 2 başlangıç promptları.',
+        selected: true,
+      },
+    ];
+  }
+
   if (domain === 'problem_solving') {
     return [
       {
@@ -731,10 +768,22 @@ export function buildBlueprintFilePrompt(
     roleSpecificRules.push(
       '7. FAZ KİLİDİ & YÜRÜTÜLEBİLİR DOĞRULAMA KAPILARI (ZORUNLU): Kanonik Proje Sözleşmesindeki `phases` listesini BİREBİR aynı numara ve sırayla (`Faz 1`, `Faz 2`, ...) kullan! Her fazın altına kodlama ajanının çalıştırıp doğrulayacağı somut kabul kriterleri ve terminal/test kontrol komutları (`npm run typecheck`, `npm test` vb.) ekle.'
     );
-  } else if (/AGENTS|START_HERE|BRIEF/.test(upperName)) {
+  } else if (/CHANGE_PROPOSAL/.test(upperName)) {
     roleSpecificRules.push(
-      '7. OKUMA SIRASI & FAZ UYUMU (ZORUNLU): Okuma sırası MUTLAKA `0. PROJECT_CONTRACT.json` ile başlasın (`AGENTS.md` ile %100 uyumlu). Dalga 1 özetindeki `04_BUILD_ROADMAP.md` faz numaraları, faz başlıkları ve doğrulama komutlarıyla BİREBİR örtüş — asla farklı faz kapsamı uydurma!',
-      '8. DRY & KISA BAŞLATMA PROMPTLARI (ZORUNLU): Hard Invariants listesini belgede YALNIZCA 1 KEZ (Bölüm 3) yaz! En sondaki **Faz 1 Başlangıç Promptu** ve **Faz 2 Devam Promptu** kod bloklarında tüm Hard Invariants listesini tekrar kopyalama; bunun yerine "`PROJECT_CONTRACT.json` ve `05_AGENTS_START_HERE.md §3` kurallarına %100 uy" diyerek her promptu 12–18 satırlık keskin, kopyala-yapıştır hazır talimat olarak yaz (bu dosya toplamda 14 KB\'ı geçmesin!).'
+      '7. MEVCUT KOD TABANI UYUM KURALI: Sıfırdan uygulama anlatma; yalnızca mevcut projeye eklenecek/değiştirilecek özelliği, etkilenen mevcut modülleri, kapsam dışını (Non-Goals) ve kırılmaması gereken mevcut davranışları (Regresyon Sınırları) net tablo hâlinde yaz.'
+    );
+  } else if (/MIGRATION|DIFF/.test(upperName)) {
+    roleSpecificRules.push(
+      '7. MİMARİ FARK & DİYAGRAM KURALI: Mevcut mimariye yeni özelliğin nasıl bağlandığını gösteren geçerli, sade 1 adet ```mermaid (`flowchart LR` veya `flowchart TD`) diyagramı ekle.',
+      '8. CERRAHİ DOSYA PLANI & ROLLBACK (ZORUNLU): "Düzenlenecek Mevcut Dosyalar", "Eklenecek Yeni Dosyalar" ve "Geri Alma (Rollback) Adımları"nı net tablo/madde listesiyle tanımla; mevcut bağımlılıklar ve tiplerle %100 uyumlu kal.'
+    );
+  } else if (/AGENTS|START_HERE|BRIEF/.test(upperName)) {
+    const isEvo = session.projectMode === 'existing_feature';
+    roleSpecificRules.push(
+      isEvo
+        ? '7. MEVCUT REPO OKUMA SIRASI & FAZ UYUMU (ZORUNLU): Okuma sırası MUTLAKA `0. PROJECT_CONTRACT.json` ile başlasın, ardından `01_CHANGE_PROPOSAL.md` ve `02_MIGRATION_AND_ARCH_DIFF.md` gelsin. Mevcut çalışan özellikleri ve testleri koruyan doğrulama komutlarını açıkça yaz.'
+        : '7. OKUMA SIRASI & FAZ UYUMU (ZORUNLU): Okuma sırası MUTLAKA `0. PROJECT_CONTRACT.json` ile başlasın (`AGENTS.md` ile %100 uyumlu). Dalga 1 özetindeki `04_BUILD_ROADMAP.md` faz numaraları, faz başlıkları ve doğrulama komutlarıyla BİREBİR örtüş — asla farklı faz kapsamı uydurma!',
+      '8. DRY & KISA BAŞLATMA PROMPTLARI (ZORUNLU): Hard Invariants listesini belgede YALNIZCA 1 KEZ (Bölüm 3) yaz! En sondaki **Faz 1 Başlangıç Promptu** ve **Faz 2 Devam Promptu** kod bloklarında tüm Hard Invariants listesini tekrar kopyalama; bunun yerine "`PROJECT_CONTRACT.json` ve bu kılavuzun §3 kurallarına %100 uy" diyerek her promptu 12–18 satırlık keskin, kopyala-yapıştır hazır talimat olarak yaz (bu dosya toplamda 14 KB\'ı geçmesin!).'
     );
   }
 

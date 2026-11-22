@@ -6,6 +6,17 @@ export type DomainMode =
   | 'problem_solving'
   | 'strategy_general';
 
+export type ProjectMode = 'new_app' | 'existing_feature';
+
+export type IdeId = 'antigravity' | 'cursor' | 'vscode';
+
+export interface DetectedIde {
+  id: IdeId;
+  name: string;
+  installed: boolean;
+  command?: string;
+}
+
 export type SeatRole =
   | 'general'
   | 'chief_architect'
@@ -272,6 +283,7 @@ export interface DebateSession {
   title: string;
   idea: string;
   domain: DomainMode;
+  projectMode?: ProjectMode;
   language?: AppLang;
   complexity?: ComplexityAssessment;
   caliber?: CaliberPreference;

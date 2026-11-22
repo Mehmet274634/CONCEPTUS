@@ -14,6 +14,10 @@ export interface ConceptusDesktopBridge {
   version: string;
   pickFolder: (title?: string) => Promise<{ folderPath: string | null; cancelled: boolean }>;
   openFolderInExplorer: (folderPath: string) => Promise<void>;
+  openFolderInIde: (
+    folderPath: string,
+    ide: 'antigravity' | 'cursor' | 'vscode' | 'explorer'
+  ) => Promise<{ ok: boolean; error?: string }>;
   downloadAndInstallUpdate: (options: {
     url: string;
     filename: string;
@@ -25,10 +29,12 @@ export interface ConceptusDesktopBridge {
 const bridge: ConceptusDesktopBridge = {
   isDesktop: true,
   platform: process.platform,
-  version: '5.1.2',
+  version: '5.2.0',
   pickFolder: (title?: string) => ipcRenderer.invoke('conceptus:pick-folder', title),
   openFolderInExplorer: (folderPath: string) =>
     ipcRenderer.invoke('conceptus:open-folder', folderPath),
+  openFolderInIde: (folderPath, ide) =>
+    ipcRenderer.invoke('conceptus:open-ide', folderPath, ide),
   downloadAndInstallUpdate: (options) =>
     ipcRenderer.invoke('conceptus:download-update', options),
   onUpdateProgress: (cb) => {

@@ -7,7 +7,9 @@ import type { Server } from 'node:http';
 import https from 'node:https';
 import path from 'node:path';
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, shell } from 'electron';
+import { openFolderInIde } from '../server/ideLauncher.ts';
 import { startConceptusServer } from '../server/index.ts';
+import type { IdeId } from '../server/types.ts';
 import { extractSha256ForFile, isAllowedUpdateHost } from '../server/updater.ts';
 
 let mainWindow: BrowserWindow | null = null;
@@ -146,6 +148,14 @@ ipcMain.handle('conceptus:open-folder', async (_event, folderPath: string) => {
   }
 });
 
+// Security: strictly validate path & allowlisted IDE ('antigravity' | 'cursor' | 'vscode' | 'explorer')
+ipcMain.handle(
+  'conceptus:open-ide',
+  async (_event, folderPath: string, ide: IdeId | 'explorer') => {
+    return openFolderInIde(String(folderPath || ''), ide);
+  }
+);
+
 function downloadHttpsToFile(
   urlStr: string,
   destPath: string,
@@ -160,7 +170,7 @@ function downloadHttpsToFile(
 
     const req = https.get(
       urlStr,
-      { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.0.0' } },
+      { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.2.0' } },
       (res) => {
         const status = res.statusCode || 0;
         if (status >= 300 && status < 400 && res.headers.location) {
@@ -218,7 +228,7 @@ function fetchHttpsText(urlStr: string, redirectsLeft = 4): Promise<string> {
       return;
     }
     https
-      .get(urlStr, { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.0.0' } }, (res) => {
+      .get(urlStr, { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.2.0' } }, (res) => {
         const status = res.statusCode || 0;
         if (status >= 300 && status < 400 && res.headers.location && redirectsLeft > 0) {
           res.resume();

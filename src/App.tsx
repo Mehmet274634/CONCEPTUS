@@ -4,6 +4,7 @@ import {
   checkForAppUpdates,
   createSession,
   extractSessionDecisionGates,
+  fetchDetectedIdes,
   fetchProvidersState,
   fetchSession,
   fetchSessions,
@@ -39,10 +40,12 @@ import type {
   CaliberPreference,
   DebateSession,
   DecisionGate,
+  DetectedIde,
   DomainMode,
   FallbackPolicy,
   GeneratedMdFile,
   PoolCooldown,
+  ProjectMode,
   ProviderId,
   ProviderInfo,
   RepoSnapshotMeta,
@@ -199,6 +202,7 @@ function pickDefaultJudge(
 export default function App() {
   const { lang } = useI18n();
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
+  const [detectedIdes, setDetectedIdes] = useState<DetectedIde[]>([]);
   const [cooldowns, setCooldowns] = useState<PoolCooldown[]>([]);
   const [fallbackPolicy, setFallbackPolicy] = useState<FallbackPolicy>({
     mode: 'quality_auto',
@@ -315,6 +319,7 @@ export default function App() {
   useEffect(() => {
     void loadProviders(false);
     void loadSessionsList();
+    void fetchDetectedIdes(false).then(setDetectedIdes);
   }, [loadProviders, loadSessionsList]);
 
   useEffect(() => {
@@ -678,6 +683,7 @@ export default function App() {
     title: string;
     idea: string;
     domain: DomainMode;
+    projectMode?: ProjectMode;
     caliber?: CaliberPreference;
     constraints: string;
     contextText: string;
@@ -691,6 +697,7 @@ export default function App() {
         title: payload.title,
         idea: payload.idea,
         domain: payload.domain,
+        projectMode: payload.projectMode || 'new_app',
         language: lang,
         caliber: payload.caliber,
         constraints: payload.constraints,
@@ -976,6 +983,7 @@ export default function App() {
               <DebateStage
                 session={activeSession}
                 providers={providers}
+                detectedIdes={detectedIdes}
                 cooldowns={cooldowns}
                 fallbackPolicy={fallbackPolicy}
                 uiMode={uiMode}
