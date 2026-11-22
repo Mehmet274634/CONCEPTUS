@@ -208,6 +208,270 @@ function wireReleaseUrls() {
   document.querySelectorAll('[data-href="license"]').forEach((a) => a.setAttribute('href', `${base}/blob/main/LICENSE`));
 }
 
+function initHeroLightCanvas() {
+  const canvases = document.querySelectorAll('canvas[data-light-canvas]');
+  if (!canvases.length) return;
+
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  canvases.forEach((canvas) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const variant = canvas.getAttribute('data-light-canvas') || 'hero';
+    const isSub = variant === 'sub';
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
+    let visible = true;
+    let rafId = 0;
+    let mouseX = 0.5;
+    let mouseY = 0.5;
+    let targetX = 0.5;
+    let targetY = 0.5;
+
+    const beamCount = isSub ? 14 : 24;
+    const beams = Array.from({ length: beamCount }, (_, i) => {
+      const norm = (i + 0.5) / beamCount;
+      const centerDist = Math.abs(norm - 0.5) * 2;
+      const palette = i % 3 === 0 ? [124, 116, 255] : i % 3 === 1 ? [63, 208, 201] : [186, 198, 255];
+      return {
+        norm,
+        centerDist,
+        color: palette,
+        width: (1 - centerDist * 0.55) * (isSub ? 2.0 : 2.8) + 0.8,
+        speed: 0.25 + (i % 5) * 0.11,
+        phase: i * 1.17,
+        streakOffset: (i * 0.29) % 1,
+        streakSpeed: 0.065 + (i % 4) * 0.024,
+      };
+    });
+
+    const sparkCount = isSub ? 26 : 56;
+    const sparks = Array.from({ length: sparkCount }, (_, i) => ({
+      x: ((i * 73.13) % 100) / 100,
+      y: ((i * 41.79) % 100) / 100,
+      r: 0.9 + (i % 4) * 0.48,
+      vy: 0.00055 + (i % 5) * 0.00024,
+      drift: ((i % 7) - 3) * 0.00009,
+      phase: i * 0.83,
+      color: i % 3 === 0 ? '124,116,255' : i % 3 === 1 ? '63,208,201' : '240,244,255',
+    }));
+
+    function resize() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      w = Math.max(320, rect.width);
+      h = Math.max(260, rect.height);
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function drawFrame(tSec) {
+      mouseX += (targetX - mouseX) * 0.05;
+      mouseY += (targetY - mouseY) * 0.05;
+
+      ctx.clearRect(0, 0, w, h);
+      const px = (mouseX - 0.5) * (isSub ? 24 : 52);
+      const py = (mouseY - 0.5) * (isSub ? 14 : 28);
+
+      // 1. Ambient obsidian-horizon aurora glow
+      const horizonY = isSub ? h * 0.98 : h * 0.92;
+      const g1 = ctx.createRadialGradient(w * 0.42 + px, horizonY + py * 0.4, 12, w * 0.42 + px, horizonY, w * 0.55);
+      g1.addColorStop(0, 'rgba(124, 116, 255, 0.34)');
+      g1.addColorStop(0.42, 'rgba(124, 116, 255, 0.11)');
+      g1.addColorStop(1, 'rgba(8, 9, 10, 0)');
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, w, h);
+
+      const g2 = ctx.createRadialGradient(w * 0.62 - px * 0.8, horizonY * 0.94, 10, w * 0.62 - px * 0.8, horizonY, w * 0.48);
+      g2.addColorStop(0, 'rgba(63, 208, 201, 0.25)');
+      g2.addColorStop(0.45, 'rgba(63, 208, 201, 0.07)');
+      g2.addColorStop(1, 'rgba(8, 9, 10, 0)');
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+
+      // 2. Volumetric rising convergence light rays (fanning subtly upward from horizon)
+      beams.forEach((b) => {
+        const baseX = w * (0.06 + b.norm * 0.88) + px * (0.45 - b.centerDist * 0.2);
+        const topSpread = (b.norm - 0.5) * w * 0.14;
+        const topX = baseX + topSpread;
+        const pulse = 0.52 + 0.48 * Math.sin(tSec * b.speed + b.phase);
+        const alpha = (1 - b.centerDist * 0.62) * (isSub ? 0.16 : 0.22) * pulse;
+        const [r, g, bl] = b.color;
+
+        // Soft ambient shaft
+        const shaft = ctx.createLinearGradient(baseX, h, topX, h * 0.06);
+        shaft.addColorStop(0, `rgba(${r},${g},${bl},${alpha * 0.95})`);
+        shaft.addColorStop(0.55, `rgba(${r},${g},${bl},${alpha * 0.32})`);
+        shaft.addColorStop(1, `rgba(${r},${g},${bl},0)`);
+        ctx.strokeStyle = shaft;
+        ctx.lineWidth = b.width * 3.4;
+        ctx.beginPath();
+        ctx.moveTo(baseX, h);
+        ctx.lineTo(topX, h * 0.06);
+        ctx.stroke();
+
+        // Crisp luminous core hairline
+        ctx.strokeStyle = `rgba(${r},${g},${bl},${alpha * 1.45})`;
+        ctx.lineWidth = Math.max(0.8, b.width * 0.48);
+        ctx.beginPath();
+        ctx.moveTo(baseX, h);
+        ctx.lineTo(topX, h * 0.08);
+        ctx.stroke();
+
+        // Rising bright light packet riding up each ray
+        const prog = (b.streakOffset + tSec * b.streakSpeed) % 1;
+        const yEnd = h * (1 - prog * 0.92);
+        const yStart = Math.min(h, yEnd + h * 0.16);
+        const ratioStart = (h - yStart) / (h * 0.94);
+        const ratioEnd = (h - yEnd) / (h * 0.94);
+        const sx = baseX + topSpread * ratioStart;
+        const ex = baseX + topSpread * ratioEnd;
+        const fade = Math.sin(prog * Math.PI);
+
+        const streakGrad = ctx.createLinearGradient(sx, yStart, ex, yEnd);
+        streakGrad.addColorStop(0, `rgba(${r},${g},${bl},0)`);
+        streakGrad.addColorStop(0.7, `rgba(${r},${g},${bl},${0.55 * fade})`);
+        streakGrad.addColorStop(1, `rgba(255,255,255,${0.85 * fade})`);
+        ctx.strokeStyle = streakGrad;
+        ctx.lineWidth = Math.max(1.2, b.width * 0.65);
+        ctx.beginPath();
+        ctx.moveTo(sx, yStart);
+        ctx.lineTo(ex, yEnd);
+        ctx.stroke();
+      });
+
+      // 3. Three living luminous horizon ribbons (Violet, Cyan, Starlight)
+      const ribbons = isSub
+        ? [
+            { y: h * 0.86, amp: 16, freq: 1.5, spd: 0.45, col: '124,116,255', a: 0.24 },
+            { y: h * 0.9, amp: 12, freq: 2.1, spd: -0.38, col: '63,208,201', a: 0.2 },
+          ]
+        : [
+            { y: h * 0.77, amp: 28, freq: 1.4, spd: 0.45, col: '124,116,255', a: 0.34 },
+            { y: h * 0.82, amp: 22, freq: 1.9, spd: -0.35, col: '63,208,201', a: 0.28 },
+            { y: h * 0.86, amp: 15, freq: 2.4, spd: 0.55, col: '240,180,76', a: 0.16 },
+          ];
+
+      ribbons.forEach((rb) => {
+        const rg = ctx.createLinearGradient(0, 0, w, 0);
+        rg.addColorStop(0, `rgba(${rb.col},0)`);
+        rg.addColorStop(0.22, `rgba(${rb.col},${rb.a})`);
+        rg.addColorStop(0.5, `rgba(255,255,255,${rb.a * 1.15})`);
+        rg.addColorStop(0.78, `rgba(${rb.col},${rb.a})`);
+        rg.addColorStop(1, `rgba(${rb.col},0)`);
+
+        ctx.strokeStyle = rg;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 18) {
+          const nx = x / w;
+          const env = Math.sin(nx * Math.PI);
+          const y =
+            rb.y +
+            Math.sin(nx * Math.PI * rb.freq + tSec * rb.spd) * rb.amp * env +
+            py * 0.35 * env;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      });
+
+      // 4. Crisp luminous horizon rim arc on main hero
+      if (!isSub) {
+        const rimGrad = ctx.createLinearGradient(w * 0.12, 0, w * 0.88, 0);
+        rimGrad.addColorStop(0, 'rgba(124,116,255,0)');
+        rimGrad.addColorStop(0.32, 'rgba(124,116,255,0.42)');
+        rimGrad.addColorStop(0.5, 'rgba(255,255,255,0.72)');
+        rimGrad.addColorStop(0.68, 'rgba(63,208,201,0.42)');
+        rimGrad.addColorStop(1, 'rgba(63,208,201,0)');
+
+        ctx.strokeStyle = rimGrad;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.08, h * 0.96);
+        ctx.quadraticCurveTo(w * 0.5 + px * 0.4, h * 0.83, w * 0.92, h * 0.96);
+        ctx.stroke();
+      }
+
+      // 5. Rising starlight micro-sparks
+      sparks.forEach((s) => {
+        if (!reduceMotion) {
+          s.y -= s.vy;
+          s.x += s.drift;
+          if (s.y < -0.04) {
+            s.y = 1.04;
+            s.x = (s.x + 0.37) % 1;
+          }
+          if (s.x < 0) s.x += 1;
+          if (s.x > 1) s.x -= 1;
+        }
+        const sx = s.x * w + px * 0.25;
+        const sy = s.y * h;
+        const twinkle = 0.35 + 0.65 * Math.abs(Math.sin(tSec * 1.4 + s.phase));
+        const edgeFade = Math.sin(Math.max(0, Math.min(1, s.y)) * Math.PI);
+        const alpha = twinkle * edgeFade * 0.78;
+
+        ctx.fillStyle = `rgba(${s.color},${alpha})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.restore();
+    }
+
+    function loop(now) {
+      if (!visible) return;
+      drawFrame(now * 0.001);
+      if (!reduceMotion) {
+        rafId = requestAnimationFrame(loop);
+      }
+    }
+
+    resize();
+    drawFrame(1.4);
+
+    if (!reduceMotion) {
+      rafId = requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('resize', resize, { passive: true });
+    canvas.parentElement.addEventListener(
+      'pointermove',
+      (e) => {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        targetX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        targetY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+      },
+      { passive: true }
+    );
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          visible = entries[0].isIntersecting;
+          if (visible && !reduceMotion && !rafId) {
+            rafId = requestAnimationFrame(loop);
+          } else if (!visible && rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = 0;
+          }
+        },
+        { threshold: 0.02 }
+      );
+      io.observe(canvas.parentElement);
+    }
+  });
+}
+
 wireReleaseUrls();
 initLanguage();
 initSpotlightCards();
@@ -220,3 +484,4 @@ initTabGroup('data-pol-tab', 'data-pol-pane');
 initDecisionGateDemo();
 initOsTabs();
 initDropdownAutoClose();
+initHeroLightCanvas();

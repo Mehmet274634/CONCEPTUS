@@ -21,6 +21,7 @@
       </a>
 
       <div class="links">
+        <a class="nav-link" href="index.html#prism" data-tr="Mimari" data-en="Architecture">Mimari</a>
         <a class="nav-link" href="index.html#flow" data-tr="Evrim Masası" data-en="Evolution Desk">Evrim Masası</a>
         <a class="nav-link" href="index.html#blueprint" data-tr="5'li MD" data-en="5-File MD">5'li MD</a>
         <a class="nav-link" href="index.html#studio" data-tr="Sade &amp; Pro" data-en="Simple &amp; Pro">Sade &amp; Pro</a>
@@ -57,36 +58,9 @@
   </header>
 
   <main>
-    <!-- Sub-Hero (Clean, Zero Green-Dot Eyebrow, Upward Kinetic Beams) -->
+    <!-- Sub-Hero (Clean, Zero Green-Dot Eyebrow, Live Luminous Light Field) -->
     <section class="sub-hero">
-      <div class="hero-beams" aria-hidden="true">
-        <svg viewBox="0 0 1440 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="dlBeamV" x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0%" stop-color="#7c74ff" stop-opacity="0" />
-              <stop offset="50%" stop-color="#7c74ff" stop-opacity="0.48" />
-              <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
-            </linearGradient>
-            <linearGradient id="dlBeamC" x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0%" stop-color="#3fd0c9" stop-opacity="0" />
-              <stop offset="50%" stop-color="#3fd0c9" stop-opacity="0.45" />
-              <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
-            </linearGradient>
-          </defs>
-          <g stroke="#ffffff0b" stroke-width="1">
-            <line x1="220" y1="0" x2="220" y2="480" />
-            <line x1="460" y1="0" x2="460" y2="480" />
-            <line x1="720" y1="0" x2="720" y2="480" />
-            <line x1="980" y1="0" x2="980" y2="480" />
-            <line x1="1220" y1="0" x2="1220" y2="480" />
-          </g>
-          <line class="beam-line slow" x1="220" y1="480" x2="220" y2="0" stroke="url(#dlBeamV)" stroke-width="1.3" />
-          <line class="beam-line fast" x1="460" y1="480" x2="460" y2="0" stroke="url(#dlBeamC)" stroke-width="1.4" />
-          <line class="beam-line" x1="720" y1="480" x2="720" y2="0" stroke="url(#dlBeamV)" stroke-width="1.6" />
-          <line class="beam-line fast" x1="980" y1="480" x2="980" y2="0" stroke="url(#dlBeamC)" stroke-width="1.4" />
-          <line class="beam-line slow" x1="1220" y1="480" x2="1220" y2="0" stroke="url(#dlBeamV)" stroke-width="1.3" />
-        </svg>
-      </div>
+      <canvas class="light-canvas" data-light-canvas="sub" aria-hidden="true"></canvas>
 
       <div class="wrap" style="position: relative; z-index: 2;">
         <h1 class="display enter" data-tr="Masaüstü Stüdyosunu İndir." data-en="Download Desktop Studio.">
@@ -323,10 +297,10 @@
         <div class="steps-3 reveal">
           <article class="card">
             <div class="step-glyph" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3fd0c9" stroke-width="1.8">
-                <circle cx="12" cy="12" r="9" stroke-opacity="0.35" />
-                <circle cx="12" cy="12" r="5" stroke-opacity="0.65" />
-                <circle cx="12" cy="12" r="2" fill="#3fd0c9" stroke="none" />
+              <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+                <circle class="radar-ping" cx="14" cy="14" r="10" stroke="#5ce8e1" stroke-width="1.3" />
+                <circle cx="14" cy="14" r="7" stroke="#5ce8e1" stroke-opacity="0.55" stroke-width="1.4" />
+                <circle cx="14" cy="14" r="2.6" fill="#5ce8e1" />
               </svg>
             </div>
             <h3 class="h3" data-tr="01 · Otomatik CLI Tarama" data-en="01 · Auto-Detect CLIs">01 · Otomatik CLI Tarama</h3>
@@ -337,9 +311,12 @@
 
           <article class="card">
             <div class="step-glyph" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#958fff" stroke-width="1.8">
-                <polygon points="12 3 21 19 3 19" />
-                <circle cx="12" cy="14" r="2" fill="#f0b44c" stroke="none" />
+              <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+                <polygon points="14 4 24 22 4 22" stroke="#a29bff" stroke-width="1.6" fill="#7c74ff1c" />
+                <circle cx="14" cy="4" r="2.2" fill="#958fff" />
+                <circle cx="24" cy="22" r="2.2" fill="#5ce8e1" />
+                <circle cx="4" cy="22" r="2.2" fill="#f5c266" />
+                <circle cx="14" cy="16" r="2.4" fill="#ffffff" />
               </svg>
             </div>
             <h3 class="h3" data-tr="02 · Masada Çarpıştır" data-en="02 · Cross-Debate">02 · Masada Çarpıştır</h3>
@@ -350,10 +327,10 @@
 
           <article class="card">
             <div class="step-glyph" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4cc58a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 7l8-4 8 4-8 4-8-4Z" />
-                <path d="M4 12l8 4 8-4" />
-                <path d="M4 17l8 4 8-4" />
+              <svg width="26" height="26" viewBox="0 0 28 28" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9l10-5 10 5-10 5-10-5Z" fill="#4cc58a24" stroke="#5fe0a1" stroke-width="1.6" />
+                <path d="M4 14.5l10 5 10-5" stroke="#5ce8e1" stroke-width="1.6" />
+                <path d="M4 19.5l10 5 10-5" stroke="#958fff" stroke-width="1.6" />
               </svg>
             </div>
             <h3 class="h3" data-tr="03 · 5'li MD'yi Klasöre Yaz" data-en="03 · Export 5-File Pack">03 · 5'li MD'yi Klasöre Yaz</h3>
