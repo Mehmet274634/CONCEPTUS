@@ -4,6 +4,14 @@ const VERSION = '4.2.0';
 function setLang(lang) {
   const active = lang === 'en' ? 'en' : 'tr';
   document.documentElement.lang = active;
+  const isDownload = window.location.pathname.includes('download');
+  document.title = isDownload
+    ? active === 'en'
+      ? 'CONCEPTUS — Download & Install (Windows · macOS · Linux)'
+      : 'CONCEPTUS — İndir & Kur (Windows · macOS · Linux)'
+    : active === 'en'
+      ? 'CONCEPTUS — One Table for Every AI Mind'
+      : "CONCEPTUS — Ham Fikirden Kusursuz Uygulama MD'sine";
 
   document.querySelectorAll('[data-tr][data-en]').forEach((el) => {
     const val = active === 'en' ? el.getAttribute('data-en') : el.getAttribute('data-tr');
@@ -98,9 +106,11 @@ function initOsTabs() {
 
   const activate = (os) => {
     const target = os === 'macos' || os === 'linux' ? os : 'windows';
-    buttons.forEach((b) =>
-      b.classList.toggle('active', b.getAttribute('data-os-tab') === target)
-    );
+    buttons.forEach((b) => {
+      const isActive = b.getAttribute('data-os-tab') === target;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-selected', String(isActive));
+    });
     panels.forEach((p) =>
       p.classList.toggle('active', p.getAttribute('data-os-panel') === target)
     );
