@@ -33,8 +33,8 @@ Most people jump straight into an AI coding tool with a vague 2-line prompt — 
 
 ### Option 1 — Native Desktop App (Recommended · No Node.js Required)
 Download the latest release from the **[Official Download Page](https://conceptus-ivory.vercel.app/download)** or **[GitHub Releases (Latest)](https://github.com/Mehmet274634/CONCEPTUS/releases/latest)**:
-- **Windows Installer (`CONCEPTUS-Setup-5.3.1.exe`)** — Silent in-app updates, frameless dark window, native OS folder picker, zero terminal
-- **Windows Portable (`CONCEPTUS-5.3.1-Portable.exe`)** — Standalone `.exe` (zero install)
+- **Windows Installer (`CONCEPTUS-Setup-5.3.2.exe`)** — Silent in-app updates, frameless dark window, native OS folder picker, zero terminal
+- **Windows Portable (`CONCEPTUS-5.3.2-Portable.exe`)** — Standalone `.exe` (zero install)
 - **macOS (`.dmg`) & Linux (`.AppImage`)** — Available on every tagged GitHub Release alongside **`SHA256SUMS.txt`**
 
 Build the Windows desktop installer from source:

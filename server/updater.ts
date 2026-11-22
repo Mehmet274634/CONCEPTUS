@@ -10,9 +10,10 @@ import type {
 
 const execFileAsync = promisify(execFile);
 
-export const APP_VERSION = '5.3.1';
+export const APP_VERSION = '5.3.2';
 export const GITHUB_REPO = 'Mehmet274634/CONCEPTUS';
 const RELEASE_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+const RELEASE_WEB_LATEST_URL = `https://github.com/${GITHUB_REPO}/releases/latest`;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 const ALLOWED_UPDATE_HOSTS = new Set([
@@ -144,6 +145,80 @@ export function parseGitHubReleasePayload(
   };
 }
 
+export function buildReleaseFromTag(
+  rawTag: string,
+  currentVersion = APP_VERSION
+): UpdateCheckResult {
+  const { isDesktop, isGitRepo } = getRuntimeFlags();
+  const cleanTag = rawTag.trim().replace(/^v/i, '');
+  const latestVersion = cleanTag || currentVersion;
+  const tag = `v${latestVersion}`;
+  const updateAvailable = compareSemver(currentVersion, latestVersion) < 0;
+  const dlBase = `https://github.com/${GITHUB_REPO}/releases/download/${tag}`;
+
+  return {
+    status: updateAvailable ? 'update_available' : 'up_to_date',
+    currentVersion,
+    latestVersion,
+    updateAvailable,
+    releaseName: `CONCEPTUS ${tag}`,
+    releaseUrl: `https://github.com/${GITHUB_REPO}/releases/tag/${tag}`,
+    releaseNotes: updateAvailable
+      ? `Yeni kararlı sürüm **CONCEPTUS ${tag}** GitHub Releases üzerinde yayında (SHA-256 doğrulamalı sessiz kurulum).`
+      : '',
+    setupAsset: {
+      name: `CONCEPTUS-Setup-${latestVersion}.exe`,
+      url: `${dlBase}/CONCEPTUS-Setup-${latestVersion}.exe`,
+      sizeBytes: 0,
+    },
+    portableAsset: {
+      name: `CONCEPTUS-${latestVersion}-Portable.exe`,
+      url: `${dlBase}/CONCEPTUS-${latestVersion}-Portable.exe`,
+      sizeBytes: 0,
+    },
+    macAsset: {
+      name: `CONCEPTUS-${latestVersion}.dmg`,
+      url: `${dlBase}/CONCEPTUS-${latestVersion}.dmg`,
+      sizeBytes: 0,
+    },
+    linuxAsset: {
+      name: `CONCEPTUS-${latestVersion}.AppImage`,
+      url: `${dlBase}/CONCEPTUS-${latestVersion}.AppImage`,
+      sizeBytes: 0,
+    },
+    checksumsUrl: `${dlBase}/SHA256SUMS.txt`,
+    isDesktop,
+    isGitRepo,
+    checkedAt: Date.now(),
+  };
+}
+
+/**
+ * Zero-rate-limit fallback: resolves the latest release tag directly from
+ * github.com/.../releases/latest HTTP 302 Location header (never hits the 60 req/hr api.github.com limit!).
+ */
+async function checkLatestViaWebRedirect(
+  signal: AbortSignal
+): Promise<UpdateCheckResult | null> {
+  try {
+    const res = await fetch(RELEASE_WEB_LATEST_URL, {
+      redirect: 'manual',
+      headers: {
+        'User-Agent': `CONCEPTUS/${APP_VERSION}`,
+      },
+      signal,
+    });
+    const loc = res.headers.get('location') || '';
+    const match = loc.match(/\/releases\/tag\/(v?[\d.]+(?:-[a-zA-Z0-9.]+)?)/i);
+    if (match && match[1]) {
+      return buildReleaseFromTag(match[1], APP_VERSION);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function checkForUpdates(force = false): Promise<UpdateCheckResult> {
   if (!force && cachedCheck && Date.now() - cachedCheck.at < CACHE_TTL_MS) {
     return cachedCheck.result;
@@ -162,27 +237,43 @@ export async function checkForUpdates(force = false): Promise<UpdateCheckResult>
       signal: controller.signal,
     });
 
-    if (!res.ok) {
-      return {
-        status: 'offline',
-        currentVersion: APP_VERSION,
-        latestVersion: APP_VERSION,
-        updateAvailable: false,
-        releaseName: `CONCEPTUS v${APP_VERSION}`,
-        releaseUrl: `https://github.com/${GITHUB_REPO}/releases`,
-        releaseNotes: '',
-        isDesktop,
-        isGitRepo,
-        checkedAt: Date.now(),
-        error: `GitHub API yanıtı: HTTP ${res.status}`,
-      };
+    if (res.ok) {
+      const data = await res.json();
+      const parsed = parseGitHubReleasePayload(data, APP_VERSION);
+      cachedCheck = { at: Date.now(), result: parsed };
+      return parsed;
     }
 
-    const data = await res.json();
-    const parsed = parseGitHubReleasePayload(data, APP_VERSION);
-    cachedCheck = { at: Date.now(), result: parsed };
-    return parsed;
+    // If GitHub API returns 403/429 (hourly IP rate limit) or any non-200,
+    // immediately fall back to zero-rate-limit github.com/releases/latest 302 redirect!
+    const fallbackResult = await checkLatestViaWebRedirect(controller.signal);
+    if (fallbackResult) {
+      cachedCheck = { at: Date.now(), result: fallbackResult };
+      return fallbackResult;
+    }
+
+    return {
+      status: 'offline',
+      currentVersion: APP_VERSION,
+      latestVersion: APP_VERSION,
+      updateAvailable: false,
+      releaseName: `CONCEPTUS v${APP_VERSION}`,
+      releaseUrl: `https://github.com/${GITHUB_REPO}/releases`,
+      releaseNotes: '',
+      isDesktop,
+      isGitRepo,
+      checkedAt: Date.now(),
+      error: `GitHub API yanıtı: HTTP ${res.status}`,
+    };
   } catch (err: any) {
+    // Also attempt redirect fallback if API host failed while github.com is reachable
+    if (err?.name !== 'AbortError') {
+      const fallbackResult = await checkLatestViaWebRedirect(controller.signal);
+      if (fallbackResult) {
+        cachedCheck = { at: Date.now(), result: fallbackResult };
+        return fallbackResult;
+      }
+    }
     return {
       status: 'offline',
       currentVersion: APP_VERSION,

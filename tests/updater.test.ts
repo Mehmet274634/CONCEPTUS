@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildReleaseFromTag,
   compareSemver,
   extractSha256ForFile,
   isAllowedUpdateHost,
@@ -80,5 +81,20 @@ describe('CONCEPTUS v5.0 — Auto-Updater Engine & Security Guards', () => {
     const upToDate = parseGitHubReleasePayload(payload, '5.1.0');
     expect(upToDate.status).toBe('up_to_date');
     expect(upToDate.updateAvailable).toBe(false);
+  });
+
+  it('builds valid SHA-256 verified update assets via zero-rate-limit tag redirect fallback', () => {
+    const fb = buildReleaseFromTag('v5.3.2', '5.3.0');
+    expect(fb.status).toBe('update_available');
+    expect(fb.updateAvailable).toBe(true);
+    expect(fb.latestVersion).toBe('5.3.2');
+    expect(fb.setupAsset?.name).toBe('CONCEPTUS-Setup-5.3.2.exe');
+    expect(fb.setupAsset?.url).toBe(
+      'https://github.com/Mehmet274634/CONCEPTUS/releases/download/v5.3.2/CONCEPTUS-Setup-5.3.2.exe'
+    );
+    expect(fb.checksumsUrl).toBe(
+      'https://github.com/Mehmet274634/CONCEPTUS/releases/download/v5.3.2/SHA256SUMS.txt'
+    );
+    expect(isAllowedUpdateHost(fb.setupAsset!.url)).toBe(true);
   });
 });
