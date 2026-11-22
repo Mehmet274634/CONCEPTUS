@@ -439,7 +439,8 @@ export async function saveBlueprintToLocalFolder(
     folderPath?: string;
     useLinkedRepo?: boolean;
     subfolder?: string;
-    includeIdeRules?: boolean;
+    includeClaudeMd?: boolean;
+    includeCursorRules?: boolean;
   }
 ): Promise<{ folderPath: string; fileCount: number }> {
   return requestJson<{ folderPath: string; fileCount: number }>(
@@ -475,8 +476,15 @@ export function getExportUrl(sessionId: string): string {
   return `/api/sessions/${sessionId}/export`;
 }
 
-export function getBlueprintZipUrl(sessionId: string, includeIdeRules = true): string {
-  return `/api/sessions/${sessionId}/blueprint.zip${includeIdeRules ? '' : '?ide=0'}`;
+export function getBlueprintZipUrl(
+  sessionId: string,
+  options?: { includeClaudeMd?: boolean; includeCursorRules?: boolean }
+): string {
+  const params = new URLSearchParams();
+  if (options?.includeClaudeMd) params.set('claude', '1');
+  if (options?.includeCursorRules) params.set('cursor', '1');
+  const qs = params.toString();
+  return `/api/sessions/${sessionId}/blueprint.zip${qs ? `?${qs}` : ''}`;
 }
 
 export async function checkForAppUpdates(force = false): Promise<UpdateCheckResult> {

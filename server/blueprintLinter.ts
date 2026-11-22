@@ -12,7 +12,7 @@ const UNCERTAINTY_PATTERNS: { re: RegExp; label: string }[] = [
   { re: /\bkarar\s+verilecek\b/gi, label: 'karar verilecek' },
   { re: /\bsonra\s+belirlenecek\b/gi, label: 'sonra belirlenecek' },
   { re: /\bto\s+be\s+decided\b/gi, label: 'to be decided' },
-  { re: /\bplaceholder\b/gi, label: 'placeholder' },
+  { re: /\[\s*placeholder\s*\]/gi, label: '[placeholder]' },
 ];
 
 const VALID_MERMAID_HEADER =

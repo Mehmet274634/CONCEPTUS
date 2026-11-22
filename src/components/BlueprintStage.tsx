@@ -150,10 +150,11 @@ export function BlueprintStage({
   const [newFilename, setNewFilename] = useState('');
   const [newPurpose, setNewPurpose] = useState('');
   const [showBuildPrompt, setShowBuildPrompt] = useState(false);
-  const [includeIdeRules, setIncludeIdeRules] = useState(true);
+  const [includeClaudeMd, setIncludeClaudeMd] = useState(false);
+  const [includeCursorRules, setIncludeCursorRules] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [linting, setLinting] = useState(false);
-  const [contractOpen, setContractOpen] = useState(false);
-  const [lintIssuesOpen, setLintIssuesOpen] = useState(false);
+  const [activeInfoTab, setActiveInfoTab] = useState<'none' | 'contract' | 'lint' | 'qa'>('none');
 
   const exhaustedPools = useMemo(
     () => new Set(cooldowns.map((c) => c.pool)),
@@ -434,12 +435,14 @@ export function BlueprintStage({
 
   const handleSaveToLinkedRepo = async () => {
     setError(null);
+    setExportMenuOpen(false);
     setSavingFolder(true);
     try {
       const res = await saveBlueprintToLocalFolder(session.id, {
         useLinkedRepo: true,
         subfolder: 'docs',
-        includeIdeRules,
+        includeClaudeMd,
+        includeCursorRules,
       });
       setSavedFolder(res.folderPath);
     } catch (err: any) {
@@ -451,6 +454,7 @@ export function BlueprintStage({
 
   const handlePickAndSaveFolder = async () => {
     setError(null);
+    setExportMenuOpen(false);
     setSavingFolder(true);
     try {
       const picked = await pickLocalFolder(
@@ -459,7 +463,8 @@ export function BlueprintStage({
       if (picked.folderPath) {
         const res = await saveBlueprintToLocalFolder(session.id, {
           folderPath: picked.folderPath,
-          includeIdeRules,
+          includeClaudeMd,
+          includeCursorRules,
         });
         setSavedFolder(res.folderPath);
       }
@@ -511,45 +516,41 @@ export function BlueprintStage({
   }, [session.blueprint?.files, session.blueprint?.contract, session.title, savedFolder]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6">
-      <div className="max-w-6xl mx-auto space-y-5">
-        {/* Top Action Header */}
+    <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-5">
+      <div className="max-w-6xl mx-auto space-y-3.5">
+        {/* Clean Minimal Header — Only Primary Actions */}
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#958fff]">
-                <FileCode2 className="w-3.5 h-3.5" />
-                {t('Proje MD Paketi Stüdyosu', 'Project MD Blueprint Studio')}
-              </span>
-              {lockedGateCount > 0 && (
-                <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-[#4cc58a]/15 text-[#8ae3b7] border border-[#4cc58a]/30">
-                  <Lock className="w-2.5 h-2.5" />
-                  {t(`${lockedGateCount} Karar Kilitli`, `${lockedGateCount} Locked`)}
-                </span>
-              )}
-              {packTotalSec && !showPlanner && (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-400">
-                  {packTotalSec} s
-                </span>
-              )}
-            </div>
-            <h2 className="text-xl font-semibold text-white tracking-tight mt-0.5">
-              {t(
-                'Kesinleşen karardan projene hazır `.md` dosyaları üret.',
-                'Generate agent-ready `.md` blueprints from your finalized decision.'
-              )}
+          <div className="flex items-center gap-2.5 flex-wrap min-w-0">
+            <h2 className="text-lg font-semibold text-white tracking-tight flex items-center gap-2">
+              <FileCode2 className="w-4 h-4 text-[#958fff]" />
+              {t('MD Paketi', 'MD Blueprints')}
             </h2>
+            {!showPlanner && totalCount > 0 && (
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-300">
+                {doneCount}/{totalCount}
+              </span>
+            )}
+            {lockedGateCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full bg-[#4cc58a]/12 text-[#8ae3b7] border border-[#4cc58a]/25">
+                <Lock className="w-2.5 h-2.5" />
+                {t(`${lockedGateCount} Karar`, `${lockedGateCount} Locked`)}
+              </span>
+            )}
+            {packTotalSec && !showPlanner && (
+              <span className="text-[10.5px] font-mono text-zinc-500">
+                {packTotalSec}s
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {session.blueprint && (
+            {showPlanner && session.blueprint && (
               <button
-                onClick={() => setShowPlanner((v) => !v)}
+                onClick={() => setShowPlanner(false)}
                 disabled={activeRun}
                 className="glass-pill inline-flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-full text-zinc-200 hover:text-white cursor-pointer disabled:opacity-40"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                {showPlanner ? 'Dosyalara Dön' : 'Planı Düzenle'}
+                Dosyalara Dön
               </button>
             )}
 
@@ -583,7 +584,7 @@ export function BlueprintStage({
                   value={retryModel}
                   onChange={(e) => setRetryModel(e.target.value)}
                   title="Eksik dosyaları tamamlayacak yedek model"
-                  className="text-[11px] font-mono bg-black/35 text-white rounded-full px-2.5 py-1 focus:outline-none max-w-[175px] cursor-pointer"
+                  className="text-[11px] font-mono bg-black/35 text-white rounded-full px-2.5 py-1 focus:outline-none max-w-[165px] cursor-pointer"
                 >
                   {(retryProviderInfo?.models || []).map((m) => {
                     const isOut = exhaustedPools.has(
@@ -602,82 +603,152 @@ export function BlueprintStage({
                   className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-[#f0b44c] hover:bg-[#f5c46d] text-[#060709] font-semibold transition cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  Eksik {failedCount} Dosyayı Tamamla
+                  Eksik {failedCount} Tamamla
                 </button>
               </div>
             )}
 
-            {doneCount > 0 && !showPlanner && (
+            {doneCount > 0 && !showPlanner && !activeRun && (
               <>
-                <button
-                  onClick={handleAudit}
-                  disabled={auditing || activeRun}
-                  className="glass-pill inline-flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-full text-[#cbc7ff] hover:text-white border-[#7c74ff]/35 cursor-pointer disabled:opacity-40"
-                >
-                  {auditing ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#958fff]" />
-                  )}
-                  {auditing ? 'Denetleniyor...' : 'QA Denetimi'}
-                </button>
-
-                {/* 1-Click Save Straight Into Linked Project Folder! */}
-                {session.repoMeta && (
+                {/* Unified Export Popover (Clean Default: Only Universal MDs + AGENTS.md; Cursor & CLAUDE strictly opt-in) */}
+                <div className="relative">
                   <button
-                    onClick={handleSaveToLinkedRepo}
-                    disabled={savingFolder || activeRun}
-                    title={`Doğrudan ${session.repoMeta.folderPath}\\docs klasörüne kaydeder`}
-                    className="glass-pill inline-flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-full text-[#88ece7] border-[#3fd0c9]/40 hover:text-white cursor-pointer disabled:opacity-40"
+                    type="button"
+                    onClick={() => setExportMenuOpen((v) => !v)}
+                    disabled={savingFolder}
+                    className="glass-pill inline-flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-full text-zinc-100 border-[#3fd0c9]/35 hover:border-[#3fd0c9]/60 cursor-pointer disabled:opacity-40"
                   >
                     {savingFolder ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#3fd0c9]" />
                     ) : (
-                      <FolderGit2 className="w-3.5 h-3.5" />
+                      <FolderDown className="w-3.5 h-3.5 text-[#3fd0c9]" />
                     )}
-                    {session.repoMeta.rootName}/docs’a Kaydet
+                    {t('Kaydet / İndir', 'Save / Export')}
+                    <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
                   </button>
-                )}
 
-                {/* Native Windows Folder Picker to save anywhere */}
-                <button
-                  onClick={handlePickAndSaveFolder}
-                  disabled={savingFolder || activeRun}
-                  className="glass-pill inline-flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-full text-zinc-200 hover:text-white cursor-pointer disabled:opacity-40"
-                >
-                  {savingFolder ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <FolderOpen className="w-3.5 h-3.5 text-[#3fd0c9]" />
+                  {exportMenuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-30"
+                        onClick={() => setExportMenuOpen(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-white/[0.12] bg-[#101218] shadow-2xl p-2 z-40 space-y-1">
+                        {session.repoMeta && (
+                          <button
+                            type="button"
+                            onClick={handleSaveToLinkedRepo}
+                            className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-[#88ece7] hover:bg-white/[0.06] cursor-pointer"
+                          >
+                            <FolderGit2 className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">
+                              {session.repoMeta.rootName}/docs’a Kaydet
+                            </span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={handlePickAndSaveFolder}
+                          className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-zinc-100 hover:bg-white/[0.06] cursor-pointer"
+                        >
+                          <FolderOpen className="w-3.5 h-3.5 text-[#3fd0c9] shrink-0" />
+                          <span>{t('Klasör Seç & Kaydet', 'Choose Folder & Save')}</span>
+                        </button>
+
+                        <a
+                          href={getBlueprintZipUrl(session.id, {
+                            includeClaudeMd,
+                            includeCursorRules,
+                          })}
+                          download
+                          onClick={() => setExportMenuOpen(false)}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-zinc-100 hover:bg-white/[0.06]"
+                        >
+                          <Archive className="w-3.5 h-3.5 text-[#958fff] shrink-0" />
+                          <span>{t(`.ZIP Olarak İndir (${doneCount} MD)`, `Download .ZIP (${doneCount} MDs)`)}</span>
+                        </a>
+
+                        <div className="border-t border-white/[0.08] my-1.5 pt-2 px-3 pb-1 space-y-2">
+                          <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
+                            {t('İsteğe Bağlı Ek Dosyalar', 'Optional Tool Files')}
+                          </div>
+                          <label className="flex items-center gap-2 text-[11px] text-zinc-300 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={includeClaudeMd}
+                              onChange={(e) => setIncludeClaudeMd(e.target.checked)}
+                              className="accent-[#7c74ff] rounded cursor-pointer"
+                            />
+                            <span>
+                              <code className="font-mono text-zinc-200">CLAUDE.md</code>{' '}
+                              <span className="text-zinc-500">(Claude Code)</span>
+                            </span>
+                          </label>
+                          <label className="flex items-center gap-2 text-[11px] text-zinc-300 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={includeCursorRules}
+                              onChange={(e) => setIncludeCursorRules(e.target.checked)}
+                              className="accent-[#7c74ff] rounded cursor-pointer"
+                            />
+                            <span>
+                              <code className="font-mono text-zinc-200">.cursor/rules</code>{' '}
+                              <span className="text-zinc-500">(Cursor IDE)</span>
+                            </span>
+                          </label>
+                        </div>
+
+                        <div className="border-t border-white/[0.08] pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setExportMenuOpen(false);
+                              setShowPlanner(true);
+                            }}
+                            className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-zinc-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
+                          >
+                            <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+                            <span>{t('Dosya Planını Düzenle', 'Edit File Plan')}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </>
                   )}
-                  Klasör Seç & Kaydet
-                </button>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIncludeIdeRules((v) => !v)}
-                  title={t(
-                    'Dışa aktarmaya AGENTS.md, CLAUDE.md, .cursor/rules/conceptus-architecture.mdc ve PROJECT_CONTRACT.json dosyalarını dahil et',
-                    'Include AGENTS.md, CLAUDE.md, .cursor/rules/conceptus-architecture.mdc, and PROJECT_CONTRACT.json in exports'
-                  )}
-                  className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-2 rounded-full border transition cursor-pointer ${
-                    includeIdeRules
-                      ? 'bg-[#3fd0c9]/15 text-[#88ece7] border-[#3fd0c9]/40'
-                      : 'glass-pill text-zinc-400 hover:text-zinc-200'
-                  }`}
-                >
-                  <FileCheck2 className="w-3.5 h-3.5" />
-                  {t('IDE Paketi', 'IDE Rules')}
-                </button>
-
-                <a
-                  href={getBlueprintZipUrl(session.id, includeIdeRules)}
-                  download
-                  className="btn-white inline-flex items-center gap-1.5 text-xs px-4 py-2"
-                >
-                  <Archive className="w-3.5 h-3.5" />
-                  .ZIP İndir ({doneCount})
-                </a>
+                {/* Primary 1-Click Build Prompt CTA */}
+                <div className="inline-flex items-center rounded-full bg-[#f7f8f8] text-[#060709] p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(starterBuildPrompt);
+                      setCopiedId('starter-prompt');
+                      setTimeout(() => setCopiedId(null), 1800);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full hover:bg-black/5 transition cursor-pointer"
+                  >
+                    {copiedId === 'starter-prompt' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-700" />
+                        {t('Kopyalandı', 'Copied')}
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="w-3.5 h-3.5" />
+                        {t('Başlatma Promptu', 'Copy Build Prompt')}
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowBuildPrompt((v) => !v)}
+                    title={t('Başlatma promptunu önizle', 'Preview starter prompt')}
+                    className="p-1.5 rounded-full hover:bg-black/10 text-zinc-700 transition cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </>
             )}
 
@@ -695,128 +766,59 @@ export function BlueprintStage({
 
         {/* Warning if Master Karar not yet generated */}
         {!session.synthesis?.content && (
-          <div className="rounded-2xl bg-[#f0b44c]/10 border border-[#f0b44c]/25 px-4 py-3 text-xs text-[#f7cf86] flex items-center gap-2.5">
-            <Sparkles className="w-4 h-4 shrink-0" />
+          <div className="rounded-xl bg-[#f0b44c]/10 border border-[#f0b44c]/25 px-3.5 py-2 text-xs text-[#f7cf86] flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
             <span>
-              En yüksek tutarlılık için önce <strong>2. Master Karar</strong> aşamasını tamamlaman önerilir; ancak istersen son tartışma turundan da doğrudan MD paketi üretebilirsin.
+              En yüksek tutarlılık için önce <strong>2. Master Karar</strong> aşamasını tamamlaman önerilir.
             </span>
           </div>
         )}
 
-        {savedFolder && (
-          <div className="rounded-2xl bg-[#4cc58a]/10 border border-[#4cc58a]/30 px-4 py-2.5 text-xs text-[#a5ecc7] flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <FolderDown className="w-4 h-4 shrink-0 text-[#4cc58a]" />
-              <span className="truncate">
-                Klasöre kaydedildi:{' '}
-                <code className="font-mono text-white">{savedFolder}</code>
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {isDesktopApp() && (
-                <button
-                  onClick={() => void openLocalFolderInExplorer(savedFolder)}
-                  className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#4cc58a]/25 hover:bg-[#4cc58a]/35 text-white shrink-0 cursor-pointer"
-                >
-                  Klasörü Aç
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(savedFolder);
-                  setCopiedId('folder');
-                  setTimeout(() => setCopiedId(null), 1500);
-                }}
-                className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white shrink-0 cursor-pointer"
-              >
-                {copiedId === 'folder' ? 'Kopyalandı' : 'Yolu Kopyala'}
-              </button>
-            </div>
-          </div>
-        )}
-
         {error && (
-          <div className="rounded-2xl bg-[#ff7a6e]/10 border border-[#ff7a6e]/30 px-4 py-3 text-xs text-[#ffb4ad]">
+          <div className="rounded-xl bg-[#ff7a6e]/10 border border-[#ff7a6e]/30 px-3.5 py-2 text-xs text-[#ffb4ad]">
             {error}
           </div>
         )}
 
-        {/* READY-TO-BUILD HANDOFF BANNER (Paste straight into Antigravity / Claude Code / Cursor / Codex!) */}
-        {!showPlanner && doneCount > 0 && !activeRun && (
-          <div className="glass-panel rounded-2xl p-4 sm:p-5 border-[#3fd0c9]/30 bg-gradient-to-r from-[#3fd0c9]/[0.07] via-transparent to-[#7c74ff]/[0.07] space-y-3">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl bg-[#3fd0c9]/15 border border-[#3fd0c9]/35 flex items-center justify-center shrink-0">
-                  <Rocket className="w-4 h-4 text-[#88ece7]" />
-                </div>
-                <div>
-                  <h3 className="text-xs sm:text-sm font-semibold text-white">
-                    Uygulamanı İnşa Etmeye Hazırsın
-                  </h3>
-                  <p className="text-[11px] text-zinc-400 mt-0.5">
-                    1) Dosyaları proje klasörüne kaydet → 2) Aşağıdaki başlatma promptunu kopyalayıp Antigravity, Claude Code, Cursor veya Codex’e yapıştır.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => setShowBuildPrompt((v) => !v)}
-                  className="glass-pill text-xs px-3 py-1.5 rounded-full text-zinc-300 hover:text-white cursor-pointer"
-                >
-                  {showBuildPrompt ? 'Promptu Gizle' : 'Promptu Gör'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(starterBuildPrompt);
-                    setCopiedId('starter-prompt');
-                    setTimeout(() => setCopiedId(null), 1800);
-                  }}
-                  className="btn-white inline-flex items-center gap-1.5 text-xs px-4 py-1.5 cursor-pointer"
-                >
-                  {copiedId === 'starter-prompt' ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-700" />
-                      Başlatma Promptu Kopyalandı
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      Başlatma Promptunu Kopyala
-                    </>
-                  )}
-                </button>
-              </div>
+        {/* Expandable Starter Build Prompt Preview (only when Eye clicked) */}
+        {!showPlanner && showBuildPrompt && doneCount > 0 && (
+          <div className="rounded-2xl bg-black/50 border border-white/[0.1] p-3.5 space-y-2">
+            <div className="flex items-center justify-between text-[11px] text-zinc-400">
+              <span>Kodlama ajanına (Antigravity / Codex / Claude Code / Cursor) yapıştıracağın başlatma komutu:</span>
+              <button
+                type="button"
+                onClick={() => setShowBuildPrompt(false)}
+                className="text-zinc-400 hover:text-white cursor-pointer"
+              >
+                Gizle
+              </button>
             </div>
-
-            {showBuildPrompt && (
-              <pre className="rounded-xl bg-black/50 border border-white/[0.08] p-3.5 text-xs font-mono text-zinc-200 whitespace-pre-wrap leading-relaxed">
-                {starterBuildPrompt}
-              </pre>
-            )}
+            <pre className="text-xs font-mono text-zinc-200 whitespace-pre-wrap leading-relaxed">
+              {starterBuildPrompt}
+            </pre>
           </div>
         )}
 
-        {/* WAVE 0 CANONICAL CONTRACT + 0-TOKEN DETERMINISTIC LINT STRIP */}
-        {!showPlanner && session.blueprint && (session.blueprint.contract || session.blueprint.lint || doneCount > 0) && (
-          <div className="glass-panel rounded-2xl p-3.5 sm:p-4 border-white/[0.10] space-y-3">
-            <div className="flex items-center justify-between flex-wrap gap-2.5">
-              <div className="flex items-center gap-2 flex-wrap">
+        {/* SINGLE COMPACT STATUS & QUALITY STRIP (All details neatly tucked until clicked!) */}
+        {!showPlanner && session.blueprint && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-2 rounded-2xl bg-white/[0.025] border border-white/[0.07]">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 {session.blueprint.contract && (
                   <button
                     type="button"
-                    onClick={() => setContractOpen((v) => !v)}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-medium px-3 py-1 rounded-full bg-[#3fd0c9]/12 text-[#88ece7] border border-[#3fd0c9]/35 hover:bg-[#3fd0c9]/20 transition cursor-pointer"
+                    onClick={() =>
+                      setActiveInfoTab((cur) => (cur === 'contract' ? 'none' : 'contract'))
+                    }
+                    className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border transition cursor-pointer ${
+                      activeInfoTab === 'contract'
+                        ? 'bg-[#3fd0c9]/20 text-white border-[#3fd0c9]/50'
+                        : 'bg-white/[0.03] text-zinc-300 border-white/[0.08] hover:text-white'
+                    }`}
                   >
-                    <Lock className="w-3 h-3" />
-                    <span>
-                      {t('Dalga 0 Sözleşme Kilitli', 'Wave 0 Contract Locked')} ·{' '}
-                      {session.blueprint.contract.entities.length} varlık /{' '}
-                      {session.blueprint.contract.hardInvariants.length} kural
-                    </span>
-                    {contractOpen ? (
+                    <Lock className="w-3 h-3 text-[#3fd0c9]" />
+                    <span>Sözleşme ({session.blueprint.contract.entities.length})</span>
+                    {activeInfoTab === 'contract' ? (
                       <ChevronUp className="w-3 h-3" />
                     ) : (
                       <ChevronDown className="w-3 h-3" />
@@ -827,49 +829,94 @@ export function BlueprintStage({
                 {session.blueprint.lint && (
                   <button
                     type="button"
-                    onClick={() => setLintIssuesOpen((v) => !v)}
-                    className={`inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold px-3 py-1 rounded-full border transition cursor-pointer ${
-                      session.blueprint.lint.score >= 90
-                        ? 'bg-[#4cc58a]/15 text-[#8ae3b7] border-[#4cc58a]/35'
-                        : session.blueprint.lint.score >= 75
-                          ? 'bg-[#f0b44c]/15 text-[#f7cf86] border-[#f0b44c]/35'
-                          : 'bg-[#ff7a6e]/15 text-[#ffb4ad] border-[#ff7a6e]/35'
+                    onClick={() =>
+                      setActiveInfoTab((cur) => (cur === 'lint' ? 'none' : 'lint'))
+                    }
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-full border transition cursor-pointer ${
+                      activeInfoTab === 'lint'
+                        ? 'bg-white/15 text-white border-white/30'
+                        : session.blueprint.lint.score >= 90
+                          ? 'bg-[#4cc58a]/12 text-[#8ae3b7] border-[#4cc58a]/30'
+                          : 'bg-[#f0b44c]/12 text-[#f7cf86] border-[#f0b44c]/30'
                     }`}
                   >
                     <FileCheck2 className="w-3 h-3" />
-                    <span>
-                      0-Token Lint: {session.blueprint.lint.score}/100 (
-                      {session.blueprint.lint.passedChecks}/{session.blueprint.lint.totalChecks})
-                    </span>
-                    {session.blueprint.lint.issues.length > 0 &&
-                      (lintIssuesOpen ? (
-                        <ChevronUp className="w-3 h-3" />
-                      ) : (
-                        <ChevronDown className="w-3 h-3" />
-                      ))}
+                    <span>Lint {session.blueprint.lint.score}/100</span>
+                    {activeInfoTab === 'lint' ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
                   </button>
+                )}
+
+                {audit ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveInfoTab((cur) => (cur === 'qa' ? 'none' : 'qa'))
+                    }
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-full border transition cursor-pointer ${
+                      activeInfoTab === 'qa'
+                        ? 'bg-[#7c74ff]/25 text-white border-[#7c74ff]/50'
+                        : audit.score >= 90
+                          ? 'bg-[#4cc58a]/12 text-[#8ae3b7] border-[#4cc58a]/30'
+                          : 'bg-[#f0b44c]/12 text-[#f7cf86] border-[#f0b44c]/30'
+                    }`}
+                  >
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>
+                      QA {audit.score}/100
+                      {openAuditIssues.length > 0 ? ` (${openAuditIssues.length} açık)` : ''}
+                    </span>
+                    {activeInfoTab === 'qa' ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
+                  </button>
+                ) : (
+                  doneCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleAudit}
+                      disabled={auditing || activeRun}
+                      className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-white/[0.03] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] transition cursor-pointer disabled:opacity-40"
+                    >
+                      {auditing ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <ShieldCheck className="w-3 h-3 text-[#958fff]" />
+                      )}
+                      {auditing ? 'Denetleniyor...' : 'QA Denetle'}
+                    </button>
+                  )
                 )}
               </div>
 
-              {doneCount > 0 && (
-                <button
-                  type="button"
-                  onClick={handleRunLint}
-                  disabled={linting || activeRun}
-                  className="glass-pill inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full text-zinc-300 hover:text-white cursor-pointer disabled:opacity-40"
-                >
-                  {linting ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <RefreshCw className="w-3 h-3 text-[#88ece7]" />
+              {/* Right Inline Saved Status */}
+              {savedFolder && (
+                <div className="flex items-center gap-2 text-[11px] text-[#8ae3b7] min-w-0">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate max-w-[220px] font-mono text-zinc-300" title={savedFolder}>
+                    {savedFolder.split(/[\\/]/).slice(-2).join('/')}
+                  </span>
+                  {isDesktopApp() && (
+                    <button
+                      type="button"
+                      onClick={() => void openLocalFolderInExplorer(savedFolder)}
+                      className="text-[10.5px] font-medium px-2 py-0.5 rounded-full bg-[#4cc58a]/20 hover:bg-[#4cc58a]/30 text-white cursor-pointer shrink-0"
+                    >
+                      Aç
+                    </button>
                   )}
-                  {t('Yerel Lint (0 Token)', 'Local Lint (0 Token)')}
-                </button>
+                </div>
               )}
             </div>
 
-            {contractOpen && session.blueprint.contract && (
-              <div className="rounded-xl bg-black/40 border border-white/[0.08] p-3.5 text-[11px] space-y-2.5">
+            {/* Expandable Drawer: Contract */}
+            {activeInfoTab === 'contract' && session.blueprint.contract && (
+              <div className="rounded-2xl bg-black/45 border border-white/[0.09] p-4 text-[11px] space-y-2.5">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <span className="font-mono font-semibold text-[#88ece7]">
                     PROJECT_CONTRACT.json · {session.blueprint.contract.projectName}
@@ -884,7 +931,7 @@ export function BlueprintStage({
                   {session.blueprint.contract.stack.length > 0 && (
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
-                        Stack
+                        Teknoloji Yığını
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {session.blueprint.contract.stack.map((s, idx) => (
@@ -927,156 +974,116 @@ export function BlueprintStage({
                       </ul>
                     </div>
                   )}
-                  {session.blueprint.contract.nonGoals.length > 0 && (
-                    <div className="md:col-span-2">
-                      <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
-                        Kapsam Dışı (Non-Goals)
-                      </div>
-                      <ul className="list-disc pl-4 space-y-0.5 text-zinc-400">
-                        {session.blueprint.contract.nonGoals.map((ng, idx) => (
-                          <li key={idx}>{ng}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
 
-            {lintIssuesOpen &&
-              session.blueprint.lint &&
-              session.blueprint.lint.issues.length > 0 && (
-                <div className="space-y-1.5 pt-1">
-                  {session.blueprint.lint.issues.map((iss) => (
-                    <div
-                      key={iss.id}
-                      className="rounded-xl px-3 py-2 border border-white/[0.08] bg-white/[0.02] flex items-start justify-between gap-2 text-[11px]"
-                    >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded ${
-                              iss.severity === 'high'
-                                ? 'bg-[#ff7a6e]/20 text-[#ffb4ad]'
-                                : iss.severity === 'medium'
-                                  ? 'bg-[#f0b44c]/20 text-[#f7cf86]'
-                                  : 'bg-white/10 text-zinc-300'
-                            }`}
-                          >
-                            {iss.severity}
-                          </span>
-                          <span className="font-mono text-[#88ece7] font-semibold">
-                            {iss.file}
-                          </span>
-                          {iss.conflictWith && (
-                            <span className="text-[10px] font-mono text-zinc-500">
-                              ↔ {iss.conflictWith}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-zinc-200">{iss.description}</p>
-                        {iss.fixInstruction && (
-                          <p className="text-[10px] text-zinc-400">
-                            Öneri: {iss.fixInstruction}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-          </div>
-        )}
-
-        {/* QA AUDIT RESULT BANNER */}
-        {!showPlanner && audit && (
-          <div className="glass-panel rounded-2xl p-4 sm:p-5 space-y-3 border-[#7c74ff]/30">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`px-3 py-1 rounded-full font-mono text-xs font-bold border ${
-                    audit.score >= 90
-                      ? 'bg-[#4cc58a]/15 text-[#8ae3b7] border-[#4cc58a]/35'
-                      : audit.score >= 75
-                        ? 'bg-[#f0b44c]/15 text-[#f7cf86] border-[#f0b44c]/35'
-                        : 'bg-[#ff7a6e]/15 text-[#ffb4ad] border-[#ff7a6e]/35'
-                  }`}
-                >
-                  QA Skoru: {audit.score}/100
-                </div>
-                <div>
-                  <p className="text-xs text-zinc-200">{audit.summary}</p>
-                  <p className="text-[10px] font-mono text-zinc-500 mt-0.5">
-                    Denetçi: {PROVIDER_META[audit.provider].shortName} ·{' '}
-                    {audit.model} · {(audit.durationMs / 1000).toFixed(1)}s
-                  </p>
-                </div>
-              </div>
-
-              {openAuditIssues.length > 0 && (
-                <button
-                  onClick={() =>
-                    handleFixIssues(openAuditIssues.map((i) => i.id))
-                  }
-                  disabled={activeRun}
-                  className="btn-white inline-flex items-center gap-1.5 text-xs px-3.5 py-1.5 cursor-pointer disabled:opacity-40"
-                >
-                  <Wrench className="w-3.5 h-3.5" />
-                  Tümünü Otomatik Düzelt ({openAuditIssues.length})
-                </button>
-              )}
-            </div>
-
-            {audit.issues.length > 0 && (
-              <div className="space-y-2 pt-1">
-                {audit.issues.map((iss) => (
-                  <div
-                    key={iss.id}
-                    className={`rounded-xl px-3.5 py-2.5 border flex items-start justify-between gap-3 text-xs ${
-                      iss.fixed
-                        ? 'bg-[#4cc58a]/[0.06] border-[#4cc58a]/25 opacity-70'
-                        : 'bg-white/[0.025] border-white/[0.08]'
-                    }`}
+            {/* Expandable Drawer: 0-Token Lint */}
+            {activeInfoTab === 'lint' && session.blueprint.lint && (
+              <div className="rounded-2xl bg-black/45 border border-white/[0.09] p-4 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-zinc-200 font-medium">
+                    0-Token Yerel Kontrol: {session.blueprint.lint.passedChecks}/{session.blueprint.lint.totalChecks} kontrol geçti
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleRunLint}
+                    disabled={linting || activeRun}
+                    className="glass-pill inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full text-zinc-200 hover:text-white cursor-pointer"
                   >
-                    <div className="space-y-0.5 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span
-                          className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded ${
-                            iss.fixed
-                              ? 'bg-[#4cc58a]/20 text-[#8ae3b7]'
-                              : iss.severity === 'high'
-                                ? 'bg-[#ff7a6e]/20 text-[#ffb4ad]'
-                                : 'bg-[#f0b44c]/20 text-[#f7cf86]'
-                          }`}
-                        >
-                          {iss.fixed ? 'Düzeltildi' : iss.severity}
-                        </span>
-                        <span className="font-mono text-[#88ece7] font-semibold">
-                          {iss.file}
-                        </span>
-                        {iss.conflictWith && (
-                          <span className="text-[11px] text-zinc-500">
-                            ↔ {iss.conflictWith}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-zinc-200">{iss.description}</p>
-                      <p className="text-[11px] text-zinc-400">
-                        Öneri: {iss.fixInstruction}
-                      </p>
-                    </div>
-
-                    {!iss.fixed && (
-                      <button
-                        onClick={() => handleFixIssues([iss.id])}
-                        disabled={activeRun}
-                        className="glass-pill px-2.5 py-1 rounded-full text-[11px] text-zinc-200 hover:text-white shrink-0 cursor-pointer disabled:opacity-40"
+                    {linting ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                    Yeniden Tara
+                  </button>
+                </div>
+                {session.blueprint.lint.issues.length === 0 ? (
+                  <p className="text-[11px] text-[#8ae3b7]">
+                    Tüm dosyalar H1 başlık, derinlik, Mermaid diyagramı ve sözleşme uyumu açısından temiz.
+                  </p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {session.blueprint.lint.issues.map((iss) => (
+                      <div
+                        key={iss.id}
+                        className="rounded-xl px-3 py-2 border border-white/[0.08] bg-white/[0.02] text-[11px] space-y-0.5"
                       >
-                        Düzelt
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[#88ece7] font-semibold">{iss.file}</span>
+                          <span className="text-[10px] uppercase font-mono text-[#f7cf86]">{iss.severity}</span>
+                        </div>
+                        <p className="text-zinc-300">{iss.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Expandable Drawer: QA Audit */}
+            {activeInfoTab === 'qa' && audit && (
+              <div className="rounded-2xl bg-black/45 border border-[#7c74ff]/30 p-4 space-y-3 text-xs">
+                <div className="flex items-start justify-between flex-wrap gap-3">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <p className="text-zinc-200 leading-relaxed">{audit.summary}</p>
+                    <p className="text-[10px] font-mono text-zinc-500">
+                      Denetçi: {PROVIDER_META[audit.provider].shortName} · {audit.model} · {(audit.durationMs / 1000).toFixed(1)}s
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleAudit}
+                      disabled={auditing || activeRun}
+                      className="glass-pill inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full text-zinc-300 hover:text-white cursor-pointer"
+                    >
+                      {auditing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                      Tekrar Denetle
+                    </button>
+                    {openAuditIssues.length > 0 && (
+                      <button
+                        onClick={() => handleFixIssues(openAuditIssues.map((i) => i.id))}
+                        disabled={activeRun}
+                        className="btn-white inline-flex items-center gap-1.5 text-[11px] px-3 py-1 cursor-pointer disabled:opacity-40"
+                      >
+                        <Wrench className="w-3 h-3" />
+                        Tümünü Düzelt ({openAuditIssues.length})
                       </button>
                     )}
                   </div>
-                ))}
+                </div>
+
+                {audit.issues.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    {audit.issues.map((iss) => (
+                      <div
+                        key={iss.id}
+                        className={`rounded-xl px-3 py-2 border flex items-start justify-between gap-3 text-[11px] ${
+                          iss.fixed
+                            ? 'bg-[#4cc58a]/[0.06] border-[#4cc58a]/25 opacity-70'
+                            : 'bg-white/[0.025] border-white/[0.08]'
+                        }`}
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-[#88ece7] font-semibold">{iss.file}</span>
+                            <span className="text-[10px] uppercase font-mono text-zinc-400">
+                              {iss.fixed ? 'Düzeltildi' : iss.severity}
+                            </span>
+                          </div>
+                          <p className="text-zinc-200">{iss.description}</p>
+                        </div>
+                        {!iss.fixed && (
+                          <button
+                            onClick={() => handleFixIssues([iss.id])}
+                            disabled={activeRun}
+                            className="glass-pill px-2.5 py-1 rounded-full text-[11px] text-zinc-200 hover:text-white shrink-0 cursor-pointer disabled:opacity-40"
+                          >
+                            Düzelt
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

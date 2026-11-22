@@ -699,8 +699,12 @@ app.get('/api/sessions/:id/blueprint.zip', async (req, res) => {
       res.status(404).json({ error: 'Oturum bulunamadı.' });
       return;
     }
-    const includeIdeRules = req.query.ide !== '0';
-    const buf = await buildBlueprintZipBuffer(session, { includeIdeRules });
+    const includeClaudeMd = req.query.claude === '1' || req.query.ide === '1';
+    const includeCursorRules = req.query.cursor === '1' || req.query.ide === '1';
+    const buf = await buildBlueprintZipBuffer(session, {
+      includeClaudeMd,
+      includeCursorRules,
+    });
     const slug = slugifyProjectName(session.title);
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${slug}-md-paketi.zip"`);
@@ -727,8 +731,12 @@ app.post('/api/sessions/:id/blueprint/save-folder', (req, res) => {
         ? path.join(session.repoMeta.folderPath, sub)
         : session.repoMeta.folderPath;
     }
-    const includeIdeRules = req.body?.includeIdeRules !== false;
-    const result = saveBlueprintToFolder(session, targetPath, { includeIdeRules });
+    const includeClaudeMd = Boolean(req.body?.includeClaudeMd ?? req.body?.includeIdeRules ?? false);
+    const includeCursorRules = Boolean(req.body?.includeCursorRules ?? req.body?.includeIdeRules ?? false);
+    const result = saveBlueprintToFolder(session, targetPath, {
+      includeClaudeMd,
+      includeCursorRules,
+    });
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err?.message || 'Klasöre kaydedilemedi.' });

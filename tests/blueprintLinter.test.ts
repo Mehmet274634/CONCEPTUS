@@ -41,7 +41,7 @@ function makeCleanSession(contract?: ProjectContract): DebateSession {
           status: 'done',
           provider: 'antigravity',
           model: 'gemini-4-neon-high',
-          content: `# 02 UX & Ekran Akışı\n\n\`\`\`mermaid\nflowchart LR\n  A["Ana Ekran"] --> B["Odak Oturumu"]\n\`\`\`\n\n${fillerWords(200)}`,
+          content: `# 02 UX & Ekran Akışı\n\nGiriş alanlarında input placeholder rengi #6b7280 kullanılır.\n\n\`\`\`mermaid\nflowchart LR\n  A["Ana Ekran"] --> B["Odak Oturumu"]\n\`\`\`\n\n${fillerWords(200)}`,
         },
         {
           id: 'f3',

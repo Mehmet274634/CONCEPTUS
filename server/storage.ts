@@ -255,15 +255,24 @@ function buildCursorRuleMdc(session: DebateSession): string {
   ].join('\n');
 }
 
+export interface BlueprintExportOptions {
+  /** Legacy shorthand: if true, includes both CLAUDE.md and .cursor/rules */
+  includeIdeRules?: boolean;
+  includeClaudeMd?: boolean;
+  includeCursorRules?: boolean;
+}
+
 export async function buildBlueprintZipBuffer(
   session: DebateSession,
-  options?: { includeIdeRules?: boolean }
+  options?: BlueprintExportOptions
 ): Promise<Buffer> {
   if (!session.blueprint || session.blueprint.files.length === 0) {
     throw new Error('Henüz üretilmiş MD paketi yok.');
   }
 
-  const includeIdeRules = options?.includeIdeRules !== false;
+  // Clean universal export by default — tool-specific files (.cursor, CLAUDE.md) are strictly opt-in!
+  const includeClaude = Boolean(options?.includeClaudeMd ?? options?.includeIdeRules ?? false);
+  const includeCursor = Boolean(options?.includeCursorRules ?? options?.includeIdeRules ?? false);
   const zip = new JSZip();
   const folderName = slugifyProjectName(session.title);
   const root = zip.folder(folderName)!;
@@ -271,8 +280,10 @@ export async function buildBlueprintZipBuffer(
   root.file('README.md', buildBlueprintIndexReadme(session));
   root.file('AGENTS.md', buildAgentBridgeMarkdown(session));
 
-  if (includeIdeRules) {
+  if (includeClaude) {
     root.file('CLAUDE.md', buildClaudeBridgeMarkdown(session));
+  }
+  if (includeCursor) {
     root.file('.cursor/rules/conceptus-architecture.mdc', buildCursorRuleMdc(session));
   }
 
@@ -296,13 +307,15 @@ export async function buildBlueprintZipBuffer(
 export function saveBlueprintToFolder(
   session: DebateSession,
   customDir?: string,
-  options?: { includeIdeRules?: boolean }
+  options?: BlueprintExportOptions
 ): { folderPath: string; fileCount: number } {
   if (!session.blueprint || session.blueprint.files.length === 0) {
     throw new Error('Kaydedilecek MD paketi bulunamadı.');
   }
 
-  const includeIdeRules = options?.includeIdeRules !== false;
+  // Clean universal export by default — tool-specific files (.cursor, CLAUDE.md) are strictly opt-in!
+  const includeClaude = Boolean(options?.includeClaudeMd ?? options?.includeIdeRules ?? false);
+  const includeCursor = Boolean(options?.includeCursorRules ?? options?.includeIdeRules ?? false);
   const folderName = slugifyProjectName(session.title);
   const targetDir = customDir?.trim()
     ? path.resolve(customDir.trim())
@@ -325,14 +338,16 @@ export function saveBlueprintToFolder(
   );
   count++;
 
-  if (includeIdeRules) {
+  if (includeClaude) {
     fs.writeFileSync(
       path.join(targetDir, 'CLAUDE.md'),
       buildClaudeBridgeMarkdown(session),
       'utf8'
     );
     count++;
+  }
 
+  if (includeCursor) {
     const cursorDir = path.join(targetDir, '.cursor', 'rules');
     ensureDir(cursorDir);
     fs.writeFileSync(

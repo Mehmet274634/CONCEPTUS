@@ -86,49 +86,50 @@ describe('Storage, ZIP Export & AGENTS.md Bridge Generation', () => {
       updatedAt: Date.now(),
     };
 
-    // 1. Verify ZIP buffer contents (default includeIdeRules = true)
+    // 1. Default ZIP export must stay universal & clean (NO .cursor/ or CLAUDE.md unless explicitly opted in!)
     const zipBuf = await buildBlueprintZipBuffer(session);
     const zip = await JSZip.loadAsync(zipBuf);
     const zipPaths = Object.keys(zip.files);
     expect(zipPaths.some((p) => p.endsWith('/README.md'))).toBe(true);
     expect(zipPaths.some((p) => p.endsWith('/AGENTS.md'))).toBe(true);
-    expect(zipPaths.some((p) => p.endsWith('/CLAUDE.md'))).toBe(true);
-    expect(zipPaths.some((p) => p.endsWith('/.cursor/rules/conceptus-architecture.mdc'))).toBe(true);
     expect(zipPaths.some((p) => p.endsWith('/PROJECT_CONTRACT.json'))).toBe(true);
     expect(zipPaths.some((p) => p.endsWith('/MASTER_DECISION.md'))).toBe(true);
     expect(zipPaths.some((p) => p.endsWith('/01_PRODUCT_VISION.md'))).toBe(true);
     expect(zipPaths.some((p) => p.endsWith('/05_AGENTS_START_HERE.md'))).toBe(true);
+    expect(zipPaths.some((p) => p.endsWith('/CLAUDE.md'))).toBe(false);
+    expect(zipPaths.some((p) => p.endsWith('/.cursor/rules/conceptus-architecture.mdc'))).toBe(false);
 
-    // 2. Verify Folder export writes Multi-IDE rules + PROJECT_CONTRACT.json + all files (8 total)
+    // 2. Default Folder export writes only universal files (6 total: 2 MDs + README + AGENTS + MASTER_DECISION + PROJECT_CONTRACT)
     const exported = saveBlueprintToFolder(session, tempExportDir);
-    expect(exported.fileCount).toBe(8);
+    expect(exported.fileCount).toBe(6);
     expect(fs.existsSync(path.join(tempExportDir, 'AGENTS.md'))).toBe(true);
-    expect(fs.existsSync(path.join(tempExportDir, 'CLAUDE.md'))).toBe(true);
-    expect(fs.existsSync(path.join(tempExportDir, '.cursor', 'rules', 'conceptus-architecture.mdc'))).toBe(true);
     expect(fs.existsSync(path.join(tempExportDir, 'PROJECT_CONTRACT.json'))).toBe(true);
     expect(fs.existsSync(path.join(tempExportDir, '01_PRODUCT_VISION.md'))).toBe(true);
+    expect(fs.existsSync(path.join(tempExportDir, 'CLAUDE.md'))).toBe(false);
+    expect(fs.existsSync(path.join(tempExportDir, '.cursor', 'rules', 'conceptus-architecture.mdc'))).toBe(false);
 
     const bridge = fs.readFileSync(path.join(tempExportDir, 'AGENTS.md'), 'utf8');
     expect(bridge).toContain('01_PRODUCT_VISION.md');
     expect(bridge).toContain('05_AGENTS_START_HERE.md');
     expect(bridge).toContain('Offline-first çalışmalı');
 
-    const cursorRule = fs.readFileSync(
-      path.join(tempExportDir, '.cursor', 'rules', 'conceptus-architecture.mdc'),
-      'utf8'
-    );
-    expect(cursorRule).toContain('alwaysApply: true');
-    expect(cursorRule).toContain('PantryItem');
-
-    // 3. Verify includeIdeRules: false skips CLAUDE.md and .cursor rules
-    const minimalDir = fs.mkdtempSync(path.join(os.tmpdir(), 'conceptus-minimal-test-'));
+    // 3. Explicit opt-in writes CLAUDE.md and .cursor/rules/conceptus-architecture.mdc cleanly
+    const optInDir = fs.mkdtempSync(path.join(os.tmpdir(), 'conceptus-optin-test-'));
     try {
-      const minimalExport = saveBlueprintToFolder(session, minimalDir, { includeIdeRules: false });
-      expect(minimalExport.fileCount).toBe(6); // 2 MDs + MASTER_DECISION + README + AGENTS + PROJECT_CONTRACT.json
-      expect(fs.existsSync(path.join(minimalDir, 'CLAUDE.md'))).toBe(false);
-      expect(fs.existsSync(path.join(minimalDir, '.cursor', 'rules', 'conceptus-architecture.mdc'))).toBe(false);
+      const optInExport = saveBlueprintToFolder(session, optInDir, {
+        includeClaudeMd: true,
+        includeCursorRules: true,
+      });
+      expect(optInExport.fileCount).toBe(8);
+      expect(fs.existsSync(path.join(optInDir, 'CLAUDE.md'))).toBe(true);
+      const cursorRule = fs.readFileSync(
+        path.join(optInDir, '.cursor', 'rules', 'conceptus-architecture.mdc'),
+        'utf8'
+      );
+      expect(cursorRule).toContain('alwaysApply: true');
+      expect(cursorRule).toContain('PantryItem');
     } finally {
-      fs.rmSync(minimalDir, { recursive: true, force: true });
+      fs.rmSync(optInDir, { recursive: true, force: true });
     }
   });
 });
