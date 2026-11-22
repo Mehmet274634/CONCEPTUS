@@ -610,7 +610,7 @@ export function SetupStage({
                       if (repoPathInput.trim()) void scanPath(repoPathInput.trim());
                     }
                   }}
-                  placeholder="Proje klasör yolu (örn: C:\Users\ev\Desktop\PROJE)"
+                  placeholder="Proje klasör yolu (örn: C:\Projects\my-app)"
                   className="glass-input flex-1 text-xs font-mono rounded-full px-3.5 py-2 text-zinc-100 placeholder:text-zinc-600"
                 />
                 <button
