@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-electron/
 release/
+.vercel/
 
 # Local user data, sessions & exports (never publish personal ideas)
 data/

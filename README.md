@@ -29,7 +29,7 @@ Most people jump straight into an AI coding tool with a vague 2-line prompt — 
 ## Quick Start
 
 ### Option 1 — Native Desktop App (Recommended · No Node.js Required)
-Download and run the Windows installer from **[GitHub Releases](https://github.com/Mehmet274634/CONCEPTUS/releases/latest)** or the **[Official Download Page](https://mehmet274634.github.io/CONCEPTUS/)**:
+Download and run the Windows installer from the **[Official Website (Vercel)](https://conceptus-ivory.vercel.app/download)** or **[GitHub Releases](https://github.com/Mehmet274634/CONCEPTUS/releases/latest)**:
 - **[CONCEPTUS-Setup-4.2.0.exe](https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-4.2.0.exe)** — Full Windows 10/11 installer (Desktop & Start Menu shortcuts, frameless dark window, zero terminal)
 - **[CONCEPTUS-4.2.0-Portable.exe](https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-4.2.0-Portable.exe)** — Standalone portable `.exe` (zero install)
 - **[SHA256SUMS.txt](https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/SHA256SUMS.txt)** — Integrity verification checksums
