@@ -1,5 +1,6 @@
 process.env.CONCEPTUS_EMBEDDED = '1';
 
+import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import type { Server } from 'node:http';
@@ -325,16 +326,30 @@ ipcMain.handle(
         }
       }
 
-      emit({ stage: 'launching', percent: 100, message: 'Kurulum sihirbazı başlatılıyor...' });
+      emit({
+        stage: 'launching',
+        percent: 100,
+        message:
+          'Sessizce güncelleniyor — uygulama birkaç saniye içinde yeni sürümle otomatik yeniden açılacak...',
+      });
 
-      const openErr = await shell.openPath(destPath);
-      if (openErr) {
-        throw new Error(`Kurulum başlatılamadı: ${openErr}`);
-      }
+      // True silent in-place NSIS upgrade + automatic relaunch (zero setup wizard popups!)
+      // Verified in electron-builder NsisTarget.js + installSection.nsh:
+      // /S (silent) + --updated (preserve userData/installDir) + --force-run (auto-relaunch) + --keep-shortcuts
+      const installer = spawn(
+        destPath,
+        ['/S', '--updated', '--force-run', '--keep-shortcuts'],
+        {
+          detached: true,
+          stdio: 'ignore',
+          windowsHide: true,
+        }
+      );
+      installer.unref();
 
       setTimeout(() => {
         app.quit();
-      }, 900);
+      }, 350);
 
       return { ok: true };
     } catch (err: any) {
@@ -355,6 +370,17 @@ app.on('second-instance', () => {
 app.whenReady().then(async () => {
   try {
     configureUserDataPaths();
+    // Clean up temporary downloaded installer after a silent self-update
+    if (process.argv.includes('--updated')) {
+      try {
+        fs.rmSync(path.join(app.getPath('temp'), 'conceptus-updates'), {
+          recursive: true,
+          force: true,
+        });
+      } catch {
+        // non-fatal
+      }
+    }
     const distDir = path.join(app.getAppPath(), 'dist');
 
     // Bind exclusively to 127.0.0.1 ephemeral port — zero port conflicts ever!
