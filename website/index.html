@@ -1,1029 +1,1047 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#08090a" />
-    <meta
-      name="description"
-      content="CONCEPTUS — Put your raw app idea on the table. Multiple AI minds debate, critique, lock your decisions and generate a 5-file agent-ready Markdown blueprint pack locally with zero extra API fees."
-    />
-    <title>CONCEPTUS — Ham Fikirden Kusursuz Uygulama MD'sine</title>
-    <link rel="icon" type="image/png" href="./icon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <!-- 1. Sticky Floating Glass Navbar -->
-    <div class="nav-wrap">
-      <header class="nav">
-        <a href="./index.html" class="brand">
-          <img src="./icon.png" alt="CONCEPTUS" class="brand-icon" />
-          <span>CONCEPTUS</span>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CONCEPTUS — İki Cümlelik Fikrini Profesyonel Uygulama MD'sine Dönüştür</title>
+  <meta name="description" content="Gemini, Claude ve Codex'i tek bir yerel masada birbirine eleştirt; karar kapılarını kilitle ve 5 dosyalık üretim seviyesi Markdown uygulama planını çıkar." />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Floating Glass Navbar -->
+  <header class="nav-wrap">
+    <nav class="nav" aria-label="Main navigation">
+      <a class="brand" href="index.html">
+        <img class="brand-icon" src="icon.png" alt="CONCEPTUS" width="24" height="24" />
+        <span>CONCEPTUS</span>
+      </a>
+
+      <div class="links">
+        <a class="nav-link" href="#flow" data-tr="Evrim Akışı" data-en="Evolution Flow">Evrim Akışı</a>
+        <a class="nav-link" href="#blueprint" data-tr="5'li MD Standardı" data-en="5-File Blueprint">5'li MD Standardı</a>
+        <a class="nav-link" href="#studio" data-tr="Sade &amp; Pro" data-en="Simple &amp; Pro">Sade &amp; Pro</a>
+        <a class="nav-link" href="#security" data-tr="Güvenlik" data-en="Security">Güvenlik</a>
+        <a class="nav-link" href="download.html" data-tr="İndir" data-en="Download">İndir</a>
+      </div>
+
+      <div class="nav-right">
+        <a class="icon-btn" data-href="repo" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.17-.02-2.12-3.2.69-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11.02 11.02 0 0 1 5.76 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.66.79.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
+          </svg>
         </a>
 
-        <nav class="links" aria-label="Primary">
-          <details class="dd">
-            <summary class="nav-link">
-              <span data-tr="Ürün" data-en="Product">Ürün</span>
-              <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
-            </summary>
-            <div class="menu-panel">
-              <a class="dd-item" href="#how-it-works">
-                <strong data-tr="Nasıl çalışır" data-en="How it works">Nasıl çalışır</strong>
-                <span data-tr="Kör analiz, çapraz tartışma ve 5'li MD üretimi" data-en="Blind round, cross-debate and 5-file MD blueprints">Kör analiz, çapraz tartışma ve 5'li MD üretimi</span>
-              </a>
-              <a class="dd-item" href="#quota-guard">
-                <strong data-tr="Kota & Yedek Motoru" data-en="Quota & Fallback">Kota & Yedek Motoru</strong>
-                <span data-tr="Düşük modele düşürmeyen kalite korumalı devralma" data-en="Quality-matched failover across quota pools">Düşük modele düşürmeyen kalite korumalı devralma</span>
-              </a>
-              <a class="dd-item" href="#blueprints">
-                <strong data-tr="5'li Uygulama MD Paketi" data-en="5-File MD Standard">5'li Uygulama MD Paketi</strong>
-                <span data-tr="Canlı Mermaid diyagramları, QA ve AGENTS.md köprüsü" data-en="Live Mermaid diagrams, QA audit & AGENTS.md bridge">Canlı Mermaid diyagramları, QA ve AGENTS.md köprüsü</span>
-              </a>
-              <a class="dd-item" href="#studio">
-                <strong data-tr="Masaüstü Stüdyosu" data-en="Desktop Studio">Masaüstü Stüdyosu</strong>
-                <span data-tr="Çerçevesiz karanlık cam arayüz, Sade & Pro mod" data-en="Frameless dark glass app with Simple & Pro modes">Çerçevesiz karanlık cam arayüz, Sade & Pro mod</span>
-              </a>
-              <a class="dd-item" href="#ecosystem">
-                <strong data-tr="Bağlı AI Araçları" data-en="Connected CLIs">Bağlı AI Araçları</strong>
-                <span data-tr="Antigravity, Claude Code, Codex ve Gemini abonelikleri" data-en="Antigravity, Claude Code, Codex and Gemini CLIs">Antigravity, Claude Code, Codex ve Gemini abonelikleri</span>
-              </a>
-              <a class="dd-item" href="#security">
-                <strong data-tr="Güvenlik & Gizlilik" data-en="Security & Privacy">Güvenlik & Gizlilik</strong>
-                <span data-tr="127.0.0.1 kilidi, secret filtresi ve sıfır telemetri" data-en="127.0.0.1 lock, secret filtering and zero telemetry">127.0.0.1 kilidi, secret filtresi ve sıfır telemetri</span>
-              </a>
-            </div>
-          </details>
+        <div class="lang" role="group" aria-label="Language">
+          <button type="button" data-lang="en">EN</button>
+          <button type="button" data-lang="tr" class="active">TR</button>
+        </div>
 
-          <a class="nav-link" href="#ecosystem" data-tr="Araçlar" data-en="Tools">Araçlar</a>
-          <a class="nav-link" href="#security" data-tr="Güvenlik" data-en="Security">Güvenlik</a>
-          <a class="nav-link" href="#faq" data-tr="SSS" data-en="FAQ">SSS</a>
-          <a class="nav-link" href="./download.html" data-tr="İndir" data-en="Install">İndir</a>
-        </nav>
+        <a class="btn btn-primary btn-sm" href="download.html" data-tr="Ücretsiz indir" data-en="Download free">Ücretsiz indir</a>
 
-        <div class="nav-right">
-          <a
-            class="icon-btn"
-            data-href="repo"
-            href="https://github.com/Mehmet274634/CONCEPTUS"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.49 1 .11-.78.42-1.31.76-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.21.7.82.58A12 12 0 0 0 12 .5z" /></svg>
-          </a>
+        <details class="mobile-menu">
+          <summary class="nav-link" data-tr="Menü" data-en="Menu">Menü</summary>
+          <div class="sheet">
+            <a href="#flow" data-tr="Evrim Akışı" data-en="Evolution Flow">Evrim Akışı</a>
+            <a href="#blueprint" data-tr="5'li MD Standardı" data-en="5-File Blueprint">5'li MD Standardı</a>
+            <a href="#studio" data-tr="Sade &amp; Pro" data-en="Simple &amp; Pro">Sade &amp; Pro</a>
+            <a href="#security" data-tr="Güvenlik" data-en="Security">Güvenlik</a>
+            <a href="download.html" data-tr="Masaüstüne İndir" data-en="Download Desktop">Masaüstüne İndir</a>
+            <a data-href="repo" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </details>
+      </div>
+    </nav>
+  </header>
 
-          <div class="lang" role="group" aria-label="Language">
-            <button type="button" data-lang="en">EN</button>
-            <button type="button" data-lang="tr" class="active">TR</button>
+  <main>
+    <!-- Hero + Interactive 3-Stage Evolution Forge -->
+    <section class="hero-section">
+      <div class="hero-rays" aria-hidden="true">
+        <svg viewBox="0 0 1600 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="rayFade" cx="50%" cy="0%" r="72%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22" />
+              <stop offset="55%" stop-color="#7c74ff" stop-opacity="0.08" />
+              <stop offset="100%" stop-color="#08090a" stop-opacity="0" />
+            </radialGradient>
+          </defs>
+          <g stroke="url(#rayFade)" stroke-width="1">
+            <line x1="800" y1="0" x2="60" y2="760" />
+            <line x1="800" y1="0" x2="210" y2="760" />
+            <line x1="800" y1="0" x2="360" y2="760" />
+            <line x1="800" y1="0" x2="510" y2="760" />
+            <line x1="800" y1="0" x2="655" y2="760" />
+            <line x1="800" y1="0" x2="800" y2="760" />
+            <line x1="800" y1="0" x2="945" y2="760" />
+            <line x1="800" y1="0" x2="1090" y2="760" />
+            <line x1="800" y1="0" x2="1240" y2="760" />
+            <line x1="800" y1="0" x2="1390" y2="760" />
+            <line x1="800" y1="0" x2="1540" y2="760" />
+          </g>
+        </svg>
+      </div>
+      <div class="hero-glow" aria-hidden="true"></div>
+
+      <div class="wrap">
+        <div class="hero-head">
+          <div class="eyebrow enter">
+            <span class="dot"></span>
+            <span data-tr="CONCEPTUS v4.2.0 · Çoklu-AI Fikir Evrim Stüdyosu" data-en="CONCEPTUS v4.2.0 · Multi-AI Idea Evolution Studio">CONCEPTUS v4.2.0 · Çoklu-AI Fikir Evrim Stüdyosu</span>
           </div>
 
-          <a class="btn btn-primary btn-sm" href="./download.html" data-tr="Hemen indir" data-en="Get started">
-            Hemen indir
-          </a>
-
-          <details class="mobile-menu">
-            <summary class="btn btn-ghost btn-sm" data-tr="Menü" data-en="Menu">Menü</summary>
-            <div class="sheet">
-              <a href="#how-it-works" data-tr="Nasıl çalışır" data-en="How it works">Nasıl çalışır</a>
-              <a href="#quota-guard" data-tr="Kota & Yedek Motoru" data-en="Quota & Fallback">Kota & Yedek Motoru</a>
-              <a href="#blueprints" data-tr="5'li MD Paketi" data-en="5-File MD Pack">5'li MD Paketi</a>
-              <a href="#studio" data-tr="Masaüstü Stüdyosu" data-en="Desktop Studio">Masaüstü Stüdyosu</a>
-              <a href="#security" data-tr="Güvenlik" data-en="Security">Güvenlik</a>
-              <a href="#faq" data-tr="SSS" data-en="FAQ">SSS</a>
-              <a href="./download.html" data-tr="İndir & Kur" data-en="Download & Install">İndir & Kur</a>
-            </div>
-          </details>
-        </div>
-      </header>
-    </div>
-
-    <main>
-      <!-- 2. Full-Viewport Sunburst Hero + Marquee -->
-      <section class="first">
-        <div class="hero-rays" aria-hidden="true">
-          <svg viewBox="0 0 1600 900" fill="none" preserveAspectRatio="xMidYMax slice">
-            <g stroke="url(#rayGrad)" stroke-width="1">
-              <line x1="800" y1="900" x2="0" y2="60" />
-              <line x1="800" y1="900" x2="180" y2="0" />
-              <line x1="800" y1="900" x2="380" y2="0" />
-              <line x1="800" y1="900" x2="580" y2="0" />
-              <line x1="800" y1="900" x2="720" y2="0" />
-              <line x1="800" y1="900" x2="880" y2="0" />
-              <line x1="800" y1="900" x2="1020" y2="0" />
-              <line x1="800" y1="900" x2="1220" y2="0" />
-              <line x1="800" y1="900" x2="1420" y2="0" />
-              <line x1="800" y1="900" x2="1600" y2="60" />
-              <line x1="800" y1="900" x2="0" y2="340" />
-              <line x1="800" y1="900" x2="1600" y2="340" />
-              <line x1="800" y1="900" x2="0" y2="610" />
-              <line x1="800" y1="900" x2="1600" y2="610" />
-            </g>
-            <defs>
-              <radialGradient id="rayGrad" cx="800" cy="900" r="950" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#958fff" stop-opacity="0.34" />
-                <stop offset="45%" stop-color="#3fd0c9" stop-opacity="0.10" />
-                <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
-              </radialGradient>
-            </defs>
-          </svg>
-        </div>
-        <div class="hero-glow" aria-hidden="true"></div>
-
-        <div class="hero-body">
-          <h1
-            class="hero-title enter"
-            data-tr="Tüm AI beyinleri aynı fikir masasında."
-            data-en="One table for every AI mind."
-          >
-            Tüm AI beyinleri aynı fikir masasında.
+          <h1 class="hero-title enter enter-d1" data-tr="İki cümlelik fikrini üretim seviyesi uygulama planına çevir." data-en="Turn a two-sentence idea into a production app blueprint.">
+            İki cümlelik fikrini üretim seviyesi uygulama planına çevir.
           </h1>
 
-          <p class="lead enter enter-d1">
-            <span
-              class="bright"
-              data-tr="Ham düşünceni profesyonel uygulama MD'sine çevir."
-              data-en="Turn a raw thought into battle-tested app specs."
-            >
-              Ham düşünceni profesyonel uygulama MD'sine çevir.
-            </span>
-            <span
-              data-tr=" Mevcut Antigravity, Claude Code, Codex ve Gemini aboneliklerini kör analiz, çapraz tartışma ve İnsan Kararı Kilidi ile çalıştır — sıfır ek API ücretiyle."
-              data-en=" Orchestrate your Antigravity, Claude Code, Codex and Gemini subscriptions through blind debate, Human Decision Gates and a 5-file blueprint pack — zero extra API fees."
-            >
-              Mevcut Antigravity, Claude Code, Codex ve Gemini aboneliklerini kör analiz, çapraz tartışma ve İnsan Kararı Kilidi ile çalıştır — sıfır ek API ücretiyle.
-            </span>
+          <p class="lead enter enter-d2">
+            <span data-tr="Gemini, Claude ve Codex'i tek bir yerel masada birbirine eleştirt. Karar kapılarını kilitle; Antigravity, Cursor veya Claude Code'un tek seferde inşa edebileceği " data-en="Pit Gemini, Claude, and Codex against each other on one local desk. Lock human decision gates and export a ">Gemini, Claude ve Codex'i tek bir yerel masada birbirine eleştirt. Karar kapılarını kilitle; Antigravity, Cursor veya Claude Code'un tek seferde inşa edebileceği </span>
+            <span class="bright" data-tr="5 dosyalık mimari MD paketini" data-en="5-file architectural Markdown pack">5 dosyalık mimari MD paketini</span>
+            <span data-tr=" al. Sıfır ekstra API ücreti." data-en=" ready to build. Zero extra API fees."> al. Sıfır ekstra API ücreti.</span>
           </p>
 
-          <div class="hero-actions enter enter-d2">
-            <a class="btn btn-primary btn-lg" href="./download.html">
-              <span data-tr="Ücretsiz indir" data-en="Get started">Ücretsiz indir</span>
-              <span class="arr">→</span>
+          <div class="hero-actions enter enter-d3">
+            <a class="btn btn-primary btn-lg" href="download.html">
+              <span data-tr="Masaüstü Uygulamasını İndir" data-en="Download Desktop Studio">Masaüstü Uygulamasını İndir</span>
+              <span class="arr" aria-hidden="true">→</span>
             </a>
-            <a class="btn btn-ghost btn-lg" href="#how-it-works" data-tr="Nasıl çalışır" data-en="How it works">
-              Nasıl çalışır
-            </a>
+            <a class="btn btn-ghost btn-lg" href="#blueprint" data-tr="5'li MD Paketini İncele" data-en="Inspect the 5-File Pack">5'li MD Paketini İncele</a>
           </div>
-
-          <div class="scroll-cue" aria-hidden="true"><span></span></div>
         </div>
 
-        <div class="marquee-block">
-          <div class="marquee-label" data-tr="BİRLİKTE ÇALIŞTIĞI ARAÇLAR" data-en="WORKS WITH">
-            BİRLİKTE ÇALIŞTIĞI ARAÇLAR
-          </div>
-          <div class="marquee">
-            <div class="marquee-track">
-              <span class="m-item"><span class="m-dot" style="background:#958fff"></span>Antigravity CLI</span>
-              <span class="m-item"><span class="m-dot" style="background:#f0b44c"></span>Claude Code</span>
-              <span class="m-item"><span class="m-dot" style="background:#4cc58a"></span>Codex CLI</span>
-              <span class="m-item"><span class="m-dot" style="background:#3fd0c9"></span>Gemini CLI</span>
-              <span class="m-item"><span class="m-dot" style="background:#f7f8f8"></span>Cursor</span>
-              <span class="m-item"><span class="m-dot" style="background:#60a5fa"></span>VS Code · Copilot</span>
-              <span class="m-item"><span class="m-dot" style="background:#2dd4bf"></span>Windsurf</span>
-              <span class="m-item"><span class="m-dot" style="background:#a78bfa"></span>AGENTS.md Standard</span>
-              <!-- Duplicate for seamless infinite loop -->
-              <span class="m-item"><span class="m-dot" style="background:#958fff"></span>Antigravity CLI</span>
-              <span class="m-item"><span class="m-dot" style="background:#f0b44c"></span>Claude Code</span>
-              <span class="m-item"><span class="m-dot" style="background:#4cc58a"></span>Codex CLI</span>
-              <span class="m-item"><span class="m-dot" style="background:#3fd0c9"></span>Gemini CLI</span>
-              <span class="m-item"><span class="m-dot" style="background:#f7f8f8"></span>Cursor</span>
-              <span class="m-item"><span class="m-dot" style="background:#60a5fa"></span>VS Code · Copilot</span>
-              <span class="m-item"><span class="m-dot" style="background:#2dd4bf"></span>Windsurf</span>
-              <span class="m-item"><span class="m-dot" style="background:#a78bfa"></span>AGENTS.md Standard</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 3. Problem Statement + Animated Constellation Hub -->
-      <section id="ecosystem" class="section wrap">
-        <p class="statement reveal">
-          <span
-            data-tr="Tek bir modele belirsiz iki cümle verdiğinde, o her şeyi tahmin eder."
-            data-en="Give one model two vague lines, and it guesses everything."
-          >
-            Tek bir modele belirsiz iki cümle verdiğinde, o her şeyi tahmin eder.
-          </span>
-          <span
-            class="dim"
-            data-tr=" Kırılgan mimariler, tutarsız ekranlar ve günlerce süren hata ayıklama. CONCEPTUS tek satır kod yazılmadan önce tüm yapay zekâ beyinlerini aynı masada çarpıştırır; kodlama ajanın ilk seferde doğru inşa etsin diye tek bir kusursuz blueprint paketi çıkarır."
-            data-en=" Fragile stacks, drifting screens, days lost unwinding contradictions. CONCEPTUS puts every AI mind at one table before a single line of code is written, outputting one rock-solid blueprint pack your coding agent builds right the first time."
-          >
-            Kırılgan mimariler, tutarsız ekranlar ve günlerce süren hata ayıklama. CONCEPTUS tek satır kod yazılmadan önce tüm yapay zekâ beyinlerini aynı masada çarpıştırır; kodlama ajanın ilk seferde doğru inşa etsin diye tek bir kusursuz blueprint paketi çıkarır.
-          </span>
-        </p>
-
-        <!-- Signature Animated SVG Constellation Hub -->
-        <div class="constellation-stage reveal">
-          <svg class="constellation-svg" viewBox="0 0 1000 500" fill="none" role="img" aria-label="CONCEPTUS Multi-AI Hub">
-            <defs>
-              <radialGradient id="coreHalo" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#7c74ff" stop-opacity="0.45" />
-                <stop offset="55%" stop-color="#3fd0c9" stop-opacity="0.12" />
-                <stop offset="100%" stop-color="#08090a" stop-opacity="0" />
-              </radialGradient>
-              <linearGradient id="lineV" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#958fff" stop-opacity="0.9" />
-                <stop offset="100%" stop-color="#3fd0c9" stop-opacity="0.9" />
-              </linearGradient>
-              <linearGradient id="lineWarm" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#f0b44c" stop-opacity="0.85" />
-                <stop offset="100%" stop-color="#958fff" stop-opacity="0.9" />
-              </linearGradient>
-              <linearGradient id="iconTile" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#5b4bff" />
-                <stop offset="100%" stop-color="#06c8e8" />
-              </linearGradient>
-            </defs>
-
-            <!-- Subtle stars -->
-            <g fill="#ffffff">
-              <circle class="c-twinkle" cx="110" cy="80" r="1.3" style="animation-delay:.2s" />
-              <circle class="c-twinkle" cx="310" cy="54" r="1.1" style="animation-delay:1.1s" />
-              <circle class="c-twinkle" cx="690" cy="68" r="1.4" style="animation-delay:.7s" />
-              <circle class="c-twinkle" cx="890" cy="96" r="1.2" style="animation-delay:1.9s" />
-              <circle class="c-twinkle" cx="170" cy="410" r="1.3" style="animation-delay:1.4s" />
-              <circle class="c-twinkle" cx="840" cy="420" r="1.2" style="animation-delay:.4s" />
-              <circle class="c-twinkle" cx="420" cy="450" r="1.1" style="animation-delay:2.2s" />
-              <circle class="c-twinkle" cx="600" cy="445" r="1.3" style="animation-delay:.9s" />
-            </g>
-
-            <!-- Central breathing halo & rotating HUD orbit rings -->
-            <circle class="c-halo" cx="500" cy="250" r="155" fill="url(#coreHalo)" />
-            <g class="c-orbit">
-              <circle cx="500" cy="250" r="88" stroke="#958fff" stroke-opacity="0.28" stroke-width="1.2" stroke-dasharray="10 14" />
-            </g>
-            <g class="c-orbit-rev">
-              <circle cx="500" cy="250" r="122" stroke="#3fd0c9" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="4 18" />
-            </g>
-
-            <!-- Base curved filaments + animated data flows -->
-            <g stroke-width="2" stroke-linecap="round">
-              <!-- Claude Code (top-left) -->
-              <path d="M 210 92 C 330 130, 410 190, 500 250" stroke="url(#lineWarm)" stroke-opacity="0.32" />
-              <path class="c-flow" d="M 210 92 C 330 130, 410 190, 500 250" stroke="url(#lineWarm)" />
-
-              <!-- Codex CLI (top-center) -->
-              <path d="M 500 54 C 485 130, 492 185, 500 250" stroke="url(#lineV)" stroke-opacity="0.32" />
-              <path class="c-flow" d="M 500 54 C 485 130, 492 185, 500 250" stroke="#4cc58a" />
-
-              <!-- Cursor (top-right) -->
-              <path d="M 790 92 C 670 130, 590 190, 500 250" stroke="url(#lineV)" stroke-opacity="0.34" />
-              <path class="c-flow-slow" d="M 790 92 C 670 130, 590 190, 500 250" stroke="#958fff" />
-
-              <!-- Antigravity (right) -->
-              <path d="M 855 292 C 725 258, 620 245, 500 250" stroke="url(#lineV)" stroke-opacity="0.35" />
-              <path class="c-flow" d="M 855 292 C 725 258, 620 245, 500 250" stroke="url(#lineV)" />
-
-              <!-- Gemini CLI (bottom-right) -->
-              <path d="M 642 424 C 580 355, 540 310, 500 250" stroke="#3fd0c9" stroke-opacity="0.30" />
-              <path class="c-flow-slow" d="M 642 424 C 580 355, 540 310, 500 250" stroke="#3fd0c9" />
-
-              <!-- AGENTS.md / VS Code (bottom-left) -->
-              <path d="M 358 424 C 420 355, 460 310, 500 250" stroke="url(#lineV)" stroke-opacity="0.32" />
-              <path class="c-flow" d="M 358 424 C 420 355, 460 310, 500 250" stroke="#958fff" />
-
-              <!-- Local Repo (left) -->
-              <path d="M 145 292 C 275 258, 380 245, 500 250" stroke="#3fd0c9" stroke-opacity="0.32" />
-              <path class="c-flow-slow" d="M 145 292 C 275 258, 380 245, 500 250" stroke="#3fd0c9" />
-            </g>
-
-            <!-- Outer Nodes -->
-            <g font-family="Inter, sans-serif" font-size="13" fill="#b4b9c4" text-anchor="middle">
-              <!-- Claude Code -->
-              <rect x="182" y="64" width="56" height="56" rx="15" fill="#121318" stroke="#f0b44c66" stroke-width="1.2" />
-              <path d="M210 80v24M198 92h24M201.5 83.5l17 17M218.5 83.5l-17 17" stroke="#f0b44c" stroke-width="2" stroke-linecap="round" />
-              <text x="210" y="139">Claude Code</text>
-
-              <!-- Codex CLI -->
-              <rect x="472" y="26" width="56" height="56" rx="15" fill="#121318" stroke="#4cc58a66" stroke-width="1.2" />
-              <path d="M491 49l7 5-7 5M502 59h8" stroke="#4cc58a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              <text x="500" y="101">Codex CLI</text>
-
-              <!-- Cursor -->
-              <rect x="762" y="64" width="56" height="56" rx="15" fill="#121318" stroke="#958fff66" stroke-width="1.2" />
-              <polygon points="790,79 802,92 790,105 778,92" stroke="#f7f8f8" stroke-width="1.8" fill="#958fff33" />
-              <text x="790" y="139">Cursor</text>
-
-              <!-- Antigravity -->
-              <rect x="827" y="264" width="56" height="56" rx="15" fill="#121318" stroke="#7c74ff77" stroke-width="1.2" />
-              <path d="M845 304l10-24 10 24M849 296h12" stroke="#a5a0ff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" />
-              <text x="855" y="339">Antigravity</text>
-
-              <!-- Gemini CLI -->
-              <rect x="614" y="396" width="56" height="56" rx="15" fill="#121318" stroke="#3fd0c966" stroke-width="1.2" />
-              <path d="M642 411c1.8 7 6 11.2 13 13-7 1.8-11.2 6-13 13-1.8-7-6-11.2-13-13 7-1.8 11.2-6 13-13z" fill="#3fd0c9" />
-              <text x="642" y="471">Gemini CLI</text>
-
-              <!-- AGENTS.md -->
-              <rect x="330" y="396" width="56" height="56" rx="15" fill="#121318" stroke="#ffffff33" stroke-width="1.2" />
-              <rect x="348" y="413" width="20" height="22" rx="3" stroke="#f7f8f8" stroke-width="1.7" />
-              <path d="M352 420h12M352 425h12M352 430h7" stroke="#88ece7" stroke-width="1.5" stroke-linecap="round" />
-              <text x="358" y="471">01..05 MD + AGENTS.md</text>
-
-              <!-- Local Repo -->
-              <rect x="117" y="264" width="56" height="56" rx="15" fill="#121318" stroke="#3fd0c955" stroke-width="1.2" />
-              <path d="M133 284h9l3 3h13v16h-25z" stroke="#88ece7" stroke-width="1.8" stroke-linejoin="round" />
-              <text x="145" y="339">Local Repo</text>
-            </g>
-
-            <!-- Central CONCEPTUS Flagship Tile -->
-            <g>
-              <rect x="458" y="208" width="84" height="84" rx="22" fill="url(#iconTile)" stroke="#ffffff44" stroke-width="1.5" />
-              <path d="M 516 235 A 22 22 0 1 0 516 265" stroke="#ffffff" stroke-width="8.5" stroke-linecap="round" fill="none" />
-              <circle cx="497" cy="250" r="8" fill="#ffffff" />
-              <circle cx="523" cy="250" r="5" fill="#ffffff" />
-            </g>
-          </svg>
-
-          <div class="constellation-caption">
-            <h2 class="h2">
-              <span data-tr="Ortada tek bir fikir masası." data-en="One debate table in the middle.">
-                Ortada tek bir fikir masası.
-              </span>
-              <br />
-              <span class="dim" data-tr="Her yapay zekâ ajanı buna bağlı." data-en="Every AI agent wired to it.">
-                Her yapay zekâ ajanı buna bağlı.
-              </span>
-            </h2>
-            <a class="btn btn-ghost btn-sm" href="./download.html">
-              <span data-tr="Kurulum ve araçlar" data-en="Tools & setup">Kurulum ve araçlar</span>
-              <span class="arr">→</span>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- 4. Band: Three-Step Workflow (Exact Isometric Wireframe Cards) -->
-      <section id="how-it-works" class="section band">
-        <div class="wrap">
-          <h2 class="h2 reveal">
-            <span data-tr="Üç adım, sıfır belirsizlik." data-en="Three stages, zero guesswork.">
-              Üç adım, sıfır belirsizlik.
-            </span>
-            <br />
-            <span class="dim" data-tr="Son karar kilidi daima sende." data-en="You hold the final lock.">
-              Son karar kilidi daima sende.
-            </span>
-          </h2>
-
-          <div class="steps-3">
-            <article class="card step-card reveal">
-              <div class="step-art" aria-hidden="true">
-                <svg width="160" height="120" viewBox="0 0 160 120" fill="none">
-                  <polygon points="80,26 132,54 80,82 28,54" stroke="#ffffff33" stroke-width="1.2" />
-                  <line x1="60" y1="52" x2="96" y2="52" stroke="#ffffff38" stroke-width="1.2" />
-                  <line x1="66" y1="60" x2="90" y2="60" stroke="#ffffff26" stroke-width="1.2" />
-                  <circle cx="108" cy="36" r="18" fill="#0c0d10" stroke="#958fff99" stroke-width="1.4" />
-                  <line x1="101" y1="36" x2="115" y2="36" stroke="#958fff" stroke-width="2" stroke-linecap="round" />
-                  <line x1="121" y1="49" x2="134" y2="62" stroke="#958fff99" stroke-width="1.5" stroke-linecap="round" />
-                </svg>
-              </div>
-              <span class="step-num">01</span>
-              <h3 class="h3" data-tr="Fikri netleştir & kör tartışma" data-en="Clarify & blind debate">
-                Fikri netleştir & kör tartışma
-              </h3>
-              <p
-                data-tr="Akıllı Netleştirici 3–4 kısa soruyla eksikleri kapatır. Platform, bütçe ve görsel dil kilitlenir; ajanlar önce birbirini görmeden analiz yapar, Tur 2'de anonim olarak çarpışır."
-                data-en="The Smart Clarifier closes gaps in 3–4 clicks. Lock platform, budget and visual style; agents analyze independently first, then critique anonymously in Round 2."
-              >
-                Akıllı Netleştirici 3–4 kısa soruyla eksikleri kapatır. Platform, bütçe ve görsel dil kilitlenir; ajanlar önce birbirini görmeden analiz yapar, Tur 2'de anonim olarak çarpışır.
-              </p>
-            </article>
-
-            <article class="card step-card reveal">
-              <div class="step-art" aria-hidden="true">
-                <svg width="160" height="120" viewBox="0 0 160 120" fill="none">
-                  <polygon points="80,50 130,74 80,98 30,74" stroke="#ffffff1c" stroke-width="1.1" />
-                  <polygon points="80,38 130,62 80,86 30,62" stroke="#ffffff28" stroke-width="1.1" />
-                  <polygon points="80,24 130,48 80,72 30,48" fill="#0f1014" stroke="#ffffff4a" stroke-width="1.2" />
-                  <circle cx="80" cy="48" r="13" fill="#4cc58a1c" stroke="#4cc58a" stroke-width="1.4" />
-                  <path d="M74 48l4 4 8-8" stroke="#4cc58a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </div>
-              <span class="step-num">02</span>
-              <h3 class="h3" data-tr="İnsan Kararı Kilidi" data-en="Human Decision Gates">
-                İnsan Kararı Kilidi
-              </h3>
-              <p
-                data-tr="Master Karar tartışmanın neyi iyileştirdiğini Evrim Özeti ile gösterir ve kalan kritik yol ayrımlarını sana tek tıkla kilitletir. Hiçbir mimari karar tahmine bırakılmaz."
-                data-en="Master Decision highlights what evolved and presents every remaining trade-off as clickable Decision Gates. No architectural choice is left as TBD."
-              >
-                Master Karar tartışmanın neyi iyileştirdiğini Evrim Özeti ile gösterir ve kalan kritik yol ayrımlarını sana tek tıkla kilitletir. Hiçbir mimari karar tahmine bırakılmaz.
-              </p>
-            </article>
-
-            <article class="card step-card reveal">
-              <div class="step-art" aria-hidden="true">
-                <svg width="160" height="120" viewBox="0 0 160 120" fill="none">
-                  <polygon points="80,68 124,90 80,112 36,90" stroke="#ffffff18" stroke-width="1" />
-                  <polygon points="80,58 124,80 80,102 36,80" stroke="#ffffff20" stroke-width="1" />
-                  <polygon points="80,48 124,70 80,92 36,70" stroke="#ffffff2a" stroke-width="1" />
-                  <polygon points="80,38 124,60 80,82 36,60" stroke="#ffffff36" stroke-width="1.1" />
-                  <polygon points="80,26 124,48 80,70 36,48" fill="#101218" stroke="#ffffff5a" stroke-width="1.3" />
-                  <polygon points="80,33 111,48 80,63 49,48" stroke="#958fff88" stroke-width="1" stroke-dasharray="3 4" />
-                  <circle cx="80" cy="48" r="3.5" fill="#958fff" />
-                </svg>
-              </div>
-              <span class="step-num">03</span>
-              <h3 class="h3" data-tr="5'li Uygulama MD Paketi + QA" data-en="5-File MD Pack + QA">
-                5'li Uygulama MD Paketi + QA
-              </h3>
-              <p
-                data-tr="01..05 standart dosyalar ve AGENTS.md köprüsü tek dalgada paralel üretilir (~55 sn). Canlı Mermaid diyagramları çizilir, Çapraz-Ajan QA çelişkileri tek tıkla yamalar."
-                data-en="Standard 01..05 blueprints plus AGENTS.md generate in one parallel wave (~55s) with live Mermaid diagrams and Cross-Agent QA surgical auto-fix."
-              >
-                01..05 standart dosyalar ve AGENTS.md köprüsü tek dalgada paralel üretilir (~55 sn). Canlı Mermaid diyagramları çizilir, Çapraz-Ajan QA çelişkileri tek tıkla yamalar.
-              </p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5. Feature Split #1: Quota Circuit Breaker & Quality-Matched Failover -->
-      <section id="quota-guard" class="section wrap">
-        <div class="split">
-          <div class="split-copy reveal">
-            <h2 class="h2">
-              <span data-tr="Claude kotan mı bitti?" data-en="Hit a quota limit?">
-                Claude kotan mı bitti?
-              </span>
-              <br />
-              <span
-                class="dim"
-                data-tr="Eşit kalitedeki yedek ajan devralır."
-                data-en="A quality-matched backup takes over."
-              >
-                Eşit kalitedeki yedek ajan devralır.
-              </span>
-            </h2>
-            <p
-              data-tr="Antigravity içindeki Claude havuzu, Gemini havuzu ve Codex kotası birbirinden bağımsız izlenir. Kalite korumalı devre kesici işin profesyonelliğini asla düşük modele düşürmez — ya da sağ panelden kendi seçtiğin yedek ajanı belirlersin."
-              data-en="CONCEPTUS tracks separate quota pools (antigravity:claude ≠ antigravity:gemini ≠ codex). Its quality-guarded circuit breaker never silently downgrades flagship work to weak models — or lets you pin your exact preferred backup agent."
-            >
-              Antigravity içindeki Claude havuzu, Gemini havuzu ve Codex kotası birbirinden bağımsız izlenir. Kalite korumalı devre kesici işin profesyonelliğini asla düşük modele düşürmez — ya da sağ panelden kendi seçtiğin yedek ajanı belirlersin.
-            </p>
-            <a class="btn btn-ghost btn-sm" href="./download.html">
-              <span data-tr="Yedek model kurallarını dene" data-en="Try quality-matched fallback">Yedek model kurallarını dene</span>
-              <span class="arr">→</span>
-            </a>
-          </div>
-
-          <div class="stage reveal">
-            <div class="window">
-              <div class="win-bar">
-                <span class="win-dots"><span></span><span></span><span></span></span>
-                <span>blueprint_studio · 5/5 MD Pack</span>
-              </div>
-              <div class="win-body">
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                  <span class="chip">↻ Quality-Matched Failover</span>
-                  <span class="mono muted" style="font-size:11.5px;">57.4s · 0 files lost</span>
-                </div>
-
-                <div class="file-row">
-                  <span class="fname">01_PRODUCT_VISION.md</span>
-                  <span class="chip chip-warn">↻ Yedek · gemini-4-neon-medium</span>
-                </div>
-                <div class="file-row">
-                  <span class="fname">02_UX_SCREENS_AND_DESIGN.md</span>
-                  <span class="chip chip-warn">↻ Yedek · gpt-6-luna</span>
-                </div>
-                <div class="file-row">
-                  <span class="fname">03_ARCHITECTURE_AND_DATA.md</span>
-                  <span class="fmeta">gemini-4-neon-medium · 9.5 KB ✓</span>
-                </div>
-                <div class="file-row">
-                  <span class="fname">04_BUILD_ROADMAP.md</span>
-                  <span class="fmeta">gpt-6-luna · 8.3 KB ✓</span>
-                </div>
-                <div class="file-row">
-                  <span class="fname">05_AGENTS_START_HERE.md</span>
-                  <span class="fmeta">gpt-6-luna · 7.0 KB ✓</span>
-                </div>
-              </div>
+        <!-- Interactive 3-Stage CONCEPTUS Evolution Forge -->
+        <div class="forge-shell enter enter-d3" id="flow">
+          <div class="forge-bar">
+            <div class="forge-left">
+              <span class="win-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+              <span>CONCEPTUS · dolapsef-v1 · 127.0.0.1</span>
             </div>
 
-            <div class="terminal stage-overlap">
-              <div class="terminal-bar">
-                <span>fallback-engine · Kalite / Özel / Sor</span>
-                <button type="button" class="copy" data-copy="antigravity:claude -> codex/gpt-6-luna (balanced+ locked)" data-tr="Kopyala" data-en="Copy">
-                  Kopyala
-                </button>
-              </div>
-              <pre class="terminal-pre"><span class="p">!</span> <span class="c">antigravity:claude quota reached (cooldown 30m)</span>
-<span class="ac">→</span> required caliber: balanced+ (low-tier downgrade blocked)
-<span class="ok">✓</span> switched seamlessly to gemini-4-neon-medium &amp; gpt-6-luna</pre>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 6. Band: 4-Card Output Pack Grid -->
-      <section id="blueprints" class="section band">
-        <div class="wrap">
-          <h2 class="h2 reveal">
-            <span data-tr="Kodlama ajanının ihtiyaç duyduğu her dosya," data-en="Every spec your coding agent needs,">
-              Kodlama ajanının ihtiyaç duyduğu her dosya,
-            </span>
-            <br />
-            <span class="dim" data-tr="birbirine %100 tutarlı bağlı." data-en="wired together with zero drift.">
-              birbirine %100 tutarlı bağlı.
-            </span>
-          </h2>
-
-          <div class="grid-4">
-            <article class="card reveal">
-              <div class="mini-box">
-                <span class="mini-pill ac">01_PRODUCT_VISION.md</span>
-                <span class="mini-pill cy">02_UX_SCREENS_AND_DESIGN.md</span>
-                <span class="muted mono" style="font-size:10.5px;">flowchart LR · Design Tokens</span>
-              </div>
-              <h3 class="h3" data-tr="Vizyon & Görsel UX" data-en="Vision & Visual UX">
-                Vizyon & Görsel UX
-              </h3>
-              <p class="muted" style="margin-top:8px;font-size:13.5px;" data-tr="Kapsam sınırları, kilitli renk/tipografi token'ları ve canlı Mermaid ekran akışı." data-en="MVP boundaries, locked color/typography tokens, empty/error states and live Mermaid UX flows.">
-                Kapsam sınırları, kilitli renk/tipografi token'ları ve canlı Mermaid ekran akışı.
-              </p>
-            </article>
-
-            <article class="card reveal">
-              <div class="mini-box">
-                <span class="mini-pill cy">03_ARCHITECTURE_AND_DATA.md</span>
-                <span class="mono muted" style="font-size:10.5px;">erDiagram · API · Security</span>
-                <span class="mini-pill ok">$0.00 / mo verified</span>
-              </div>
-              <h3 class="h3" data-tr="Mimari & Veri Şeması" data-en="Architecture & Schema">
-                Mimari & Veri Şeması
-              </h3>
-              <p class="muted" style="margin-top:8px;font-size:13.5px;" data-tr="Klasör yapısı, veri modelleri, güvenlik sınırları ve canlı sistem mimarisi şeması." data-en="Folder layout, concrete data models, cost ceilings and live Mermaid system architecture.">
-                Klasör yapısı, veri modelleri, güvenlik sınırları ve canlı sistem mimarisi şeması.
-              </p>
-            </article>
-
-            <article class="card reveal">
-              <div class="mini-box">
-                <span class="mini-pill">04_BUILD_ROADMAP.md</span>
-                <span class="mini-pill ac">05_AGENTS_START_HERE.md</span>
-                <span class="mono" style="font-size:10.5px;color:#8ae3b7;">Step 1 → N · Hard Invariants</span>
-              </div>
-              <h3 class="h3" data-tr="Yol Haritası & Kurallar" data-en="Roadmap & Invariants">
-                Yol Haritası & Kurallar
-              </h3>
-              <p class="muted" style="margin-top:8px;font-size:13.5px;" data-tr="Adım 1'den N'e doğrulanabilir inşa fazları ve kodlama ajanının asla çiğnemeyeceği kurallar." data-en="Ordered build phases with concrete Done criteria plus non-negotiable Hard Invariants.">
-                Adım 1'den N'e doğrulanabilir inşa fazları ve kodlama ajanının asla çiğnemeyeceği kurallar.
-              </p>
-            </article>
-
-            <article class="card reveal">
-              <div class="mini-box">
-                <span class="mini-pill ok">AGENTS.md · Auto Bridge</span>
-                <span class="mono muted" style="font-size:10.5px;">1-click Starter Prompt</span>
-                <span class="mini-pill">Save to folder · .ZIP</span>
-              </div>
-              <h3 class="h3" data-tr="Tek Tık İnşa Köprüsü" data-en="1-Click Build Handoff">
-                Tek Tık İnşa Köprüsü
-              </h3>
-              <p class="muted" style="margin-top:8px;font-size:13.5px;" data-tr="Klasöre kaydettiğinde AGENTS.md otomatik eklenir; başlatma promptunu yapıştır ve inşa başlasın." data-en="Automatically writes AGENTS.md alongside your pack — open in any agent and paste the starter prompt.">
-                Klasöre kaydettiğinde AGENTS.md otomatik eklenir; başlatma promptunu yapıştır ve inşa başlasın.
-              </p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- 7. Feature Split #2: 3D Angled Desktop Studio Stage -->
-      <section id="studio" class="section wrap">
-        <div class="split">
-          <div class="split-copy reveal">
-            <h2 class="h2">
-              <span data-tr="Sakin bir masaüstü stüdyosu." data-en="A calm desktop studio.">
-                Sakin bir masaüstü stüdyosu.
-              </span>
-              <br />
-              <span class="dim" data-tr="Tüm kararlar tek pencerede." data-en="Every decision in one window.">
-                Tüm kararlar tek pencerede.
-              </span>
-            </h2>
-            <p
-              data-tr="Siyah konsol penceresi yok, .bat dosyası yok. Çift tıkla açılan çerçevesiz Apple Dark Liquid Glass masaüstü uygulaması; teknik bilmeyenler için Sade, uzmanlar için tam Pro kontrol sunar."
-              data-en="No black console window, no Node setup required. A native frameless dark Liquid Glass desktop app with 1-click Simple mode for beginners and full Pro controls for engineers."
-            >
-              Siyah konsol penceresi yok, .bat dosyası yok. Çift tıkla açılan çerçevesiz Apple Dark Liquid Glass masaüstü uygulaması; teknik bilmeyenler için Sade, uzmanlar için tam Pro kontrol sunar.
-            </p>
-            <ul class="check-list">
-              <li><span class="tick">✓</span> <span data-tr="Çerçevesiz tam ekran masaüstü uygulaması + doğal OS klasör seçici" data-en="Frameless native desktop window + OS folder picker">Çerçevesiz tam ekran masaüstü uygulaması + doğal OS klasör seçici</span></li>
-              <li><span class="tick">✓</span> <span data-tr="Canlı Mermaid diyagramları & revizyon notuyla cerrahi güncelleme" data-en="Live Mermaid diagrams & surgical per-file revision notes">Canlı Mermaid diyagramları & revizyon notuyla cerrahi güncelleme</span></li>
-              <li><span class="tick">✓</span> <span data-tr="Türkçe ve İngilizce tam arayüz + AI çıktı dili" data-en="Full Turkish & English UI and AI output language">Türkçe ve İngilizce tam arayüz + AI çıktı dili</span></li>
-            </ul>
-            <a class="btn btn-ghost btn-sm" href="./download.html">
-              <span data-tr="Masaüstü uygulamasını indir" data-en="Download desktop app">Masaüstü uygulamasını indir</span>
-              <span class="arr">→</span>
-            </a>
-          </div>
-
-          <div class="stage-3d reveal">
-            <div class="float-pill float-top">
-              <span style="width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);"></span>
-              <span>Live · 3 agents debating</span>
-            </div>
-
-            <div class="panel-3d">
-              <div class="win-bar" style="justify-content:space-between;">
-                <span style="display:inline-flex;align-items:center;gap:8px;">
-                  <span class="win-dots"><span></span><span></span><span></span></span>
-                  <span>CONCEPTUS · Desktop v4.2</span>
-                </span>
-                <span style="display:inline-flex;gap:6px;font-size:10px;">
-                  <span class="mini-pill" style="padding:2px 7px;">TR | EN</span>
-                  <span class="mini-pill" style="padding:2px 7px;">Sade | Pro</span>
-                </span>
-              </div>
-
-              <div class="pm-grid">
-                <div class="pm-rail">
-                  <div class="pm-rail-brand">
-                    <img src="./icon.png" alt="" style="width:18px;height:18px;border-radius:5px;" />
-                    <span>CONCEPTUS</span>
-                  </div>
-                  <div class="pm-rail-item active"><span>DolapSef</span><span class="mono" style="font-size:10px;color:#958fff;">5 MD</span></div>
-                  <div class="pm-rail-item"><span>OdakKalkanı</span><span class="mono" style="font-size:10px;color:#3fd0c9;">Master</span></div>
-                  <div class="pm-rail-item"><span>EsnafFlow</span><span class="mono" style="font-size:10px;">6 MD</span></div>
-                </div>
-
-                <div class="pm-main">
-                  <div class="pm-card">
-                    <span class="chip">İnsan Kararı Kilidi · 1/3</span>
-                    <h4>Veri depolama ve gizlilik mimarisi</h4>
-                    <p>Seçenek A: %100 yerel IndexedDB (0 USD maliyet, hesap gerekmez) · Seçenek B: Bulut senkronizasyonu</p>
-                    <div class="pm-pills">
-                      <span class="pm-btn">A · Yerel IndexedDB (Önerilen)</span>
-                      <span class="pm-btn ghost">B · Bulut DB</span>
-                    </div>
-                  </div>
-
-                  <div class="pm-card cyan">
-                    <span class="chip chip-ok">Evrim Özeti · 4 İyileştirme</span>
-                    <h4>Çapraz tartışma kapsam şişmesini önledi</h4>
-                    <p>Ajan B ve C gereksiz bulut sunucusunu eledi; 150 KB offline-first PWA mimarisine kilitlendi.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="float-pill float-bottom">
-              <span style="color:var(--ok);font-weight:700;">✓</span>
-              <span>QA Audit Score · 97/100</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 8. Band: Runs Everywhere (OS Cards + Quick Terminal) -->
-      <section class="section band">
-        <div class="wrap">
-          <h2 class="h2 reveal">
-            <span data-tr="Çalıştığın her yerde hazır." data-en="Runs where you work.">
-              Çalıştığın her yerde hazır.
-            </span>
-            <br />
-            <span class="dim" data-tr="Windows, macOS ve Linux." data-en="Windows, macOS and Linux.">
-              Windows, macOS ve Linux.
-            </span>
-          </h2>
-
-          <div class="os-row">
-            <a class="os-card active reveal" href="./download.html?os=windows">
-              <div class="os-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3V5.5zm0 13 7.5 1.1v-7H3v5.9zm8.6 1.2L21 21v-8.4h-9.4v7.1zm0-15.4v7.2H21V3l-9.4 1.3z" /></svg>
-              </div>
-              <strong>Windows</strong>
-              <span data-tr="Windows 10 & 11 · .exe Kurulum + Portable" data-en="Windows 10 & 11 · .exe Installer + Portable">Windows 10 & 11 · .exe Kurulum + Portable</span>
-            </a>
-
-            <a class="os-card reveal" href="./download.html?os=macos">
-              <div class="os-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 1.64a4.2 4.2 0 0 1-1 3.04 3.6 3.6 0 0 1-2.85 1.36 4.1 4.1 0 0 1 1-2.96 4.2 4.2 0 0 1 2.85-1.44zM20.36 17.2c-.43.99-.94 1.9-1.56 2.74-.82 1.12-1.5 1.9-2.04 2.33-.81.74-1.68 1.12-2.61 1.14-.67 0-1.47-.19-2.4-.58-.94-.39-1.8-.58-2.59-.58-.82 0-1.7.19-2.66.58-.96.39-1.73.59-2.32.61-.89.04-1.78-.35-2.67-1.17-.58-.5-1.29-1.31-2.12-2.43-.9-1.26-1.63-2.72-2.2-4.38-.61-1.78-.92-3.51-.92-5.17 0-1.91.48-3.52 1.44-4.82.75-1.01 1.75-1.77 3.01-2.28a5.4 5.4 0 0 1 2.02-.4c.79 0 1.83.24 3.12.71 1.29.47 2.12.71 2.48.71.27 0 1.19-.28 2.74-.84 1.47-.52 2.7-.74 3.7-.66 2.73.22 4.79 1.29 6.16 3.22-2.44 1.48-3.64 3.55-3.61 6.21.03 2.07.77 3.8 2.23 5.18.66.63 1.43 1.11 2.3 1.45-.18.54-.39 1.07-.64 1.56z" /></svg>
-              </div>
-              <strong>macOS</strong>
-              <span data-tr="Apple Silicon & Intel · Kaynak & .dmg" data-en="Apple Silicon & Intel · Source & .dmg">Apple Silicon & Intel · Kaynak & .dmg</span>
-            </a>
-
-            <a class="os-card reveal" href="./download.html?os=linux">
-              <div class="os-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
-              </div>
-              <strong>Linux</strong>
-              <span data-tr="Ubuntu, Debian, Fedora, Arch · CLI & AppImage" data-en="Ubuntu, Debian, Fedora, Arch · CLI & AppImage">Ubuntu, Debian, Fedora, Arch · CLI & AppImage</span>
-            </a>
-          </div>
-
-          <div class="terminal reveal" style="margin-top:20px;">
-            <div class="terminal-bar">
-              <span>Terminal / CLI</span>
-              <button
-                type="button"
-                class="copy"
-                data-copy="git clone https://github.com/Mehmet274634/CONCEPTUS.git && cd CONCEPTUS && npm install && npm run build && npm run cli"
-                data-tr="Kopyala"
-                data-en="Copy"
-              >
-                Kopyala
+            <div class="forge-tabs" role="tablist" aria-label="CONCEPTUS Evolution Stages">
+              <button type="button" class="forge-tab active" role="tab" aria-selected="true" data-forge-tab="idea">
+                <span data-tr="01 · Ham Fikir &amp; Netleştir" data-en="01 · Raw Idea &amp; Clarify">01 · Ham Fikir &amp; Netleştir</span>
+              </button>
+              <button type="button" class="forge-tab" role="tab" aria-selected="false" data-forge-tab="debate">
+                <span data-tr="02 · Çoklu-Ajan Tartışması" data-en="02 · Multi-AI Debate">02 · Çoklu-Ajan Tartışması</span>
+              </button>
+              <button type="button" class="forge-tab" role="tab" aria-selected="false" data-forge-tab="master">
+                <span data-tr="03 · Karar Kilidi &amp; 5'li MD" data-en="03 · Decision Gate &amp; 5-File MD">03 · Karar Kilidi &amp; 5'li MD</span>
               </button>
             </div>
-            <pre class="terminal-pre"><span class="p">$</span> git clone https://github.com/Mehmet274634/CONCEPTUS.git &amp;&amp; cd CONCEPTUS
-<span class="p">$</span> npm install &amp;&amp; npm run build &amp;&amp; npm run cli
-<span class="ok">✓</span> CONCEPTUS v4.2 ready: http://127.0.0.1:3847
-<span class="ac">→</span> Detected 4/4 local CLIs: Antigravity (24) · Claude Code (6) · Codex (4) · Gemini (4)</pre>
+          </div>
+
+          <div class="forge-body">
+            <!-- Stage 1: Raw Idea + Clarify -->
+            <div class="forge-panel active" data-forge-panel="idea">
+              <div class="idea-prompt-box">
+                <div class="widget-head" style="margin-bottom: 10px;">
+                  <span class="mono muted" data-tr="Ham Fikir · Uygulama / Ürün" data-en="Raw Idea · App / Product">Ham Fikir · Uygulama / Ürün</span>
+                  <span class="chip chip-ok" data-tr="Fikri Netleştir ✓ · 20 sn" data-en="Idea Clarifier ✓ · 20s">Fikri Netleştir ✓ · 20 sn</span>
+                </div>
+                <p class="idea-quote" data-tr="“Dolaptaki malzemeleri yazınca 15 dakikalık akşam yemeği tarifi öneren, eksik malzemelerden tek tıkla market listesi çıkaran sade bir uygulama istiyorum.”" data-en="“I want a clean app where I pick ingredients in my fridge, get 15-minute dinner recipes, and build a one-tap missing grocery list.”">
+                  “Dolaptaki malzemeleri yazınca 15 dakikalık akşam yemeği tarifi öneren, eksik malzemelerden tek tıkla market listesi çıkaran sade bir uygulama istiyorum.”
+                </p>
+                <div class="chip-row">
+                  <span class="chip" data-tr="Mobil Web + PWA" data-en="Mobile Web + PWA">Mobil Web + PWA</span>
+                  <span class="chip chip-cyan" data-tr="0₺ Yerel İlk MVP" data-en="$0 Local-First MVP">0₺ Yerel İlk MVP</span>
+                  <span class="chip chip-neutral" data-tr="Sıcak Minimal UI" data-en="Warm Minimal UI">Sıcak Minimal UI</span>
+                  <span class="chip chip-neutral" data-tr="TR + EN Hazır" data-en="TR + EN Ready">TR + EN Hazır</span>
+                </div>
+              </div>
+
+              <div class="clarify-grid">
+                <div class="clarify-item">
+                  <small data-tr="Netleştirilen Hedef Kitle" data-en="Clarified Target User">Netleştirilen Hedef Kitle</small>
+                  <strong data-tr="İş çıkışı 15 dk içinde akşam yemeğine karar vermek isteyen ev kullanıcıları" data-en="Busy home cooks deciding dinner in under 15 minutes">İş çıkışı 15 dk içinde akşam yemeğine karar vermek isteyen ev kullanıcıları</strong>
+                </div>
+                <div class="clarify-item">
+                  <small data-tr="Olmazsa Olmaz Çekirdek" data-en="Non-Negotiable Core">Olmazsa Olmaz Çekirdek</small>
+                  <strong data-tr="Görsel malzeme çipleri, alerjen kilidi ve tek tıkla eksik malzeme listesi" data-en="Visual ingredient chips, allergen lock, and 1-tap grocery checklist">Görsel malzeme çipleri, alerjen kilidi ve tek tıkla eksik malzeme listesi</strong>
+                </div>
+                <div class="clarify-item">
+                  <small data-tr="Kapsam Dışı (v1 Sınırı)" data-en="Out of Scope (v1 Guardrail)">Kapsam Dışı (v1 Sınırı)</small>
+                  <strong data-tr="Sosyal akış, yorumlar, yapay zekâ foto-tarama ve abonelik duvarı v2'de" data-en="Social feed, comments, AI camera scan, and paywall deferred to v2">Sosyal akış, yorumlar, yapay zekâ foto-tarama ve abonelik duvarı v2'de</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage 2: Blind Round 1 & Anonymous Cross-Debate Round 2 -->
+            <div class="forge-panel" data-forge-panel="debate">
+              <div class="widget-head" style="margin-bottom: 14px;">
+                <span class="mono muted" data-tr="Tur 1 (Kör Üretim) ✓ → Tur 2 (Anonim Çapraz Eleştiri: Ajan A / B / C)" data-en="Round 1 (Blind Drafts) ✓ → Round 2 (Anonymous Cross-Critique: Agent A / B / C)">Tur 1 (Kör Üretim) ✓ → Tur 2 (Anonim Çapraz Eleştiri: Ajan A / B / C)</span>
+                <span class="chip chip-cyan" data-tr="3 Bağımsız Model Çarpışıyor" data-en="3 Independent Models Clashing">3 Bağımsız Model Çarpışıyor</span>
+              </div>
+
+              <div class="arena-grid">
+                <div class="agent-col">
+                  <div class="agent-head">
+                    <span class="agent-id">
+                      <span class="a-dot" style="background: #7c74ff;"></span>
+                      <span data-tr="Gemini · Baş Mimar" data-en="Gemini · Chief Architect">Gemini · Baş Mimar</span>
+                    </span>
+                    <span class="mono dim">Ajan A</span>
+                  </div>
+                  <p data-tr="“Ajan B'nin önerdiği bulut + Auth katmanı ilk 1000 kullanıcı için gereksiz yük. 350 tariflik yerel katalog + IndexedDB ile 0₺ sunucu maliyeti ve 10ms filtre hızı elde ederiz.”" data-en="“Agent B's cloud + Auth stack is premature for the first 1,000 users. A local 350-recipe catalog + IndexedDB gives $0 hosting and 10ms instant search.”">
+                    “Ajan B'nin önerdiği bulut + Auth katmanı ilk 1000 kullanıcı için gereksiz yük. 350 tariflik yerel katalog + IndexedDB ile 0₺ sunucu maliyeti ve 10ms filtre hızı elde ederiz.”
+                  </p>
+                  <div class="agent-verdict" data-tr="✓ Öneri: Offline-First PWA + IndexedDB" data-en="✓ Proposal: Offline-First PWA + IndexedDB">✓ Öneri: Offline-First PWA + IndexedDB</div>
+                </div>
+
+                <div class="agent-col">
+                  <div class="agent-head">
+                    <span class="agent-id">
+                      <span class="a-dot" style="background: #f0b44c;"></span>
+                      <span data-tr="Claude · Risk &amp; UX" data-en="Claude · Risk &amp; UX">Claude · Risk &amp; UX</span>
+                    </span>
+                    <span class="mono dim">Ajan B</span>
+                  </div>
+                  <p data-tr="“Ajan A'nın metin kutusu yaklaşımı kullanıcıyı 2. günde kaybettirir; kimse 8 malzemeyi klavyeyle yazmaz. Hızlı kategori çipleri ve üstte sabit alerjen uyarısı zorunlu.”" data-en="“Agent A's free-text input causes Day-2 churn; nobody types 8 ingredients manually. Quick visual chips and a pinned allergen guard are mandatory.”">
+                    “Ajan A'nın metin kutusu yaklaşımı kullanıcıyı 2. günde kaybettirir; kimse 8 malzemeyi klavyeyle yazmaz. Hızlı kategori çipleri ve üstte sabit alerjen uyarısı zorunlu.”
+                  </p>
+                  <div class="agent-verdict" data-tr="✓ Şart: 3 Dokunuşta Tarif + Alerjen Kilidi" data-en="✓ Rule: 3-Tap Recipe + Allergen Lock">✓ Şart: 3 Dokunuşta Tarif + Alerjen Kilidi</div>
+                </div>
+
+                <div class="agent-col">
+                  <div class="agent-head">
+                    <span class="agent-id">
+                      <span class="a-dot" style="background: #3fd0c9;"></span>
+                      <span data-tr="Codex · MVP Mühendisi" data-en="Codex · MVP Engineer">Codex · MVP Mühendisi</span>
+                    </span>
+                    <span class="mono dim">Ajan C</span>
+                  </div>
+                  <p data-tr="“İki öneriyi birleştirip kapsamı 3 ekranda kilitliyorum: Dolap Seçici, Tarif Kartı ve Market Listesi. Foto-tarama v2'ye ayrılırsa Faz-1 dört günde testli şekilde çıkar.”" data-en="“Merging both into a strict 3-screen MVP: Pantry Picker, Recipe Card, Grocery List. Deferring camera scan to v2 ships tested Phase 1 in 4 days.”">
+                    “İki öneriyi birleştirip kapsamı 3 ekranda kilitliyorum: Dolap Seçici, Tarif Kartı ve Market Listesi. Foto-tarama v2'ye ayrılırsa Faz-1 dört günde testli şekilde çıkar.”
+                  </p>
+                  <div class="agent-verdict" data-tr="✓ Kapsam: 3 Ekran · 4 Günlük Faz-1" data-en="✓ Scope: 3 Screens · 4-Day Phase 1">✓ Kapsam: 3 Ekran · 4 Günlük Faz-1</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stage 3: Human Decision Gate + 5-File Output -->
+            <div class="forge-panel" data-forge-panel="master">
+              <div class="gate-split">
+                <div class="gate-box">
+                  <div class="widget-head">
+                    <span class="chip" data-tr="İnsan Kararı Kilidi · Master Sentez" data-en="Human Decision Gate · Master Synthesis">İnsan Kararı Kilidi · Master Sentez</span>
+                    <span class="mono dim" data-tr="Tıkla ve dene" data-en="Click to try">Tıkla ve dene</span>
+                  </div>
+                  <strong style="font-size: 15px;" data-tr="v1 veri saklama mimarisi nasıl kilitlensin?" data-en="How should v1 data persistence be locked?">
+                    v1 veri saklama mimarisi nasıl kilitlensin?
+                  </strong>
+                  <div class="gate-opts">
+                    <button type="button" class="gate-opt selected" data-gate-opt="A">
+                      <strong data-tr="Seçenek A · Yerel IndexedDB" data-en="Option A · Local IndexedDB">Seçenek A · Yerel IndexedDB</strong>
+                      <span data-tr="0₺ sunucu maliyeti, hesapsız anında açılış. (3/3 ajan önerisi)" data-en="$0 backend cost, zero-signup instant launch. (3/3 consensus)">0₺ sunucu maliyeti, hesapsız anında açılış. (3/3 ajan önerisi)</span>
+                    </button>
+                    <button type="button" class="gate-opt" data-gate-opt="B">
+                      <strong data-tr="Seçenek B · Bulut + Hesap" data-en="Option B · Cloud + Account">Seçenek B · Bulut + Hesap</strong>
+                      <span data-tr="Cihazlar arası eşitleme, ancak Auth ve DB kurulumu ekler." data-en="Cross-device sync, but adds Auth and database setup.">Cihazlar arası eşitleme, ancak Auth ve DB kurulumu ekler.</span>
+                    </button>
+                  </div>
+                  <div id="gate-lock-status" class="gate-status" data-tr="Kilitlendi: Seçenek A (%100 Yerel IndexedDB · 0₺)" data-en="Locked: Option A (100% Local IndexedDB · $0/mo)">
+                    Kilitlendi: Seçenek A (%100 Yerel IndexedDB · 0₺)
+                  </div>
+                </div>
+
+                <div class="pack-list-mini">
+                  <div class="pack-row-mini">
+                    <span class="fn">01_PRODUCT_VISION.md</span>
+                    <span class="chip chip-ok">QA 98/100</span>
+                  </div>
+                  <div class="pack-row-mini">
+                    <span class="fn">02_UX_SCREENS_AND_DESIGN.md</span>
+                    <span class="chip chip-cyan">Mermaid ✓</span>
+                  </div>
+                  <div class="pack-row-mini">
+                    <span class="fn">03_ARCHITECTURE_AND_DATA.md</span>
+                    <span class="chip chip-cyan">Mermaid ✓</span>
+                  </div>
+                  <div class="pack-row-mini">
+                    <span class="fn">04_BUILD_ROADMAP.md</span>
+                    <span class="chip chip-neutral" data-tr="Faz 1–3" data-en="Phases 1–3">Faz 1–3</span>
+                  </div>
+                  <div class="pack-row-mini">
+                    <span class="fn">05_AGENTS_START_HERE.md</span>
+                    <span class="chip" data-tr="Başlangıç Promptu" data-en="Starter Prompt">Başlangıç Promptu</span>
+                  </div>
+                  <div class="pack-row-mini">
+                    <span class="fn">AGENTS.md</span>
+                    <span class="chip chip-ok" data-tr="Otomatik Köprü" data-en="Auto Bridge">Otomatik Köprü</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- 9. Security & Verified Metrics -->
-      <section id="security" class="section wrap">
-        <h2 class="h2 reveal">
-          <span data-tr="Tasarım gereği gizli." data-en="Private by design.">
-            Tasarım gereği gizli.
+    <!-- Before vs After Comparison -->
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="eyebrow">
+            <span class="dot"></span>
+            <span data-tr="Neden Tek Prompt Yetmez?" data-en="Why One Prompt Fails">Neden Tek Prompt Yetmez?</span>
+          </div>
+          <h2 class="h2" data-tr="Körlemesine kod üretmek yerine, önce fikri masada sına." data-en="Stress-test the idea before writing a single line of code.">
+            Körlemesine kod üretmek yerine, önce fikri masada sına.
+          </h2>
+          <p class="lead" data-tr="Kodlama ajanları güçlüdür ama belirsiz fikirle başladığında yarı yolda mimariyi bozar. CONCEPTUS, koda geçmeden önce fikri olgunlaştırır." data-en="Coding agents are fast, yet vague prompts force mid-build rewrites. CONCEPTUS hardens the product and architecture before coding starts.">
+            Kodlama ajanları güçlüdür ama belirsiz fikirle başladığında yarı yolda mimariyi bozar. CONCEPTUS, koda geçmeden önce fikri olgunlaştırır.
+          </p>
+        </div>
+
+        <div class="compare-grid reveal">
+          <article class="card compare-card">
+            <div class="card-kicker" style="color: var(--danger);" data-tr="ESKİ YÖNTEM" data-en="BEFORE">ESKİ YÖNTEM</div>
+            <h3 class="h3" data-tr="Tek Promptla Kodlamaya Dalmak" data-en="Jumping Straight Into Single-Prompt Coding">Tek Promptla Kodlamaya Dalmak</h3>
+            <ul class="cmp-list">
+              <li>
+                <span class="cmp-x" aria-hidden="true">✕</span>
+                <span data-tr="Tek bir modelin ilk varsayımına hapsolursun; kör noktalar kod yazıldıktan sonra ortaya çıkar." data-en="Locked into one model's first guess; blind spots surface only after code is written.">Tek bir modelin ilk varsayımına hapsolursun; kör noktalar kod yazıldıktan sonra ortaya çıkar.</span>
+              </li>
+              <li>
+                <span class="cmp-x" aria-hidden="true">✕</span>
+                <span data-tr="Veri modeli, ekran akışı ve kapsam sınırı yazılmadığı için proje yarı yolda şişer veya baştan yazılır." data-en="Without locked scope, flows, or data schemas, projects bloat or get rewritten halfway.">Veri modeli, ekran akışı ve kapsam sınırı yazılmadığı için proje yarı yolda şişer veya baştan yazılır.</span>
+              </li>
+              <li>
+                <span class="cmp-x" aria-hidden="true">✕</span>
+                <span data-tr="Tasarım tokenları ve boş/hata durumları tanımlı olmadığından sıradan, kırılgan arayüzler çıkar." data-en="Missing design tokens and empty/error states lead to generic, brittle interfaces.">Tasarım tokenları ve boş/hata durumları tanımlı olmadığından sıradan, kırılgan arayüzler çıkar.</span>
+              </li>
+              <li>
+                <span class="cmp-x" aria-hidden="true">✕</span>
+                <span data-tr="5 sohbet turu sonra kodlama ajanı baştaki mimari kararları unutur ve çelişkili kod ekler." data-en="Five chat turns later, the coding agent forgets core decisions and introduces drift.">5 sohbet turu sonra kodlama ajanı baştaki mimari kararları unutur ve çelişkili kod ekler.</span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="card compare-card good">
+            <div class="card-kicker" style="color: var(--ok);" data-tr="CONCEPTUS YÖNTEMİ" data-en="WITH CONCEPTUS">CONCEPTUS YÖNTEMİ</div>
+            <h3 class="h3" data-tr="Çoklu-Ajan Evrim Masası + 5'li MD Standardı" data-en="Multi-AI Debate Desk + 5-File Blueprint Standard">Çoklu-Ajan Evrim Masası + 5'li MD Standardı</h3>
+            <ul class="cmp-list">
+              <li>
+                <span class="cmp-ok" aria-hidden="true">✓</span>
+                <span data-tr="Kör Tur 1 + anonim çapraz eleştiri (Ajan A/B/C) sayesinde modeller birbirinin açıklarını bulur." data-en="Blind Round 1 + anonymous cross-critique (Agent A/B/C) exposes architectural flaws early.">Kör Tur 1 + anonim çapraz eleştiri (Ajan A/B/C) sayesinde modeller birbirinin açıklarını bulur.</span>
+              </li>
+              <li>
+                <span class="cmp-ok" aria-hidden="true">✓</span>
+                <span data-tr="İnsan Kararı Kapıları kritik seçimleri sana sorar ve tüm belgelere tutarlı şekilde işler." data-en="Human Decision Gates ask you to lock key trade-offs and propagate them across every file.">İnsan Kararı Kapıları kritik seçimleri sana sorar ve tüm belgelere tutarlı şekilde işler.</span>
+              </li>
+              <li>
+                <span class="cmp-ok" aria-hidden="true">✓</span>
+                <span data-tr="Ekran akışları ve veri şeması uygulama içinde canlı Mermaid diyagramı olarak çizilir ve QA denetiminden geçer." data-en="User flows and data schemas render as live Mermaid diagrams and pass automated QA audits.">Ekran akışları ve veri şeması uygulama içinde canlı Mermaid diyagramı olarak çizilir ve QA denetiminden geçer.</span>
+              </li>
+              <li>
+                <span class="cmp-ok" aria-hidden="true">✓</span>
+                <span data-tr="5 dosyalık MD paketi + otomatik AGENTS.md köprüsü proje klasörüne yazılır; her kodlama ajanı tek kılavuza uyar." data-en="5 Blueprint MDs + automatic AGENTS.md write straight to your repo so every coding agent stays aligned.">5 dosyalık MD paketi + otomatik AGENTS.md köprüsü proje klasörüne yazılır; her kodlama ajanı tek kılavuza uyar.</span>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Band: Interactive 5-File Blueprint Studio Inspector -->
+    <section class="section band" id="blueprint">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="eyebrow">
+            <span class="dot"></span>
+            <span data-tr="5'li Profesyonel MD Standardı" data-en="5-File Production Markdown Standard">5'li Profesyonel MD Standardı</span>
+          </div>
+          <h2 class="h2" data-tr="Sohbet özeti değil. Doğrudan kodlamaya hazır mimari paket." data-en="Not a chat summary. A build-ready architectural pack.">
+            Sohbet özeti değil. Doğrudan kodlamaya hazır mimari paket.
+          </h2>
+          <p class="lead" data-tr="Her dosya tek bir net sorumluluk taşır ve birbiriyle çelişmez. Soldan herhangi bir dosyaya tıkla, CONCEPTUS'un ürettiği yapıyı canlı incele." data-en="Each file owns one clear responsibility with zero contradictions. Click any file on the left to inspect the exact structure CONCEPTUS outputs.">
+            Her dosya tek bir net sorumluluk taşır ve birbiriyle çelişmez. Soldan herhangi bir dosyaya tıkla, CONCEPTUS'un ürettiği yapıyı canlı incele.
+          </p>
+        </div>
+
+        <div class="bp-studio reveal">
+          <div class="bp-rail" role="tablist" aria-label="Blueprint files">
+            <button type="button" class="bp-file-btn active" role="tab" aria-selected="true" data-bp-tab="01">
+              <span class="fn">01_PRODUCT_VISION.md</span>
+              <span class="ft" data-tr="Problem, kapsam sınırı &amp; başarı metrikleri" data-en="Problem, v1 boundaries &amp; success metrics">Problem, kapsam sınırı &amp; başarı metrikleri</span>
+            </button>
+            <button type="button" class="bp-file-btn" role="tab" aria-selected="false" data-bp-tab="02">
+              <span class="fn">02_UX_SCREENS_AND_DESIGN.md</span>
+              <span class="ft" data-tr="Ekran envanteri, tokenlar &amp; canlı Mermaid" data-en="Screen inventory, tokens &amp; live Mermaid">Ekran envanteri, tokenlar &amp; canlı Mermaid</span>
+            </button>
+            <button type="button" class="bp-file-btn" role="tab" aria-selected="false" data-bp-tab="03">
+              <span class="fn">03_ARCHITECTURE_AND_DATA.md</span>
+              <span class="ft" data-tr="Klasör yapısı, veri şeması &amp; güvenlik" data-en="Folder layout, data schema &amp; security">Klasör yapısı, veri şeması &amp; güvenlik</span>
+            </button>
+            <button type="button" class="bp-file-btn" role="tab" aria-selected="false" data-bp-tab="04">
+              <span class="fn">04_BUILD_ROADMAP.md</span>
+              <span class="ft" data-tr="Faz 1–3 görevleri &amp; kabul kriterleri" data-en="Phase 1–3 tasks &amp; acceptance criteria">Faz 1–3 görevleri &amp; kabul kriterleri</span>
+            </button>
+            <button type="button" class="bp-file-btn" role="tab" aria-selected="false" data-bp-tab="05">
+              <span class="fn">05_AGENTS_START_HERE.md</span>
+              <span class="ft" data-tr="Değişmez kurallar &amp; Başlangıç Promptu" data-en="Hard invariants &amp; Starter Prompt">Değişmez kurallar &amp; Başlangıç Promptu</span>
+            </button>
+            <button type="button" class="bp-file-btn" role="tab" aria-selected="false" data-bp-tab="agents">
+              <span class="fn">AGENTS.md</span>
+              <span class="ft" data-tr="Kodlama ajanları için otomatik köprü" data-en="Auto bridge for coding agents">Kodlama ajanları için otomatik köprü</span>
+            </button>
+          </div>
+
+          <div class="bp-viewer">
+            <div class="bp-viewer-head">
+              <span class="mono muted">docs/blueprint/dolapsef/</span>
+              <div class="chip-row" style="margin-top: 0;">
+                <span class="chip chip-ok" data-tr="QA Denetimi: 96/100" data-en="QA Audit: 96/100">QA Denetimi: 96/100</span>
+                <span class="chip chip-cyan" data-tr="Canlı Mermaid Önizleme" data-en="Live Mermaid Preview">Canlı Mermaid Önizleme</span>
+              </div>
+            </div>
+
+            <div class="bp-viewer-body">
+              <!-- Doc 01 -->
+              <div class="bp-doc active" data-bp-doc="01">
+                <h3 data-tr="01_PRODUCT_VISION.md — Net Kapsam ve Ürün Sözleşmesi" data-en="01_PRODUCT_VISION.md — Clear Scope &amp; Product Contract">01_PRODUCT_VISION.md — Net Kapsam ve Ürün Sözleşmesi</h3>
+                <p data-tr="Fikrin hedef kitlesini, v1'de nelerin yapılacağını ve özellikle nelerin kapsam dışı bırakıldığını net bir tabloda kilitler." data-en="Locks the target persona, strict v1 deliverables, and explicit out-of-scope guardrails before a single component is built.">
+                  Fikrin hedef kitlesini, v1'de nelerin yapılacağını ve özellikle nelerin kapsam dışı bırakıldığını net bir tabloda kilitler.
+                </p>
+                <table class="bp-table">
+                  <thead>
+                    <tr>
+                      <th data-tr="Alan" data-en="Area">Alan</th>
+                      <th data-tr="v1 Kapsamında (Zorunlu)" data-en="In Scope (v1 Required)">v1 Kapsamında (Zorunlu)</th>
+                      <th data-tr="v2'ye Ertelendi (Kapsam Dışı)" data-en="Deferred to v2 (Out of Scope)">v2'ye Ertelendi (Kapsam Dışı)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td data-tr="Girdi" data-en="Input">Girdi</td>
+                      <td data-tr="Görsel malzeme çipleri + hızlı arama" data-en="Visual ingredient chips + instant search">Görsel malzeme çipleri + hızlı arama</td>
+                      <td data-tr="Kamera ile buzdolabı fotoğrafı tarama" data-en="AI camera fridge photo recognition">Kamera ile buzdolabı fotoğrafı tarama</td>
+                    </tr>
+                    <tr>
+                      <td data-tr="Güvenlik" data-en="Safety">Güvenlik</td>
+                      <td data-tr="Sabit alerjen filtresi (Fıstık, Gluten, Süt)" data-en="Pinned allergen filter (Peanut, Gluten, Dairy)">Sabit alerjen filtresi (Fıstık, Gluten, Süt)</td>
+                      <td data-tr="Kişisel kalori / makro takibi" data-en="Personal calorie &amp; macro tracker">Kişisel kalori / makro takibi</td>
+                    </tr>
+                    <tr>
+                      <td data-tr="Veri" data-en="Data">Veri</td>
+                      <td data-tr="%100 yerel IndexedDB + PWA çevrimdışı" data-en="100% local IndexedDB + offline PWA">%100 yerel IndexedDB + PWA çevrimdışı</td>
+                      <td data-tr="Bulut hesap &amp; çoklu cihaz eşitleme" data-en="Cloud account &amp; multi-device sync">Bulut hesap &amp; çoklu cihaz eşitleme</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Doc 02 with Mermaid Flowchart -->
+              <div class="bp-doc" data-bp-doc="02">
+                <h3 data-tr="02_UX_SCREENS_AND_DESIGN.md — Ekranlar, Tokenlar ve Canlı Mermaid" data-en="02_UX_SCREENS_AND_DESIGN.md — Screens, Tokens &amp; Live Mermaid">02_UX_SCREENS_AND_DESIGN.md — Ekranlar, Tokenlar ve Canlı Mermaid</h3>
+                <p data-tr="CONCEPTUS yalnızca metin üretmez; kullanıcı akışını doğrudan uygulama içinde görsel Mermaid diyagramı olarak render eder." data-en="CONCEPTUS doesn't just dump prose — it renders user journeys directly inside the app as interactive Mermaid diagrams.">
+                  CONCEPTUS yalnızca metin üretmez; kullanıcı akışını doğrudan uygulama içinde görsel Mermaid diyagramı olarak render eder.
+                </p>
+                <div class="mermaid-card">
+                  <span class="mermaid-card-tag">mermaid · flowchart LR (rendered live in CONCEPTUS)</span>
+                  <svg class="mermaid-svg" viewBox="0 0 740 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="User journey Mermaid flowchart">
+                    <defs>
+                      <marker id="arrCyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M0 1 L10 5 L0 9 Z" fill="#3fd0c9" />
+                      </marker>
+                    </defs>
+                    <rect x="8" y="32" width="136" height="54" rx="12" fill="#13151d" stroke="#7c74ff" stroke-width="1.3" />
+                    <text x="76" y="56" text-anchor="middle" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="12" font-weight="600">Dolap Seçici</text>
+                    <text x="76" y="73" text-anchor="middle" fill="#8a8f98" font-family="JetBrains Mono, monospace" font-size="10">3+ malzeme çipi</text>
+
+                    <line x1="144" y1="59" x2="184" y2="59" stroke="#3fd0c9" stroke-width="1.4" marker-end="url(#arrCyan)" />
+
+                    <rect x="190" y="32" width="146" height="54" rx="12" fill="#13151d" stroke="#3fd0c9" stroke-width="1.3" />
+                    <text x="263" y="56" text-anchor="middle" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="12" font-weight="600">15 dk Filtre</text>
+                    <text x="263" y="73" text-anchor="middle" fill="#8a8f98" font-family="JetBrains Mono, monospace" font-size="10">Alerjen Kilidi</text>
+
+                    <line x1="336" y1="59" x2="376" y2="59" stroke="#3fd0c9" stroke-width="1.4" marker-end="url(#arrCyan)" />
+
+                    <rect x="382" y="32" width="150" height="54" rx="12" fill="#13151d" stroke="#7c74ff" stroke-width="1.3" />
+                    <text x="457" y="56" text-anchor="middle" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="12" font-weight="600">Tarif Kartı</text>
+                    <text x="457" y="73" text-anchor="middle" fill="#8a8f98" font-family="JetBrains Mono, monospace" font-size="10">Adım + Zamanlayıcı</text>
+
+                    <line x1="532" y1="59" x2="572" y2="59" stroke="#3fd0c9" stroke-width="1.4" marker-end="url(#arrCyan)" />
+
+                    <rect x="578" y="32" width="154" height="54" rx="12" fill="#13151d" stroke="#4cc58a" stroke-width="1.3" />
+                    <text x="655" y="56" text-anchor="middle" fill="#f7f8f8" font-family="Inter, sans-serif" font-size="12" font-weight="600">Market Listesi</text>
+                    <text x="655" y="73" text-anchor="middle" fill="#8a8f98" font-family="JetBrains Mono, monospace" font-size="10">Tek tıkla eksik ekle</text>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Doc 03 with Mermaid Architecture -->
+              <div class="bp-doc" data-bp-doc="03">
+                <h3 data-tr="03_ARCHITECTURE_AND_DATA.md — Klasör Yapısı ve Veri Mimarisi" data-en="03_ARCHITECTURE_AND_DATA.md — Folder Layout &amp; Data Schema">03_ARCHITECTURE_AND_DATA.md — Klasör Yapısı ve Veri Mimarisi</h3>
+                <p data-tr="Seçtiğin karar kapılarına uygun olarak teknoloji yığınını, tablo/şema ilişkilerini ve güvenlik sınırlarını kesinleştirir." data-en="Finalizes the tech stack, local/cloud storage contracts, and security boundaries directly from your locked Decision Gates.">
+                  Seçtiğin karar kapılarına uygun olarak teknoloji yığınını, tablo/şema ilişkilerini ve güvenlik sınırlarını kesinleştirir.
+                </p>
+                <div class="mermaid-card">
+                  <span class="mermaid-card-tag">mermaid · erDiagram / module graph</span>
+                  <svg class="mermaid-svg" viewBox="0 0 740 132" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture module graph">
+                    <rect x="14" y="22" width="198" height="88" rx="12" fill="#12141b" stroke="#7c74ff" stroke-width="1.2" />
+                    <text x="30" y="45" fill="#958fff" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">PantryStore (UI)</text>
+                    <text x="30" y="67" fill="#b4b9c4" font-family="JetBrains Mono, monospace" font-size="10.5">selectedIds: string[]</text>
+                    <text x="30" y="85" fill="#b4b9c4" font-family="JetBrains Mono, monospace" font-size="10.5">allergenMask: Set&lt;Tag&gt;</text>
+
+                    <line x1="212" y1="66" x2="266" y2="66" stroke="#3fd0c9" stroke-width="1.4" stroke-dasharray="4 3" />
+
+                    <rect x="266" y="22" width="206" height="88" rx="12" fill="#12141b" stroke="#3fd0c9" stroke-width="1.2" />
+                    <text x="282" y="45" fill="#3fd0c9" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">MatchEngine (Pure TS)</text>
+                    <text x="282" y="67" fill="#b4b9c4" font-family="JetBrains Mono, monospace" font-size="10.5">rankByOverlap(pantry)</text>
+                    <text x="282" y="85" fill="#b4b9c4" font-family="JetBrains Mono, monospace" font-size="10.5">excludeAllergens() // &lt;10ms</text>
+
+                    <line x1="472" y1="66" x2="526" y2="66" stroke="#4cc58a" stroke-width="1.4" stroke-dasharray="4 3" />
+
+                    <rect x="526" y="22" width="198" height="88" rx="12" fill="#12141b" stroke="#4cc58a" stroke-width="1.2" />
+                    <text x="542" y="45" fill="#4cc58a" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">IndexedDB (Local)</text>
+                    <text x="542" y="67" fill="#b4b9c4" font-family="JetBrains Mono, monospace" font-size="10.5">recipes_v1 (350 rows)</text>
+                    <text x="542" y="85" fill="#b4b9c4" font-family="JetBrains Mono, monospace" font-size="10.5">grocery_items (offline)</text>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Doc 04 -->
+              <div class="bp-doc" data-bp-doc="04">
+                <h3 data-tr="04_BUILD_ROADMAP.md — Sıralı Fazlar ve Test Edilebilir Kriterler" data-en="04_BUILD_ROADMAP.md — Ordered Phases &amp; Testable Acceptance">04_BUILD_ROADMAP.md — Sıralı Fazlar ve Test Edilebilir Kriterler</h3>
+                <p data-tr="Kodlama ajanının hangi sırayla hangi modülü yazacağını ve her fazın 'bitti' sayılması için hangi testlerin geçmesi gerektiğini listeler." data-en="Tells your coding agent the exact build sequence and verifiable acceptance checks before moving to the next phase.">
+                  Kodlama ajanının hangi sırayla hangi modülü yazacağını ve her fazın 'bitti' sayılması için hangi testlerin geçmesi gerektiğini listeler.
+                </p>
+                <table class="bp-table">
+                  <thead>
+                    <tr>
+                      <th data-tr="Faz" data-en="Phase">Faz</th>
+                      <th data-tr="Çıktı" data-en="Deliverable">Çıktı</th>
+                      <th data-tr="Doğrulama Kriteri" data-en="Acceptance Gate">Doğrulama Kriteri</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="mono">Faz 1</td>
+                      <td data-tr="IndexedDB katmanı + saf eşleştirme motoru" data-en="IndexedDB store + pure matching engine">IndexedDB katmanı + saf eşleştirme motoru</td>
+                      <td data-tr="Alerjen filtresi %100 birim testle doğrulanır" data-en="Allergen filter 100% covered by unit tests">Alerjen filtresi %100 birim testle doğrulanır</td>
+                    </tr>
+                    <tr>
+                      <td class="mono">Faz 2</td>
+                      <td data-tr="Dolap Seçici + 15 dk Tarif Kartı ekranları" data-en="Pantry Picker + 15-min Recipe Card UI">Dolap Seçici + 15 dk Tarif Kartı ekranları</td>
+                      <td data-tr="Mobil 375px genişlikte taşmasız &amp; &lt;100ms yanıt" data-en="Zero overflow at 375px &amp; &lt;100ms filter">Mobil 375px genişlikte taşmasız &amp; &lt;100ms yanıt</td>
+                    </tr>
+                    <tr>
+                      <td class="mono">Faz 3</td>
+                      <td data-tr="Tek tıkla Market Listesi + PWA Manifest" data-en="1-tap Grocery List + offline PWA">Tek tıkla Market Listesi + PWA Manifest</td>
+                      <td data-tr="Uçak modunda tam açılış ve sıfır konsol hatası" data-en="Full offline boot with zero console errors">Uçak modunda tam açılış ve sıfır konsol hatası</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Doc 05 -->
+              <div class="bp-doc" data-bp-doc="05">
+                <h3 data-tr="05_AGENTS_START_HERE.md — Değişmez Kurallar &amp; Başlangıç Promptu" data-en="05_AGENTS_START_HERE.md — Hard Invariants &amp; Starter Prompt">05_AGENTS_START_HERE.md — Değişmez Kurallar &amp; Başlangıç Promptu</h3>
+                <p data-tr="Aşağıdaki hazır başlangıç komutunu tek tıkla kopyalayıp Cursor, Antigravity veya Claude Code sohbetine yapıştırman yeterli." data-en="Copy the generated Starter Prompt below into Cursor, Antigravity, or Claude Code to start Phase 1 with full architectural context.">
+                  Aşağıdaki hazır başlangıç komutunu tek tıkla kopyalayıp Cursor, Antigravity veya Claude Code sohbetine yapıştırman yeterli.
+                </p>
+                <div class="terminal">
+                  <div class="terminal-bar">
+                    <span>starter-prompt.txt</span>
+                    <button type="button" class="copy" data-copy="Read AGENTS.md and docs/blueprint/01..05 in order. Respect all Hard Invariants (local IndexedDB only, zero backend auth in v1). Implement Phase 1 with unit tests and stop for verification." data-tr="Kopyala" data-en="Copy">Kopyala</button>
+                  </div>
+                  <pre class="terminal-pre"><span class="ac"># Coding Agent Starter Prompt</span>
+Read <span class="ok">AGENTS.md</span> and <span class="ok">docs/blueprint/01..05</span> in strict order.
+Respect every locked Decision Gate (100% local IndexedDB, allergen lock).
+Start with <span class="ac">Phase 1.1</span>, run unit tests, and report before Phase 2.</pre>
+                </div>
+              </div>
+
+              <!-- AGENTS.md -->
+              <div class="bp-doc" data-bp-doc="agents">
+                <h3 data-tr="AGENTS.md — Proje Klasörüne Otomatik Yazılan Ajan Köprüsü" data-en="AGENTS.md — Automatic Coding Agent Bridge">AGENTS.md — Proje Klasörüne Otomatik Yazılan Ajan Köprüsü</h3>
+                <p data-tr="Paketi 'Klasöre Kaydet' veya 'ZIP İndir' dediğinde CONCEPTUS, proje köküne AGENTS.md dosyasını otomatik ekler; yeni açılan her AI oturumu kuralları anında okur." data-en="Exporting to folder or ZIP automatically writes AGENTS.md at your project root so every coding agent picks up the rules immediately.">
+                  Paketi 'Klasöre Kaydet' veya 'ZIP İndir' dediğinde CONCEPTUS, proje köküne AGENTS.md dosyasını otomatik ekler; yeni açılan her AI oturumu kuralları anında okur.
+                </p>
+                <div class="terminal">
+                  <div class="terminal-bar">
+                    <span>AGENTS.md</span>
+                    <span class="mono ok">auto-generated</span>
+                  </div>
+                  <pre class="terminal-pre"><span class="ac"># Project Blueprint Contract (Generated by CONCEPTUS v4.2.0)</span>
+1. Always read <span class="ok">01_PRODUCT_VISION.md</span> → <span class="ok">05_AGENTS_START_HERE.md</span> first.
+2. Never add out-of-scope v2 features without explicit user approval.
+3. Verify every phase against <span class="ac">04_BUILD_ROADMAP.md</span> acceptance gates.</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Split A: Sade vs Pro Interactive Showcase -->
+    <section class="section" id="studio">
+      <div class="wrap">
+        <div class="split reveal">
+          <div class="split-copy">
+            <div class="eyebrow">
+              <span class="dot"></span>
+              <span data-tr="Herkes İçin Sade, Mühendisler İçin Pro" data-en="Simple for Anyone, Pro for Engineers">Herkes İçin Sade, Mühendisler İçin Pro</span>
+            </div>
+            <h2 class="h2" data-tr="İki çalışma modu, aynı çoklu-ajan gücü." data-en="Two studio modes, the same multi-agent engine.">
+              İki çalışma modu, aynı çoklu-ajan gücü.
+            </h2>
+            <p data-tr="Yeni başlıyorsan Sade Mod'da üç tek-tık profilden birini seç ve Oto-Pilot'a bas. Tam kontrol istiyorsan Pro Mod'a geçip her ajanın sağlayıcısını, modelini, uzmanlık rolünü ve düşünme eforunu ayrı ayrı ayarla." data-en="Pick a one-click profile in Simple Mode and hit Auto-Pilot, or flip to Pro Mode to tune every agent's CLI provider, model, specialist persona, and reasoning effort.">
+              Yeni başlıyorsan Sade Mod'da üç tek-tık profilden birini seç ve Oto-Pilot'a bas. Tam kontrol istiyorsan Pro Mod'a geçip her ajanın sağlayıcısını, modelini, uzmanlık rolünü ve düşünme eforunu ayrı ayrı ayarla.
+            </p>
+            <ul class="check-list">
+              <li>
+                <span class="tick" aria-hidden="true">✓</span>
+                <span data-tr="Sade Mod: Hızlı Fikir (2), Dengeli Ürün (3) ve Derin Mimari (4) tek tık profilleri" data-en="Simple Mode: 1-click Fast Idea (2), Balanced Product (3), and Deep Architecture (4) presets">Sade Mod: Hızlı Fikir (2), Dengeli Ürün (3) ve Derin Mimari (4) tek tık profilleri</span>
+              </li>
+              <li>
+                <span class="tick" aria-hidden="true">✓</span>
+                <span data-tr="Pro Mod: Canlı ajan masası, model/rol seçimi ve tek-dosya revizyon notu ile yenileme" data-en="Pro Mode: Live agent desk, per-agent model/role pickers, and single-file regenerate with revision notes">Pro Mod: Canlı ajan masası, model/rol seçimi ve tek-dosya revizyon notu ile yenileme</span>
+              </li>
+              <li>
+                <span class="tick" aria-hidden="true">✓</span>
+                <span data-tr="Tek tıkla Tasarım &amp; Hedef çipleri: platform, bütçe ve görsel stil önceden kilitlenir" data-en="1-click Design &amp; Target presets: lock platform, budget, and visual tone upfront">Tek tıkla Tasarım &amp; Hedef çipleri: platform, bütçe ve görsel stil önceden kilitlenir</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="demo-widget">
+            <div class="widget-head">
+              <span class="mono muted" data-tr="Stüdyo Modu Önizleme" data-en="Studio Mode Preview">Stüdyo Modu Önizleme</span>
+              <div class="seg-pill" role="tablist" aria-label="Studio Mode">
+                <button type="button" class="seg-btn active" role="tab" aria-selected="true" data-ui-tab="sade" data-tr="Sade" data-en="Simple">Sade</button>
+                <button type="button" class="seg-btn" role="tab" aria-selected="false" data-ui-tab="pro">Pro</button>
+              </div>
+            </div>
+
+            <div class="mode-pane active" data-ui-pane="sade">
+              <div class="mini-row">
+                <div>
+                  <strong data-tr="Hızlı Fikir · 2 Ajan" data-en="Fast Idea · 2 Agents">Hızlı Fikir · 2 Ajan</strong>
+                  <small data-tr="Hızlı doğrulama ve temel MVP iskeleti (~45 sn)" data-en="Quick validation and lean MVP outline (~45s)">Hızlı doğrulama ve temel MVP iskeleti (~45 sn)</small>
+                </div>
+                <span class="chip chip-neutral">2 CLI</span>
+              </div>
+              <div class="mini-row highlight">
+                <div>
+                  <strong data-tr="Dengeli Ürün · 3 Ajan ★" data-en="Balanced Product · 3 Agents ★">Dengeli Ürün · 3 Ajan ★</strong>
+                  <small data-tr="Mimar + Risk &amp; UX + MVP Mühendisi tam çapraz eleştiri" data-en="Architect + Risk &amp; UX + MVP Engineer full cross-debate">Mimar + Risk &amp; UX + MVP Mühendisi tam çapraz eleştiri</small>
+                </div>
+                <span class="chip chip-ok" data-tr="Önerilen" data-en="Recommended">Önerilen</span>
+              </div>
+              <div class="mini-row">
+                <div>
+                  <strong data-tr="Derin Mimari · 4 Ajan" data-en="Deep Architecture · 4 Agents">Derin Mimari · 4 Ajan</strong>
+                  <small data-tr="Karmaşık SaaS, güvenlik ve ölçeklenme denetimi dahil" data-en="Complex SaaS with dedicated security &amp; scale audit">Karmaşık SaaS, güvenlik ve ölçeklenme denetimi dahil</small>
+                </div>
+                <span class="chip chip-cyan">4 CLI</span>
+              </div>
+            </div>
+
+            <div class="mode-pane" data-ui-pane="pro">
+              <div class="mini-row">
+                <div>
+                  <strong>Gemini · Baş Sistem Mimarı</strong>
+                  <small class="mono">Antigravity · Gemini 4 · Effort: High</small>
+                </div>
+                <span class="chip" data-tr="Amiral" data-en="Flagship">Amiral</span>
+              </div>
+              <div class="mini-row">
+                <div>
+                  <strong>Claude · Risk &amp; UX Denetçisi</strong>
+                  <small class="mono">Claude Code · Opus 4.6 · Effort: High</small>
+                </div>
+                <span class="chip chip-warn" data-tr="Amiral" data-en="Flagship">Amiral</span>
+              </div>
+              <div class="mini-row">
+                <div>
+                  <strong>Codex · Pragmatik MVP</strong>
+                  <small class="mono">Codex CLI · gpt-6 · Effort: Medium</small>
+                </div>
+                <span class="chip chip-cyan" data-tr="Dengeli" data-en="Balanced">Dengeli</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Band Split B: Quality-Guarded Quota Engine -->
+    <section class="section band">
+      <div class="wrap">
+        <div class="split reverse reveal">
+          <div class="demo-widget">
+            <div class="widget-head">
+              <span class="mono muted" data-tr="Yedek Model Politikası" data-en="Backup Model Policy">Yedek Model Politikası</span>
+              <span class="chip chip-ok" data-tr="Düşük modeli engelle ✓" data-en="Block weak downgrades ✓">Düşük modeli engelle ✓</span>
+            </div>
+
+            <div class="seg-pill" role="tablist" aria-label="Quota Fallback Policy">
+              <button type="button" class="seg-btn active" role="tab" aria-selected="true" data-pol-tab="kalite" data-tr="Kalite" data-en="Quality">Kalite</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-pol-tab="ozel" data-tr="Özel" data-en="Custom">Özel</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-pol-tab="sor" data-tr="Sor" data-en="Ask">Sor</button>
+            </div>
+
+            <div class="mode-pane active" data-pol-pane="kalite">
+              <div class="mini-row">
+                <div>
+                  <strong class="mono">antigravity:claude → 429 Limit</strong>
+                  <small data-tr="Claude havuzu 5 dk soğumaya alındı; diğer havuzlar açık." data-en="Claude pool cooled down; other independent pools stay active.">Claude havuzu 5 dk soğumaya alındı; diğer havuzlar açık.</small>
+                </div>
+                <span class="chip chip-warn">Pool #1</span>
+              </div>
+              <div class="mini-row highlight">
+                <div>
+                  <strong class="mono" data-tr="Otomatik Geçiş → antigravity:gemini / codex" data-en="Auto Route → antigravity:gemini / codex">Otomatik Geçiş → antigravity:gemini / codex</strong>
+                  <small data-tr="Eşit veya üst kalibre amiral model seçildi; flash/mini engellendi." data-en="Equal or higher flagship caliber selected; flash/mini blocked.">Eşit veya üst kalibre amiral model seçildi; flash/mini engellendi.</small>
+                </div>
+                <span class="chip chip-ok" data-tr="Eşit Kalite" data-en="Equal Tier">Eşit Kalite</span>
+              </div>
+            </div>
+
+            <div class="mode-pane" data-pol-pane="ozel">
+              <div class="mini-row highlight">
+                <div>
+                  <strong data-tr="Sabit Yedek: Codex CLI · gpt-6" data-en="Pinned Backup: Codex CLI · gpt-6">Sabit Yedek: Codex CLI · gpt-6</strong>
+                  <small data-tr="Herhangi bir havuz kotaya çarpınca yalnızca senin belirlediğin yedek modele devreder." data-en="Whenever a pool hits quota, CONCEPTUS routes strictly to your pinned backup model.">Herhangi bir havuz kotaya çarpınca yalnızca senin belirlediğin yedek modele devreder.</small>
+                </div>
+                <span class="chip" data-tr="Sabitli" data-en="Pinned">Sabitli</span>
+              </div>
+            </div>
+
+            <div class="mode-pane" data-pol-pane="sor">
+              <div class="mini-row highlight">
+                <div>
+                  <strong data-tr="Otomatik geçiş kapalı · Tek Tıkla Kurtarma" data-en="Auto switch off · 1-Click Recovery">Otomatik geçiş kapalı · Tek Tıkla Kurtarma</strong>
+                  <small data-tr="Yarım kalan 5'li MD paketinde yalnızca eksik dosyayı seçtiğin modelle saniyeler içinde tamamla." data-en="Finish only the missing MD file in a partial 5-file pack with your chosen model in one click.">Yarım kalan 5'li MD paketinde yalnızca eksik dosyayı seçtiğin modelle saniyeler içinde tamamla.</small>
+                </div>
+                <span class="chip chip-cyan" data-tr="Eksik MD Tamamla" data-en="Retry Missing MD">Eksik MD Tamamla</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="split-copy">
+            <div class="eyebrow">
+              <span class="dot"></span>
+              <span data-tr="Kalite Korumalı Kota Motoru" data-en="Quality-Guarded Quota Engine">Kalite Korumalı Kota Motoru</span>
+            </div>
+            <h2 class="h2" data-tr="Kota dolunca işi yarıda bırakmaz, kaliteden de düşmez." data-en="Never stalls on a quota wall. Never downgrades quality.">
+              Kota dolunca işi yarıda bırakmaz, kaliteden de düşmez.
+            </h2>
+            <p data-tr="Antigravity içindeki Claude, Gemini ve OSS havuzlarını ayrı ayrı izler. Bir havuz limite çarptığında kalibre kilidi sayesinde amiral gemisi planlamayı asla zayıf/mini bir modele düşürmez." data-en="Tracks Claude, Gemini, and OSS pools independently. When one hits a rate limit, the caliber lock prevents downgrading flagship architecture work to mini/flash models.">
+              Antigravity içindeki Claude, Gemini ve OSS havuzlarını ayrı ayrı izler. Bir havuz limite çarptığında kalibre kilidi sayesinde amiral gemisi planlamayı asla zayıf/mini bir modele düşürmez.
+            </p>
+            <ul class="check-list">
+              <li>
+                <span class="tick" aria-hidden="true">✓</span>
+                <span data-tr="6 bağımsız kota havuzu: antigravity:claude, gemini, oss, claude, codex, gemini" data-en="6 independent quota pools tracked live across your installed CLIs">6 bağımsız kota havuzu: antigravity:claude, gemini, oss, claude, codex, gemini</span>
+              </li>
+              <li>
+                <span class="tick" aria-hidden="true">✓</span>
+                <span data-tr="Üç politika: Kalite (eşit/üst seviye), Özel (sabit yedek), Sor (manuel onay)" data-en="Three policies: Quality (equal/higher tier), Custom (pinned backup), Ask (manual)">Üç politika: Kalite (eşit/üst seviye), Özel (sabit yedek), Sor (manuel onay)</span>
+              </li>
+              <li>
+                <span class="tick" aria-hidden="true">✓</span>
+                <span data-tr="5'li pakette tek dosya aksarsa tüm akışı baştan almadan sadece eksikleri tamamla" data-en="If one file fails in the 5-file pack, complete only the missing files with a chosen model">5'li pakette tek dosya aksarsa tüm akışı baştan almadan sadece eksikleri tamamla</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 Real AI CLI Subscriptions -->
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="eyebrow">
+            <span class="dot"></span>
+            <span data-tr="Mevcut Aboneliklerinle Çalışır" data-en="Powered by Your Existing Subscriptions">Mevcut Aboneliklerinle Çalışır</span>
+          </div>
+          <h2 class="h2" data-tr="Ekstra API faturası yok. Bilgisayarındaki CLI'ları otomatik tanır." data-en="Zero extra API bills. Auto-detects the CLIs on your machine.">
+            Ekstra API faturası yok. Bilgisayarındaki CLI'ları otomatik tanır.
+          </h2>
+          <p class="lead" data-tr="CONCEPTUS bir aracı sunucu değildir; bilgisayarında oturum açtığın resmi CLI araçlarını güvenli biçimde paralel çalıştırır." data-en="CONCEPTUS runs no proxy servers. It orchestrates the official CLI tools already authenticated on your desktop.">
+            CONCEPTUS bir aracı sunucu değildir; bilgisayarında oturum açtığın resmi CLI araçlarını güvenli biçimde paralel çalıştırır.
+          </p>
+        </div>
+
+        <div class="grid-4 reveal">
+          <article class="card">
+            <div class="card-kicker">01 · agy</div>
+            <h3 class="h3">Antigravity CLI</h3>
+            <p class="card-p" data-tr="Claude, Gemini ve OSS model havuzlarına tek girişle erişir; her havuzun kotasını ayrı yönetir." data-en="Accesses Claude, Gemini, and OSS model pools with one sign-in and independent pool tracking.">
+              Claude, Gemini ve OSS model havuzlarına tek girişle erişir; her havuzun kotasını ayrı yönetir.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-kicker">02 · claude</div>
+            <h3 class="h3">Claude Code</h3>
+            <p class="card-p" data-tr="Derin ürün sorgulaması, UX risk denetimi ve çelişkisiz üst düzey Markdown sentezi için idealdir." data-en="Excels at deep product critique, UX edge-case auditing, and crisp architectural Markdown synthesis.">
+              Derin ürün sorgulaması, UX risk denetimi ve çelişkisiz üst düzey Markdown sentezi için idealdir.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-kicker">03 · codex</div>
+            <h3 class="h3">Codex CLI</h3>
+            <p class="card-p" data-tr="Pragmatik MVP kapsamı, temiz klasör mimarisi ve test edilebilir faz planlamasında parlar." data-en="Shines at pragmatic MVP scoping, clean folder architecture, and testable phase roadmaps.">
+              Pragmatik MVP kapsamı, temiz klasör mimarisi ve test edilebilir faz planlamasında parlar.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-kicker">04 · gemini</div>
+            <h3 class="h3">Gemini CLI</h3>
+            <p class="card-p" data-tr="Geniş bağlamlı sistem tasarımı, Mermaid diyagramları ve hızlı fikir netleştirmede güçlüdür." data-en="Strong at wide-context system architecture, Mermaid flow diagrams, and rapid idea clarification.">
+              Geniş bağlamlı sistem tasarımı, Mermaid diyagramları ve hızlı fikir netleştirmede güçlüdür.
+            </p>
+          </article>
+        </div>
+
+        <div class="compat-strip reveal">
+          <span data-tr="Üretilen 5'li MD + AGENTS.md paketi doğrudan tüm büyük kodlama ajanlarıyla uyumludur:" data-en="The exported 5-file MD + AGENTS.md pack works natively across every major coding agent:">
+            Üretilen 5'li MD + AGENTS.md paketi doğrudan tüm büyük kodlama ajanlarıyla uyumludur:
           </span>
-          <br />
-          <span class="dim" data-tr="Hiçbir veri bilgisayarından dışarı çıkmaz." data-en="Nothing leaves your computer.">
-            Hiçbir veri bilgisayarından dışarı çıkmaz.
-          </span>
-        </h2>
+          <div class="chip-row" style="margin-top: 0;">
+            <span class="chip chip-neutral">Antigravity</span>
+            <span class="chip chip-neutral">Cursor</span>
+            <span class="chip chip-neutral">Claude Code</span>
+            <span class="chip chip-neutral">Codex</span>
+            <span class="chip chip-neutral">Windsurf</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        <div class="grid-4">
-          <article class="card reveal">
-            <h3 class="h3" data-tr="127.0.0.1 & 403 Kilidi" data-en="127.0.0.1 & 403 Lock">
-              127.0.0.1 & 403 Kilidi
-            </h3>
-            <p class="muted" style="margin-top:8px;font-size:14px;" data-tr="Sunucu yalnızca yerel loopback adresinde dinler; harici web sitelerinin tüm API çağrıları 403 ile reddedilir." data-en="Server binds strictly to localhost loopback; every cross-origin browser API request is blocked with 403.">
-              Sunucu yalnızca yerel loopback adresinde dinler; harici web sitelerinin tüm API çağrıları 403 ile reddedilir.
+    <!-- Band: Local-First Security & Verified Metrics -->
+    <section class="section band" id="security">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="eyebrow">
+            <span class="dot"></span>
+            <span data-tr="Yerel-Öncelikli Güvenlik Mimarisi" data-en="Local-First Security Architecture">Yerel-Öncelikli Güvenlik Mimarisi</span>
+          </div>
+          <h2 class="h2" data-tr="Fikirlerin buluta yüklenmez. Masaüstünde kalır." data-en="Your ideas never touch a third-party cloud. They stay on your desk.">
+            Fikirlerin buluta yüklenmez. Masaüstünde kalır.
+          </h2>
+          <p class="lead" data-tr="Sıfır kullanıcı hesabı, sıfır analitik, sıfır telemetri. Tüm oturumlar, kararlar ve MD belgeleri yalnızca kendi diskinde durur." data-en="Zero user accounts, zero analytics, zero telemetry. Every session, decision gate, and Markdown pack lives strictly on your own disk.">
+            Sıfır kullanıcı hesabı, sıfır analitik, sıfır telemetri. Tüm oturumlar, kararlar ve MD belgeleri yalnızca kendi diskinde durur.
+          </p>
+        </div>
+
+        <div class="grid-4 reveal">
+          <article class="card">
+            <div class="card-kicker">127.0.0.1</div>
+            <h3 class="h3" data-tr="Loopback &amp; Origin Kilidi" data-en="Loopback &amp; Origin Lock">Loopback &amp; Origin Kilidi</h3>
+            <p class="card-p" data-tr="Yerel API dış ağa açılmaz. Yabancı web sitelerinden gelen CSRF veya Origin denemeleri anında HTTP 403 ile reddedilir." data-en="Local server binds strictly to 127.0.0.1. Cross-origin CSRF attempts are blocked with HTTP 403.">
+              Yerel API dış ağa açılmaz. Yabancı web sitelerinden gelen CSRF veya Origin denemeleri anında HTTP 403 ile reddedilir.
             </p>
           </article>
 
-          <article class="card reveal">
-            <h3 class="h3" data-tr="Secret Filtresi" data-en="Secrets Blocked">
-              Secret Filtresi
-            </h3>
-            <p class="muted" style="margin-top:8px;font-size:14px;" data-tr="Proje tarayıcısı .env, özel anahtarlar, credentials ve .git klasörünü kesinlikle dışlar (Vitest ile doğrulandı)." data-en="Read-only repo scanner strictly blocks .env*, private keys, credentials and .git (verified by Vitest).">
-              Proje tarayıcısı .env, özel anahtarlar, credentials ve .git klasörünü kesinlikle dışlar (Vitest ile doğrulandı).
+          <article class="card">
+            <div class="card-kicker">CSP + SANDBOX</div>
+            <h3 class="h3" data-tr="Sertleştirilmiş Masaüstü" data-en="Hardened Desktop Shell">Sertleştirilmiş Masaüstü</h3>
+            <p class="card-p" data-tr="Electron sandbox: true, contextIsolation: true, X-Frame-Options: DENY ve doğrulanmış yerel klasör açma koruması." data-en="Electron sandbox: true, contextIsolation: true, X-Frame-Options: DENY, and verified directory access.">
+              Electron sandbox: true, contextIsolation: true, X-Frame-Options: DENY ve doğrulanmış yerel klasör açma koruması.
             </p>
           </article>
 
-          <article class="card reveal">
-            <h3 class="h3" data-tr="Electron Sandbox & CSP" data-en="Electron Sandbox & CSP">
-              Electron Sandbox & CSP
-            </h3>
-            <p class="muted" style="margin-top:8px;font-size:14px;" data-tr="Context Isolation, OS sandbox, katı CSP başlıkları ve dizin doğrulamalı IPC ile sıfır betik riski." data-en="Context Isolation, OS sandbox, strict CSP headers and directory-validated IPC prevent arbitrary execution.">
-              Context Isolation, OS sandbox, katı CSP başlıkları ve dizin doğrulamalı IPC ile sıfır betik riski.
+          <article class="card">
+            <div class="card-kicker">ZERO TELEMETRY</div>
+            <h3 class="h3" data-tr="Sıfır Telemetri &amp; Anahtar" data-en="Zero Telemetry or Keys">Sıfır Telemetri &amp; Anahtar</h3>
+            <p class="card-p" data-tr="Hiçbir API anahtarı saklanmaz, hiçbir fikir üçüncü parti sunucuya gönderilmez. Sadece senin yerel CLI oturumların çalışır." data-en="No stored API keys and no hidden SaaS backend. Runs purely through your authenticated local CLIs.">
+              Hiçbir API anahtarı saklanmaz, hiçbir fikir üçüncü parti sunucuya gönderilmez. Sadece senin yerel CLI oturumların çalışır.
             </p>
           </article>
 
-          <article class="card reveal">
-            <h3 class="h3" data-tr="Kendi Aboneliklerin" data-en="Your Own CLIs">
-              Kendi Aboneliklerin
-            </h3>
-            <p class="muted" style="margin-top:8px;font-size:14px;" data-tr="Aracı bulut sunucusu yok, API anahtarı toplama yok; yalnızca bilgisayarındaki resmi CLI araçlarını kullanır." data-en="Zero intermediary cloud, zero API key storage; talks strictly through your locally signed-in official CLIs.">
-              Aracı bulut sunucusu yok, API anahtarı toplama yok; yalnızca bilgisayarındaki resmi CLI araçlarını kullanır.
+          <article class="card">
+            <div class="card-kicker">MIT + SHA-256</div>
+            <h3 class="h3" data-tr="Açık Kaynak &amp; Doğrulama" data-en="Open Source &amp; Checksums">Açık Kaynak &amp; Doğrulama</h3>
+            <p class="card-p" data-tr="Tüm kaynak kod GitHub'da denetime açıktır. Her Windows .exe kurulumu GitHub Releases'ta SHA-256 özetiyle yayınlanır." data-en="100% auditable MIT source on GitHub. Every Windows .exe installer ships with verified SHA-256 hashes.">
+              Tüm kaynak kod GitHub'da denetime açıktır. Her Windows .exe kurulumu GitHub Releases'ta SHA-256 özetiyle yayınlanır.
             </p>
           </article>
         </div>
 
         <div class="stats reveal">
           <div class="stat">
-            <div class="stat-val">4</div>
-            <div class="stat-label" data-tr="AI CLI aboneliği tek fikir masasında paralel" data-en="AI CLI subscriptions orchestrated in parallel">
-              AI CLI aboneliği tek fikir masasında paralel
-            </div>
+            <div class="stat-val" data-tr="0 ₺" data-en="$0">0 ₺</div>
+            <div class="stat-label" data-tr="Ekstra API maliyeti · mevcut CLI aboneliklerinle çalışır" data-en="Extra API cost · runs on your existing CLI plans">Ekstra API maliyeti · mevcut CLI aboneliklerinle çalışır</div>
           </div>
           <div class="stat">
-            <div class="stat-val">5 ms</div>
-            <div class="stat-label" data-tr="disk önbellekli anında açılış ve model listesi" data-en="stale-while-revalidate instant startup">
-              disk önbellekli anında açılış ve model listesi
-            </div>
+            <div class="stat-val">5 + 1</div>
+            <div class="stat-label" data-tr="Standart MD Blueprint dosyası + otomatik AGENTS.md köprüsü" data-en="Standard Blueprint MD files + auto AGENTS.md bridge">Standart MD Blueprint dosyası + otomatik AGENTS.md köprüsü</div>
           </div>
           <div class="stat">
-            <div class="stat-val">~55 s</div>
-            <div class="stat-label" data-tr="tek dalgada 5'li profesyonel uygulama MD paketi" data-en="single-wave parallel 5-file MD blueprint pack">
-              tek dalgada 5'li profesyonel uygulama MD paketi
-            </div>
+            <div class="stat-val">127.0.0.1</div>
+            <div class="stat-label" data-tr="%100 yerel loopback yürütme · sıfır bulut veri depolama" data-en="100% local loopback execution · zero cloud data storage">%100 yerel loopback yürütme · sıfır bulut veri depolama</div>
           </div>
           <div class="stat">
-            <div class="stat-val">0</div>
-            <div class="stat-label" data-tr="ekstra API ücreti, telemetri veya bulut isteği" data-en="extra API fees, telemetry or tracking requests">
-              ekstra API ücreti, telemetri veya bulut isteği
-            </div>
+            <div class="stat-val">14 / 14</div>
+            <div class="stat-label" data-tr="Güvenlik, kota motoru ve depolama otomatik birim testleri" data-en="Automated security, quota circuit-breaker &amp; storage tests">Güvenlik, kota motoru ve depolama otomatik birim testleri</div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- 10. Band: FAQ Split Accordion -->
-      <section id="faq" class="section band">
-        <div class="wrap faq-split">
-          <div class="reveal">
-            <h2 class="h2" data-tr="Sık sorulan sorular" data-en="Questions people ask">
-              Sık sorulan sorular
+    <!-- FAQ -->
+    <section class="section">
+      <div class="wrap">
+        <div class="faq-split reveal">
+          <div>
+            <div class="eyebrow">
+              <span class="dot"></span>
+              <span data-tr="Sık Sorulanlar" data-en="Frequently Asked">Sık Sorulanlar</span>
+            </div>
+            <h2 class="h2" data-tr="Kurmadan önce bilmek istediklerin." data-en="Everything to know before installing.">
+              Kurmadan önce bilmek istediklerin.
             </h2>
-            <a class="btn btn-ghost btn-sm" href="./download.html" style="margin-top:22px;">
-              <span data-tr="Kurulum kılavuzu" data-en="Install guide">Kurulum kılavuzu</span>
-              <span class="arr">→</span>
-            </a>
+            <p class="lead" style="margin-top: 14px;" data-tr="Kurulum, güvenlik ve desteklenen araçlarla ilgili en net cevaplar." data-en="Direct answers on setup, security, and supported local CLIs.">
+              Kurulum, güvenlik ve desteklenen araçlarla ilgili en net cevaplar.
+            </p>
           </div>
 
-          <div class="faq-list reveal">
+          <div>
             <details class="faq-item" open>
               <summary>
-                <span data-tr="CONCEPTUS tam olarak ne yapar?" data-en="What is CONCEPTUS?">
-                  CONCEPTUS tam olarak ne yapar?
-                </span>
-                <span class="faq-plus">+</span>
+                <span data-tr="API anahtarı veya yeni bir ücretli abonelik gerekiyor mu?" data-en="Do I need API keys or a new paid subscription?">API anahtarı veya yeni bir ücretli abonelik gerekiyor mu?</span>
+                <span class="faq-plus" aria-hidden="true">+</span>
               </summary>
-              <p
-                data-tr="Ham bir uygulama fikrini bilgisayarında kurulu birden fazla yapay zekâ CLI ajanı arasında kör analiz ve anonim çapraz tartışmadan geçirir; kararlarını kilitledikten sonra herhangi bir kodlama ajanının sıfır belirsizlikle inşa edebileceği 5'li profesyonel .md paketi üretir."
-                data-en="A local desktop studio that puts your raw app idea through blind analysis and anonymous cross-debate across your installed AI CLIs, locks your final choices via Decision Gates, and outputs a 5-file production .md blueprint pack ready for any coding agent."
-              >
-                Ham bir uygulama fikrini bilgisayarında kurulu birden fazla yapay zekâ CLI ajanı arasında kör analiz ve anonim çapraz tartışmadan geçirir; kararlarını kilitledikten sonra herhangi bir kodlama ajanının sıfır belirsizlikle inşa edebileceği 5'li profesyonel .md paketi üretir.
+              <p data-tr="Hayır. CONCEPTUS tamamen ücretsiz ve MIT lisanslıdır. Bilgisayarında zaten oturum açtığın Antigravity, Claude Code, Codex veya Gemini CLI aboneliklerini doğrudan kullanır; ekstra token faturası çıkarmaz." data-en="No. CONCEPTUS is free and MIT-licensed. It orchestrates the Antigravity, Claude Code, Codex, or Gemini CLIs already signed in on your computer with zero extra token fees.">
+                Hayır. CONCEPTUS tamamen ücretsiz ve MIT lisanslıdır. Bilgisayarında zaten oturum açtığın Antigravity, Claude Code, Codex veya Gemini CLI aboneliklerini doğrudan kullanır; ekstra token faturası çıkarmaz.
               </p>
             </details>
 
             <details class="faq-item">
               <summary>
-                <span data-tr="Ekstra API ücreti öder miyim?" data-en="Do I pay extra API fees?">
-                  Ekstra API ücreti öder miyim?
-                </span>
-                <span class="faq-plus">+</span>
+                <span data-tr="Bilgisayarımda sadece 1 tane AI CLI kuruluysa çalışır mı?" data-en="Does it work if I only have 1 AI CLI installed?">Bilgisayarımda sadece 1 tane AI CLI kuruluysa çalışır mı?</span>
+                <span class="faq-plus" aria-hidden="true">+</span>
               </summary>
-              <p
-                data-tr="Hayır. CONCEPTUS tamamen ücretsiz ve MIT açık kaynaklıdır; bilgisayarında zaten oturum açık olan Antigravity, Claude Code, Codex veya Gemini CLI aboneliklerini doğrudan yerel olarak çalıştırır."
-                data-en="No. CONCEPTUS is 100% free and open source (MIT). It runs strictly through the official AI CLIs already signed in on your computer with your existing subscriptions."
-              >
-                Hayır. CONCEPTUS tamamen ücretsiz ve MIT açık kaynaklıdır; bilgisayarında zaten oturum açık olan Antigravity, Claude Code, Codex veya Gemini CLI aboneliklerini doğrudan yerel olarak çalıştırır.
+              <p data-tr="Evet. Tek bir CLI (örneğin yalnızca Antigravity veya Claude Code) ile de birden fazla farklı rol ve model atayarak çoklu-ajan tartışması yapabilirsin. Birden fazla CLI kuruluysa farklı sağlayıcıları aynı masada çarpıştırır." data-en="Yes. Even with a single CLI (e.g., Antigravity or Claude Code), you can assign distinct specialist personas and models to debate each other. With multiple CLIs installed, providers cross-critique side by side.">
+                Evet. Tek bir CLI (örneğin yalnızca Antigravity veya Claude Code) ile de birden fazla farklı rol ve model atayarak çoklu-ajan tartışması yapabilirsin. Birden fazla CLI kuruluysa farklı sağlayıcıları aynı masada çarpıştırır.
               </p>
             </details>
 
             <details class="faq-item">
               <summary>
-                <span data-tr="Tartışma veya MD üretimi sırasında bir modelin kotası biterse ne olur?" data-en="What happens if one model hits its quota mid-run?">
-                  Tartışma veya MD üretimi sırasında bir modelin kotası biterse ne olur?
-                </span>
-                <span class="faq-plus">+</span>
+                <span data-tr="Windows'ta Node.js veya terminal kurmam gerekir mi?" data-en="Do I need Node.js or terminal tools on Windows?">Windows'ta Node.js veya terminal kurmam gerekir mi?</span>
+                <span class="faq-plus" aria-hidden="true">+</span>
               </summary>
-              <p
-                data-tr="Kalite korumalı devre kesici kotası dolan havuzu 30 dk bekleme listesine alır ve işin önemine göre düşük modele düşürmeden çalışan eşdeğer havuza geçer. İstersen sağ panelden 'Özel' ile kendi yedek ajanını seçebilir veya 'Sor' moduyla tam manuel onay alabilirsin."
-                data-en="The quality-guarded circuit breaker puts only that quota pool on a 30-minute cooldown and switches to an equal-or-higher tier healthy pool without downgrading quality. You can also choose Custom Backup Agent or Ask Me mode in the sidebar."
-              >
-                Kalite korumalı devre kesici kotası dolan havuzu 30 dk bekleme listesine alır ve işin önemine göre düşük modele düşürmeden çalışan eşdeğer havuza geçer. İstersen sağ panelden 'Özel' ile kendi yedek ajanını seçebilir veya 'Sor' moduyla tam manuel onay alabilirsin.
+              <p data-tr="Hayır. Windows için tek tıkla kurulan yerel CONCEPTUS-Setup-4.2.0.exe ve kurulumsuz Portable.exe paketleri her şeyi içinde barındırır; çift tıklayıp masaüstü uygulaması olarak doğrudan açarsın." data-en="No. The native Windows CONCEPTUS-Setup-4.2.0.exe installer and zero-install Portable.exe bundle everything — double-click and launch the desktop studio immediately.">
+                Hayır. Windows için tek tıkla kurulan yerel CONCEPTUS-Setup-4.2.0.exe ve kurulumsuz Portable.exe paketleri her şeyi içinde barındırır; çift tıklayıp masaüstü uygulaması olarak doğrudan açarsın.
               </p>
             </details>
 
             <details class="faq-item">
               <summary>
-                <span data-tr="Kodlama bilmeyen normal kullanıcılar kullanabilir mi?" data-en="Can non-technical users use it?">
-                  Kodlama bilmeyen normal kullanıcılar kullanabilir mi?
-                </span>
-                <span class="faq-plus">+</span>
+                <span data-tr="Üretilen 5'li MD paketini Cursor, Antigravity veya Claude Code'a nasıl veririm?" data-en="How do I feed the 5-file MD pack into Cursor, Antigravity, or Claude Code?">Üretilen 5'li MD paketini Cursor, Antigravity veya Claude Code'a nasıl veririm?</span>
+                <span class="faq-plus" aria-hidden="true">+</span>
               </summary>
-              <p
-                data-tr="Evet. Üst bardaki 'Sade' mod teknik tüm model/efor ayarlarını gizler; Fikri Netleştir ve Tasarım & Hedef çipleriyle fikrini 2 dakikada profesyonel uygulama dokümanına çevirip hazır Başlatma Promptuyla inşaya geçersin."
-                data-en="Yes. Simple mode hides technical model/effort knobs; use Clarify Idea and 1-click Design & Target chips to turn a rough idea into a complete blueprint pack with a copy-paste Starter Prompt."
-              >
-                Evet. Üst bardaki 'Sade' mod teknik tüm model/efor ayarlarını gizler; Fikri Netleştir ve Tasarım & Hedef çipleriyle fikrini 2 dakikada profesyonel uygulama dokümanına çevirip hazır Başlatma Promptuyla inşaya geçersin.
+              <p data-tr="CONCEPTUS içinde 'Klasöre Kaydet' dediğinde 01..05 MD dosyaları ve otomatik AGENTS.md köprüsü seçtiğin proje klasörüne yazılır. Ardından 05_AGENTS_START_HERE.md içindeki hazır Başlangıç Promptunu tek tıkla kopyalayıp kodlama ajanına yapıştırman yeterli." data-en="Click 'Save to Folder' inside CONCEPTUS to write 01..05 Markdown blueprints plus AGENTS.md directly into your repo, then copy-paste the Starter Prompt from 05_AGENTS_START_HERE.md into your coding agent.">
+                CONCEPTUS içinde 'Klasöre Kaydet' dediğinde 01..05 MD dosyaları ve otomatik AGENTS.md köprüsü seçtiğin proje klasörüne yazılır. Ardından 05_AGENTS_START_HERE.md içindeki hazır Başlangıç Promptunu tek tıkla kopyalayıp kodlama ajanına yapıştırman yeterli.
               </p>
             </details>
 
             <details class="faq-item">
               <summary>
-                <span data-tr="Windows ilk kurulumda neden SmartScreen uyarısı verebilir?" data-en="Why does Windows SmartScreen warn on first launch?">
-                  Windows ilk kurulumda neden SmartScreen uyarısı verebilir?
-                </span>
-                <span class="faq-plus">+</span>
+                <span data-tr="Windows SmartScreen uyarısı çıkarsa neden çıkar ve nasıl doğrularım?" data-en="Why might Windows SmartScreen appear and how can I verify the installer?">Windows SmartScreen uyarısı çıkarsa neden çıkar ve nasıl doğrularım?</span>
+                <span class="faq-plus" aria-hidden="true">+</span>
               </summary>
-              <p
-                data-tr="Ücretsiz açık kaynak sürüm henüz ücretli EV kod imzası içermediği için Windows ilk kez görülen .exe dosyalarında standart olarak 'Daha fazla bilgi → Yine de çalıştır' uyarısı gösterir. Tüm kaynak kod ve SHA-256 doğrulama özetleri GitHub'da şeffaf biçimde yayımlanır."
-                data-en="Because this free open-source build does not yet carry a paid EV code-signing certificate, Windows shows the standard 'More info → Run anyway' prompt on new binaries. Full source code, GitHub Actions CI logs, and SHA-256 checksums are public."
-              >
-                Ücretsiz açık kaynak sürüm henüz ücretli EV kod imzası içermediği için Windows ilk kez görülen .exe dosyalarında standart olarak 'Daha fazla bilgi → Yine de çalıştır' uyarısı gösterir. Tüm kaynak kod ve SHA-256 doğrulama özetleri GitHub'da şeffaf biçimde yayımlanır.
+              <p data-tr="Açık kaynaklı bağımsız sürümlerde ücretli kurumsal kod imzalama sertifikası bulunmadığı için Windows ilk çalıştırmada uyarı gösterebilir. İndirme sayfasındaki PowerShell SHA-256 komutuyla dosyanın GitHub Releases özetiyle birebir eşleştiğini doğrulayıp güvenle kurabilirsin." data-en="Independent open-source builds without a paid EV certificate trigger Windows SmartScreen on first launch. Verify the exact SHA-256 checksum on the Download page against GitHub Releases before installing.">
+                Açık kaynaklı bağımsız sürümlerde ücretli kurumsal kod imzalama sertifikası bulunmadığı için Windows ilk çalıştırmada uyarı gösterebilir. İndirme sayfasındaki PowerShell SHA-256 komutuyla dosyanın GitHub Releases özetiyle birebir eşleştiğini doğrulayıp güvenle kurabilirsin.
               </p>
             </details>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- 11. Bottom Grid-Masked CTA Box -->
-      <section class="section wrap">
+    <!-- Bottom Grid-Masked CTA -->
+    <section class="section">
+      <div class="wrap">
         <div class="cta-box reveal">
           <div class="cta-grid-bg" aria-hidden="true"></div>
           <div class="cta-inner">
-            <img src="./icon.png" alt="CONCEPTUS" class="cta-mark" />
-            <h2 class="h2">
-              <span data-tr="Sıradaki fikrine tüm yapay zekâ beyinlerini bağla." data-en="Put every AI mind on your next idea.">
-                Sıradaki fikrine tüm yapay zekâ beyinlerini bağla.
-              </span>
+            <img class="cta-mark" src="icon.png" alt="CONCEPTUS" width="56" height="56" />
+            <h2 class="display" data-tr="Bir sonraki fikrini kodlamadan önce masaya koy." data-en="Put your next idea on the desk before writing code.">
+              Bir sonraki fikrini kodlamadan önce masaya koy.
             </h2>
-            <p class="lead" data-tr="İki dakikada kur. Ücretsiz, yerel ve açık kaynak." data-en="Set up in two minutes. Free, local and open source.">
-              İki dakikada kur. Ücretsiz, yerel ve açık kaynak.
+            <p class="lead" style="margin-top: 18px;" data-tr="Windows tek tık kurulum, macOS ve Linux açık kaynak desteği. 1 dakikada yerel stüdyonu aç." data-en="One-click Windows installer, plus open-source macOS and Linux support. Ready on your desk in 60 seconds.">
+              Windows tek tık kurulum, macOS ve Linux açık kaynak desteği. 1 dakikada yerel stüdyonu aç.
             </p>
             <div class="hero-actions">
-              <a class="btn btn-primary btn-lg" href="./download.html">
-                <span data-tr="Ücretsiz indir" data-en="Get started">Ücretsiz indir</span>
-                <span class="arr">→</span>
+              <a class="btn btn-primary btn-lg" href="download.html">
+                <span data-tr="Masaüstü Uygulamasını İndir" data-en="Download Desktop Studio">Masaüstü Uygulamasını İndir</span>
+                <span class="arr" aria-hidden="true">→</span>
               </a>
-              <a
-                class="btn btn-ghost btn-lg"
-                data-href="repo"
-                href="https://github.com/Mehmet274634/CONCEPTUS"
-                target="_blank"
-                rel="noopener noreferrer"
-                data-tr="GitHub'da incele"
-                data-en="View on GitHub"
-              >
-                GitHub'da incele
-              </a>
+              <a class="btn btn-ghost btn-lg" data-href="repo" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener" data-tr="GitHub'da İncele" data-en="View on GitHub">GitHub'da İncele</a>
             </div>
           </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
+  </main>
 
-    <!-- 12. Giant Gradient Wordmark Footer -->
-    <footer class="footer">
-      <div class="wrap">
-        <div class="word-stage" aria-hidden="true">
-          <svg class="word-art" viewBox="0 0 360 220" fill="none">
-            <circle cx="180" cy="110" r="88" stroke="#ffffff14" stroke-dasharray="3 6" />
-            <circle cx="180" cy="110" r="56" stroke="#7c74ff33" />
-            <line x1="126" y1="86" x2="180" y2="110" stroke="#958fff66" />
-            <line x1="234" y1="86" x2="180" y2="110" stroke="#3fd0c966" />
-            <line x1="150" y1="156" x2="180" y2="110" stroke="#958fff55" />
-            <line x1="216" y1="152" x2="180" y2="110" stroke="#3fd0c955" />
-            <circle cx="180" cy="110" r="8" fill="#3fd0c9" />
-            <circle cx="126" cy="86" r="5" fill="#958fff" />
-            <circle cx="234" cy="86" r="5" fill="#7c74ff" />
-            <circle cx="150" cy="156" r="4" fill="#3fd0c9" />
-            <circle cx="216" cy="152" r="4" fill="#f7f8f8" />
-          </svg>
-          <div class="word">CONCEPTUS</div>
+  <!-- Giant Wordmark Footer -->
+  <footer class="footer">
+    <div class="wrap">
+      <div class="word-stage" aria-hidden="true">
+        <div class="word">CONCEPTUS</div>
+      </div>
+
+      <div class="foot-cols">
+        <div class="foot-col">
+          <a class="brand" href="index.html" style="margin-bottom: 12px;">
+            <img class="brand-icon" src="icon.png" alt="CONCEPTUS" width="24" height="24" />
+            <span>CONCEPTUS</span>
+          </a>
+          <p class="card-p" style="max-width: 300px;" data-tr="%100 yerel çoklu-AI fikir evrim ve 5'li Markdown Blueprint masaüstü stüdyosu." data-en="100% local multi-AI idea evolution &amp; 5-file Markdown Blueprint desktop studio.">
+            %100 yerel çoklu-AI fikir evrim ve 5'li Markdown Blueprint masaüstü stüdyosu.
+          </p>
         </div>
 
-        <div class="foot-cols">
-          <div class="foot-col">
-            <a href="./index.html" class="brand" style="margin-bottom:12px;">
-              <img src="./icon.png" alt="CONCEPTUS" class="brand-icon" />
-              <span>CONCEPTUS</span>
-            </a>
-            <p class="muted" style="font-size:13.5px;max-width:290px;" data-tr="Tüm AI aboneliklerini aynı fikir masasında buluşturan yerel masaüstü stüdyosu." data-en="Local-first desktop studio uniting every AI mind to forge agent-ready app blueprints.">
-              Tüm AI aboneliklerini aynı fikir masasında buluşturan yerel masaüstü stüdyosu.
-            </p>
-          </div>
-
-          <div class="foot-col">
-            <h4 data-tr="Ürün" data-en="Product">Ürün</h4>
-            <ul>
-              <li><a href="#how-it-works" data-tr="Nasıl çalışır" data-en="How it works">Nasıl çalışır</a></li>
-              <li><a href="#quota-guard" data-tr="Kota & Yedek Motoru" data-en="Quota & Fallback">Kota & Yedek Motoru</a></li>
-              <li><a href="#blueprints" data-tr="5'li MD Paketi" data-en="5-File MD Pack">5'li MD Paketi</a></li>
-              <li><a href="#security" data-tr="Güvenlik" data-en="Security">Güvenlik</a></li>
-            </ul>
-          </div>
-
-          <div class="foot-col">
-            <h4 data-tr="Kaynaklar" data-en="Resources">Kaynaklar</h4>
-            <ul>
-              <li><a href="./download.html" data-tr="İndir & Kur" data-en="Download & Install">İndir & Kur</a></li>
-              <li><a href="#ecosystem" data-tr="Bağlı Araçlar" data-en="Connected Tools">Bağlı Araçlar</a></li>
-              <li><a href="#faq" data-tr="SSS" data-en="FAQ">SSS</a></li>
-              <li><a data-href="releases" href="https://github.com/Mehmet274634/CONCEPTUS/releases" target="_blank" rel="noopener noreferrer" data-tr="Sürümler (v4.2)" data-en="Releases (v4.2)">Sürümler (v4.2)</a></li>
-            </ul>
-          </div>
-
-          <div class="foot-col">
-            <h4 data-tr="Proje" data-en="Project">Proje</h4>
-            <ul>
-              <li><a data-href="repo" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-              <li><a data-href="license" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" data-tr="MIT Lisansı" data-en="MIT License">MIT Lisansı</a></li>
-              <li><a data-href="security" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer" data-tr="Güvenlik Politikası" data-en="Security Policy">Güvenlik Politikası</a></li>
-              <li><a data-href="sums" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">SHA-256 Checksums</a></li>
-            </ul>
-          </div>
+        <div class="foot-col">
+          <h4 data-tr="Ürün" data-en="Product">Ürün</h4>
+          <ul>
+            <li><a href="#flow" data-tr="Evrim Akışı" data-en="Evolution Flow">Evrim Akışı</a></li>
+            <li><a href="#blueprint" data-tr="5'li MD Standardı" data-en="5-File Blueprint">5'li MD Standardı</a></li>
+            <li><a href="#studio" data-tr="Sade &amp; Pro Mod" data-en="Simple &amp; Pro Mode">Sade &amp; Pro Mod</a></li>
+            <li><a href="download.html" data-tr="İndir (v4.2.0)" data-en="Download (v4.2.0)">İndir (v4.2.0)</a></li>
+          </ul>
         </div>
 
-        <div class="foot-bottom">
-          <span>© 2026 CONCEPTUS</span>
-          <span data-tr="Açık kaynak (MIT). Yapay zekâ ile üretenler için." data-en="Open source (MIT). Built for people who build with AI.">
-            Açık kaynak (MIT). Yapay zekâ ile üretenler için.
-          </span>
+        <div class="foot-col">
+          <h4 data-tr="Kaynaklar" data-en="Resources">Kaynaklar</h4>
+          <ul>
+            <li><a data-href="repo" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener" data-tr="GitHub Deposu" data-en="GitHub Repository">GitHub Deposu</a></li>
+            <li><a data-href="releases" href="https://github.com/Mehmet274634/CONCEPTUS/releases" target="_blank" rel="noopener" data-tr="Sürümler (Releases)" data-en="Releases">Sürümler (Releases)</a></li>
+            <li><a data-href="sums" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/SHA256SUMS.txt" target="_blank" rel="noopener">SHA256SUMS.txt</a></li>
+          </ul>
+        </div>
+
+        <div class="foot-col">
+          <h4 data-tr="Güvenlik" data-en="Security">Güvenlik</h4>
+          <ul>
+            <li><a href="#security" data-tr="Yerel-Öncelikli Mimari" data-en="Local-First Architecture">Yerel-Öncelikli Mimari</a></li>
+            <li><a data-href="security" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a></li>
+            <li><a data-href="license" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/LICENSE" target="_blank" rel="noopener" data-tr="MIT Lisansı" data-en="MIT License">MIT Lisansı</a></li>
+          </ul>
         </div>
       </div>
-    </footer>
 
-    <script src="./app.js"></script>
-  </body>
+      <div class="foot-bottom">
+        <span data-tr="MIT Açık Kaynak · %100 Yerel · Sıfır Telemetri" data-en="MIT Open Source · 100% Local · Zero Telemetry">MIT Açık Kaynak · %100 Yerel · Sıfır Telemetri</span>
+        <span class="mono">CONCEPTUS v4.2.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
 </html>

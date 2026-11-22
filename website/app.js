@@ -7,11 +7,11 @@ function setLang(lang) {
   const isDownload = window.location.pathname.includes('download');
   document.title = isDownload
     ? active === 'en'
-      ? 'CONCEPTUS — Download & Install (Windows · macOS · Linux)'
-      : 'CONCEPTUS — İndir & Kur (Windows · macOS · Linux)'
+      ? 'CONCEPTUS — Download Desktop Studio (Windows · macOS · Linux)'
+      : 'CONCEPTUS — Masaüstü Stüdyosunu İndir (Windows · macOS · Linux)'
     : active === 'en'
-      ? 'CONCEPTUS — One Table for Every AI Mind'
-      : "CONCEPTUS — Ham Fikirden Kusursuz Uygulama MD'sine";
+      ? 'CONCEPTUS — Turn a Two-Sentence Idea Into Production App Blueprints'
+      : "CONCEPTUS — İki Cümlelik Fikrini Profesyonel Uygulama MD'sine Dönüştür";
 
   document.querySelectorAll('[data-tr][data-en]').forEach((el) => {
     const val = active === 'en' ? el.getAttribute('data-en') : el.getAttribute('data-tr');
@@ -25,7 +25,7 @@ function setLang(lang) {
   try {
     localStorage.setItem('conceptus_site_lang', active);
   } catch {
-    // ignore storage failures
+    // ignore
   }
 }
 
@@ -65,7 +65,6 @@ function initScrollReveal() {
     items.forEach((el) => el.classList.add('in'));
     return;
   }
-
   const io = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -75,9 +74,8 @@ function initScrollReveal() {
         }
       });
     },
-    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
   );
-
   items.forEach((el) => io.observe(el));
 }
 
@@ -94,6 +92,56 @@ function initCopyButtons() {
         }, 1600);
       } catch {
         // ignore
+      }
+    });
+  });
+}
+
+// Generic tab group helper (Evolution Forge, 5-File Blueprint Inspector, Sade/Pro, Quota Policy)
+function initTabGroup(btnAttr, panelAttr) {
+  const btns = document.querySelectorAll(`[${btnAttr}]`);
+  const panels = document.querySelectorAll(`[${panelAttr}]`);
+  if (!btns.length || !panels.length) return;
+
+  const activate = (id) => {
+    btns.forEach((b) => {
+      const active = b.getAttribute(btnAttr) === id;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-selected', String(active));
+    });
+    panels.forEach((p) => {
+      p.classList.toggle('active', p.getAttribute(panelAttr) === id);
+    });
+  };
+
+  btns.forEach((btn) => {
+    btn.addEventListener('click', () => activate(btn.getAttribute(btnAttr)));
+  });
+}
+
+// Interactive Human Decision Gate click demo inside Hero Forge
+function initDecisionGateDemo() {
+  const opts = document.querySelectorAll('[data-gate-opt]');
+  const statusEl = document.getElementById('gate-lock-status');
+  if (!opts.length) return;
+  opts.forEach((opt) => {
+    opt.addEventListener('click', () => {
+      opts.forEach((o) => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      if (statusEl) {
+        const isEn = document.documentElement.lang === 'en';
+        const key = opt.getAttribute('data-gate-opt');
+        const trMsg =
+          key === 'A'
+            ? 'Kilitlendi: Seçenek A (%100 Yerel IndexedDB · 0₺)'
+            : 'Kilitlendi: Seçenek B (Bulut Senkronizasyon + Hesap)';
+        const enMsg =
+          key === 'A'
+            ? 'Locked: Option A (100% Local IndexedDB · $0/mo)'
+            : 'Locked: Option B (Cloud Sync + Account)';
+        statusEl.setAttribute('data-tr', trMsg);
+        statusEl.setAttribute('data-en', enMsg);
+        statusEl.textContent = isEn ? enMsg : trMsg;
       }
     });
   });
@@ -139,7 +187,7 @@ function initOsTabs() {
 
 function initDropdownAutoClose() {
   document.addEventListener('click', (e) => {
-    document.querySelectorAll('details.dd[open], details.mobile-menu[open]').forEach((d) => {
+    document.querySelectorAll('details.mobile-menu[open]').forEach((d) => {
       if (!d.contains(e.target)) d.removeAttribute('open');
     });
   });
@@ -165,5 +213,10 @@ initLanguage();
 initSpotlightCards();
 initScrollReveal();
 initCopyButtons();
+initTabGroup('data-forge-tab', 'data-forge-panel');
+initTabGroup('data-bp-tab', 'data-bp-doc');
+initTabGroup('data-ui-tab', 'data-ui-pane');
+initTabGroup('data-pol-tab', 'data-pol-pane');
+initDecisionGateDemo();
 initOsTabs();
 initDropdownAutoClose();
