@@ -120,6 +120,7 @@ function buildCliArgs(
         '--output-format',
         'stream-json',
         '--disable-slash-commands',
+        '--sandbox',
       ];
       if (hasExplicitModel) {
         args.push('--model', cleanModel);

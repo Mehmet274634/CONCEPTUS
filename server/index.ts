@@ -24,6 +24,7 @@ import {
   clarifyRawIdea,
   extractDecisionGates,
   forkSessionScenario,
+  getLiveSession,
   isSessionRunning,
   regenerateBlueprintFile,
   retryFailedBlueprintFiles,
@@ -396,6 +397,7 @@ app.get('/api/sessions', (_req, res) => {
 // Create session
 app.post('/api/sessions', (req, res) => {
   try {
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
     const {
       title,
       idea,
@@ -408,35 +410,53 @@ app.post('/api/sessions', (req, res) => {
       contextText = '',
       repoMeta,
       seats = [],
-    } = req.body as {
-      title?: string;
-      idea?: string;
-      domain?: DomainMode;
-      projectMode?: ProjectMode;
-      targetCodingTools?: CodingToolId[];
-      language?: 'tr' | 'en';
-      caliber?: CaliberPreference;
-      constraints?: string;
-      contextText?: string;
-      repoMeta?: RepoSnapshotMeta;
-      seats?: SeatConfig[];
-    };
+    } = body as Record<string, unknown>;
 
-    if (!idea || !idea.trim()) {
-      res.status(400).json({ error: 'Lütfen tartışılacak fikri veya problemi yaz.' });
+    if (typeof idea !== 'string' || !idea.trim()) {
+      res.status(400).json({ error: 'Lütfen tartışılacak fikri veya problemi metin olarak yaz.' });
+      return;
+    }
+    if (title !== undefined && typeof title !== 'string') {
+      res.status(400).json({ error: 'Proje başlığı geçerli bir metin olmalıdır.' });
+      return;
+    }
+    if (constraints !== undefined && typeof constraints !== 'string') {
+      res.status(400).json({ error: 'Kısıtlar alanı geçerli bir metin olmalıdır.' });
+      return;
+    }
+    if (contextText !== undefined && typeof contextText !== 'string') {
+      res.status(400).json({ error: 'Bağlam alanı geçerli bir metin olmalıdır.' });
+      return;
+    }
+    if (!Array.isArray(seats)) {
+      res.status(400).json({ error: 'Ajan koltukları geçerli bir liste olmalıdır.' });
       return;
     }
 
+    const cleanIdea = idea.trim().slice(0, 40_000);
+    const cleanConstraints = String(constraints || '').trim().slice(0, 40_000);
+    const cleanContext = String(contextText || '').trim().slice(0, 200_000);
+    const allowedDomains: DomainMode[] = [
+      'app_product',
+      'tech_project',
+      'problem_solving',
+      'strategy_general',
+    ];
+    const safeDomain: DomainMode = allowedDomains.includes(domain as DomainMode)
+      ? (domain as DomainMode)
+      : 'app_product';
+    const safeLang: 'tr' | 'en' = language === 'en' ? 'en' : 'tr';
+
     const cleanTitle =
-      title?.trim() ||
-      idea.trim().split(/\r?\n/)[0].slice(0, 64) ||
-      (language === 'en' ? 'New Idea Session' : 'Yeni Fikir Oturumu');
+      (typeof title === 'string' && title.trim().slice(0, 120)) ||
+      cleanIdea.split(/\r?\n/)[0].slice(0, 64) ||
+      (safeLang === 'en' ? 'New Idea Session' : 'Yeni Fikir Oturumu');
 
     const complexity = analyzeIdeaComplexity({
-      idea: idea.trim(),
-      constraints: constraints.trim(),
-      contextText: contextText.trim(),
-      domain,
+      idea: cleanIdea,
+      constraints: cleanConstraints,
+      contextText: cleanContext,
+      domain: safeDomain,
     });
 
     const allowedTools: CodingToolId[] = ['antigravity', 'claude_code', 'cursor', 'codex'];
@@ -450,20 +470,25 @@ app.post('/api/sessions', (req, res) => {
         )
       : undefined;
 
+    const safeCaliber: CaliberPreference =
+      caliber === 'flagship' || caliber === 'hybrid' || caliber === 'economy'
+        ? caliber
+        : complexity.recommendedCaliber;
+
     const session: DebateSession = {
       id: `cpt_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`,
       title: cleanTitle,
-      idea: idea.trim(),
-      domain,
+      idea: cleanIdea,
+      domain: safeDomain,
       projectMode: projectMode === 'existing_feature' ? 'existing_feature' : 'new_app',
       targetCodingTools: cleanCodingTools && cleanCodingTools.length > 0 ? cleanCodingTools : undefined,
-      language: language === 'en' ? 'en' : 'tr',
+      language: safeLang,
       complexity,
-      caliber: caliber || complexity.recommendedCaliber,
-      constraints: constraints.trim(),
-      contextText: contextText.trim(),
-      repoMeta,
-      seats,
+      caliber: safeCaliber,
+      constraints: cleanConstraints,
+      contextText: cleanContext,
+      repoMeta: repoMeta as RepoSnapshotMeta | undefined,
+      seats: seats as SeatConfig[],
       rounds: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -476,9 +501,9 @@ app.post('/api/sessions', (req, res) => {
   }
 });
 
-// Get session
+// Get session (prefers live in-memory streaming session during an active run)
 app.get('/api/sessions/:id', (req, res) => {
-  const session = loadSession(req.params.id);
+  const session = getLiveSession(req.params.id) || loadSession(req.params.id);
   if (!session) {
     res.status(404).json({ error: 'Oturum bulunamadı.' });
     return;
@@ -539,9 +564,9 @@ app.delete('/api/sessions/:id', (req, res) => {
   res.json({ ok });
 });
 
-// SSE live stream
+// SSE live stream (sends live in-memory snapshot so browser refresh mid-stream preserves deltas)
 app.get('/api/sessions/:id/events', (req, res) => {
-  const session = loadSession(req.params.id);
+  const session = getLiveSession(req.params.id) || loadSession(req.params.id);
   if (!session) {
     res.status(404).json({ error: 'Oturum bulunamadı.' });
     return;
@@ -922,7 +947,7 @@ export async function startConceptusServer(options?: {
       const actualPort =
         typeof addr === 'object' && addr ? addr.port : requestedPort;
       const url = `http://127.0.0.1:${actualPort}`;
-      console.log(`\n  CONCEPTUS v4.2 hazir: ${url}\n`);
+      console.log(`\n  CONCEPTUS v${APP_VERSION} hazir: ${url}\n`);
       resolve({ server, port: actualPort, url });
     });
     server.on('error', reject);

@@ -93,17 +93,25 @@ const PRIORITY_NAMES = [
   'claude.md',
 ];
 
-function isSecretFilename(name: string): boolean {
+export function isSecretFilename(name: string): boolean {
   return SECRET_FILE_PATTERNS.some((re) => re.test(name));
 }
 
-function redactSecrets(text: string): string {
+export function redactSecrets(text: string): string {
   return text
-    .replace(/\b(sk-[a-zA-Z0-9_-]{20,})\b/g, '[REDACTED_API_KEY]')
-    .replace(/\b(AIza[0-9A-Za-z_-]{30,})\b/g, '[REDACTED_GOOGLE_KEY]')
-    .replace(/\b(ghp_[a-zA-Z0-9]{25,})\b/g, '[REDACTED_GH_TOKEN]')
     .replace(
-      /(api[_-]?key|secret|password|token)\s*[:=]\s*["'][^"'\r\n]{8,}["']/gi,
+      /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/g,
+      '[REDACTED_PRIVATE_KEY]'
+    )
+    .replace(/\b(sk-(?:ant-|proj-|live-|test-)?[a-zA-Z0-9_-]{20,})\b/g, '[REDACTED_API_KEY]')
+    .replace(/\b(rk_live_[a-zA-Z0-9_-]{16,})\b/g, '[REDACTED_API_KEY]')
+    .replace(/\b(AIza[0-9A-Za-z_-]{30,})\b/g, '[REDACTED_GOOGLE_KEY]')
+    .replace(/\b((?:ghp|gho|ghu|ghs)_[a-zA-Z0-9]{25,}|github_pat_[a-zA-Z0-9_]{30,})\b/g, '[REDACTED_GH_TOKEN]')
+    .replace(/\b(AKIA[0-9A-Z]{16})\b/g, '[REDACTED_AWS_KEY]')
+    .replace(/\b(xox[bpoa]-[a-zA-Z0-9-]{16,})\b/g, '[REDACTED_SLACK_TOKEN]')
+    .replace(/\b(Bearer\s+[a-zA-Z0-9._-]{24,})\b/gi, 'Bearer [REDACTED_TOKEN]')
+    .replace(
+      /(api[_-]?key|secret|password|passwd|access[_-]?token|refresh[_-]?token|private[_-]?key)\s*[:=]\s*["'][^"'\r\n]{8,}["']/gi,
       '$1: "[REDACTED]"'
     );
 }

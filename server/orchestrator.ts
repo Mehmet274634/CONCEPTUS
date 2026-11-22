@@ -44,6 +44,7 @@ import type {
 interface ActiveRun {
   controller: AbortController;
   startedAt: number;
+  session?: DebateSession;
 }
 
 const activeRuns = new Map<string, ActiveRun>();
@@ -51,6 +52,14 @@ const sseClients = new Map<string, Set<ExpressResponse>>();
 
 export function isSessionRunning(sessionId: string): boolean {
   return activeRuns.has(sessionId);
+}
+
+/**
+ * Returns the live in-memory DebateSession while a run is actively streaming deltas,
+ * so SSE reconnects / browser refreshes never regress to stale disk snapshots.
+ */
+export function getLiveSession(sessionId: string): DebateSession | null {
+  return activeRuns.get(sessionId)?.session || null;
 }
 
 export function subscribeSessionEvents(sessionId: string, res: ExpressResponse) {
@@ -437,7 +446,7 @@ export async function startNextRound(
   }
 
   const controller = new AbortController();
-  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+  activeRuns.set(sessionId, { controller, startedAt: Date.now(), session });
 
   void (async () => {
     try {
@@ -479,7 +488,7 @@ export async function startAutoPilot(
   }
 
   const controller = new AbortController();
-  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+  activeRuns.set(sessionId, { controller, startedAt: Date.now(), session });
 
   void (async () => {
     try {
@@ -544,7 +553,7 @@ export async function startMasterSynthesis(
   }
 
   const controller = new AbortController();
-  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+  activeRuns.set(sessionId, { controller, startedAt: Date.now(), session });
 
   void (async () => {
     try {
@@ -860,7 +869,7 @@ export async function startBlueprintGeneration(
   saveSession(session);
 
   const controller = new AbortController();
-  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+  activeRuns.set(sessionId, { controller, startedAt: Date.now(), session });
   broadcast(sessionId, { type: 'blueprint_started', blueprint: pack });
 
   void (async () => {
@@ -1044,7 +1053,7 @@ export async function regenerateBlueprintFile(
   saveSession(session);
 
   const controller = new AbortController();
-  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+  activeRuns.set(sessionId, { controller, startedAt: Date.now(), session });
   broadcast(sessionId, { type: 'blueprint_file_started', fileId: target.id });
 
   void (async () => {
@@ -1227,7 +1236,7 @@ export async function startFixBlueprintIssues(
   }
 
   const controller = new AbortController();
-  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+  activeRuns.set(sessionId, { controller, startedAt: Date.now(), session });
 
   const entries = Array.from(grouped.values());
 
@@ -1357,7 +1366,7 @@ export async function retryFailedBlueprintFiles(
   }));
 
   const controller = new AbortController();
-  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+  activeRuns.set(sessionId, { controller, startedAt: Date.now(), session });
 
   void (async () => {
     try {
@@ -1519,7 +1528,7 @@ export async function startRedTeamRound(
     enabledSeats[0];
 
   const controller = new AbortController();
-  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+  activeRuns.set(sessionId, { controller, startedAt: Date.now(), session });
 
   void (async () => {
     try {
@@ -1620,7 +1629,7 @@ export async function startTargetedChallenge(
   }
 
   const controller = new AbortController();
-  activeRuns.set(sessionId, { controller, startedAt: Date.now() });
+  activeRuns.set(sessionId, { controller, startedAt: Date.now(), session });
 
   void (async () => {
     try {

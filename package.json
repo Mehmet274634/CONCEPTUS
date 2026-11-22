@@ -1,6 +1,6 @@
 {
   "name": "conceptus",
-  "version": "5.3.0",
+  "version": "5.3.1",
   "private": false,
   "type": "module",
   "main": "dist-electron/main.cjs",
@@ -51,7 +51,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "tsx": "^4.19.4"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.7",
@@ -66,7 +67,6 @@
     "electron-builder": "^26.18.0",
     "png-to-ico": "^3.0.2",
     "tailwindcss": "^4.1.7",
-    "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vitest": "^4.0.18"

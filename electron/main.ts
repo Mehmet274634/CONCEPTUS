@@ -170,7 +170,7 @@ function downloadHttpsToFile(
 
     const req = https.get(
       urlStr,
-      { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.0' } },
+      { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.1' } },
       (res) => {
         const status = res.statusCode || 0;
         if (status >= 300 && status < 400 && res.headers.location) {
@@ -228,7 +228,7 @@ function fetchHttpsText(urlStr: string, redirectsLeft = 4): Promise<string> {
       return;
     }
     https
-      .get(urlStr, { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.0' } }, (res) => {
+      .get(urlStr, { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.1' } }, (res) => {
         const status = res.statusCode || 0;
         if (status >= 300 && status < 400 && res.headers.location && redirectsLeft > 0) {
           res.resume();

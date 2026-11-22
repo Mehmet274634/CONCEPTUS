@@ -1,20 +1,16 @@
-# CONCEPTUS — Geliştirme Yol Haritası (v4.2)
+# CONCEPTUS — Geliştirme Yol Haritası (`v5.3.1`)
 
-## Tamamlanan (v4.2 — Yayına Hazır Uygulama Blueprint Stüdyosu)
-- [x] **Ham Fikir → Akıllı Netleştirici (`Fikri Netleştir`) + Platform / Bütçe / Tasarım Dili Kilit Çipleri**
-- [x] **5'li Numaralı Uygulama İnşa MD Standardı:** `01_PRODUCT_VISION.md`..`05_AGENTS_START_HERE.md` + otomatik **`AGENTS.md`** kodlama ajanı köprü dosyası
-- [x] **Canlı Mermaid Diyagram Önizleme (`MermaidDiagram.tsx`):** `02_UX_SCREENS_AND_DESIGN.md` ve `03_ARCHITECTURE_AND_DATA.md` içindeki şemaları doğrudan karanlık cam arayüzde görsel çizme + `Görsel / Kod` geçişi
-- [x] **Revizyon Notuyla Cerrahi Tek Dosya Yeniden Üretimi** + **Hazır "İnşaya Başla" Başlatma Promptu** + `.zip` ve bağlı projeye kayıt
-- [x] **Sade / Pro Deneyim Modu** + **`0 CLI` İlk Kurulum Sihirbazı** (hiç CLI kurulu olmayan yeni kullanıcılar için)
-- [x] **Seviye-Bazlı Çoklu-Model Uzman Dağıtımı + 6'lı Tek Dalga Paralel Üretim (~55 sn)**
-- [x] **Evrim Özeti + İnsan Kararı Kilidi (`Decision Gates`) + Çapraz-Ajan QA Denetimi & Otomatik Düzeltme**
-- [x] **Kalite-Korumalı Kota Circuit Breaker + Kullanıcı Kontrollü Yedek Ajan (`Kalite / Özel / Sor`) + Tek Tıkla Eksik MD Tamamlama**
-- [x] **Modern Windows 11 Dosya Gezgini Klasör Seçici (`IFileOpenDialog`) + macOS/Linux + Secret-Filtreli Salt-Okunur Repo Tarayıcı**
-- [x] **Localhost Güvenlik Kilidi (403 JSON CORS/Origin Koruması) + Vitest Otomatik Test Paketi + `bin/conceptus.mjs` CLI Başlatıcı + `README.md` & `MIT LICENSE`**
-- [x] **Gerçek Windows Masaüstü Uygulaması (Electron + `CONCEPTUS-Setup-4.2.0.exe` Kurulum + `CONCEPTUS-4.2.0-Portable.exe` · Terminalsiz, İkonlu, Doğal Klasör Seçicili)**
+## Tamamlanan Kilometre Taşları (`v5.0` → `v5.3.1`)
+- [x] **Dalga 0 Kanonik Proje Sözleşmesi (`PROJECT_CONTRACT.json`) + 2 Dalgalı MD Motoru:** Tüm dosyalar tek bir teknoloji yığını, `sharedComponents`, `sharedConstants`, kilitli `phases` ve `Hard Invariants` anayasasına bağlı üretilir (`01..04` paralel → `05_AGENTS_START_HERE.md` Dalga 1 özetiyle %100 eşleşik).
+- [x] **Karmaşık Projeler İçin Üretim Kalitesi Derinlik Kapıları:** `01`’de `Given/When/Then` kabul kriterleri, `02`’de Mermaid akış + 5-durumlu uç durum matrisi, `03`’te çalışır TypeScript/SQL veri şeması, `04`’te yürütülebilir doğrulama komutları, `L/XL` sistemlerde otomatik 6. dosya (`04B_API_AND_SECURITY_SPEC.md`) ve 0-token deterministik mühendislik Linter’ı.
+- [x] **Hedef Kodlama Aracı Seçici (`Antigravity` · `Claude Code` · `Cursor` · `Codex`):** Yalnızca seçilen kodlama aracına özel prompt söz dizimi ve resmi köprü dosyası (`.agents/rules`, `CLAUDE.md`, `.cursor/rules`, `AGENTS.md`) üretimi.
+- [x] **Canlı Ajan & Kota Sağlık Çubuğu (`quotaProbe.ts`):** Gerçek CLI oturum/plan bilgisi, aktif kota kilitleri, tek tık paralel canlı kota yoklaması (`Kotaları Test Et`) ve tek tık `Sağlıklı Ajanlara Geç`.
+- [x] **Çizgisel İlerleme Çubuğu + 0-Token Tur Özeti + `00 · Mimari Özet` Panosu:** Faz 1/2/3 sekmeli prompt kopyalama, tek klasör temiz kayıt ve kurulu IDE’lerde (`Antigravity`, `Cursor`, `VS Code`) tek tıkla açma.
+- [x] **Mevcut Projeye Özellik Modu (`Existing Codebase Evolution`):** Regresyon-güvenli 3 dosyalık evrim paketi (`01_CHANGE_PROPOSAL.md`, `02_MIGRATION_AND_ARCH_DIFF.md`, `03_AGENTS_EXECUTION_GUIDE.md`).
+- [x] **TR / EN Arayüz & Çıktı Dili + Çapraz-Platform GitHub Releases CI (Windows / macOS / Linux) + Sessiz Masaüstü Güncelleyici + Vercel Tanıtım Sitesi.**
+- [x] **`v5.3.1` Güvenlik & Dayanıklılık Sertleştirmesi:** Atomik oturum yazımı (`writeFileAtomic`), canlı SSE yeniden bağlanma snapshot’ı, elle dosya yüklemede boyut/gizli dosya/anahtar maskeleme koruması, sıkı API giriş doğrulaması, Antigravity `--sandbox` bayrağı ve şeffaf gizlilik sınırları.
 
-## Sıradaki Yayın Fazları (v5.0 — Global Lansman & Opsiyonel Bulut SaaS)
-- [ ] **TR / EN Arayüz Dil Seçeneği (i18n)**
-- [ ] **GitHub Releases (`CONCEPTUS-Setup.exe`) + Tanıtım İndirme Sayfası (Vercel) + 30 sn Demo Videosu**
-- [ ] **Mevcut Projeye Yeni Özellik / Refactor Modu (`Feature Evolution`) + MD Fark (`Diff`) & Geri Alma**
-- [ ] **Bulut Web SaaS Sürümü (Opsiyonel Cloud API Adaptörü + Kullanıcı Girişi + Kredi/Abonelik)**
+## Sonraki Olası Geliştirmeler (`v5.4+`)
+- [ ] **Oturum İçi MD Sürüm Geçmişi & Görsel Diff (Revizyon Karşılaştırma)**
+- [ ] **Çoklu Oturum / Proje Şablon Kütüphanesi (SaaS, Mobil PWA, Electron, API Starter)**
+- [ ] **Opsiyonel Bulut API Sağlayıcı Adaptörü (BYOK — CLI kurulumu olmadan API anahtarıyla kullanım)**

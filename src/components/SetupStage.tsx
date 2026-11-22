@@ -41,6 +41,13 @@ import {
   type SimplePresetId,
   type UiMode,
 } from '../types.ts';
+import {
+  isBlockedUploadFilename,
+  MAX_UPLOAD_CHARS,
+  MAX_UPLOAD_FILE_BYTES,
+  MAX_UPLOAD_FILES,
+  redactUploadedSecrets,
+} from '../utils/fileSafety.ts';
 import { SeatEditorList } from './SeatEditorList.tsx';
 
 interface SetupStageProps {
@@ -268,17 +275,51 @@ export function SetupStage({
   ).length;
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-    const chunks: string[] = [];
-    for (const file of files) {
-      const text = await file.text();
-      chunks.push(`### Dosya: ${file.name}\n${text.slice(0, 20_000)}`);
+    const selected = Array.from(e.target.files || []);
+    if (selected.length === 0) return;
+
+    const warnings: string[] = [];
+    const files = selected.slice(0, MAX_UPLOAD_FILES);
+    if (selected.length > MAX_UPLOAD_FILES) {
+      warnings.push(`Tek seferde en fazla ${MAX_UPLOAD_FILES} dosya eklenebilir.`);
     }
-    setContextText((prev) =>
-      prev.trim() ? `${prev.trim()}\n\n${chunks.join('\n\n')}` : chunks.join('\n\n')
-    );
-    setShowExtras(true);
+
+    const chunks: string[] = [];
+    let totalRedacted = 0;
+
+    for (const file of files) {
+      if (isBlockedUploadFilename(file.name)) {
+        warnings.push(`"${file.name}" hassas dosya adı nedeniyle güvenlik gereği atlandı.`);
+        continue;
+      }
+      if (file.size > MAX_UPLOAD_FILE_BYTES) {
+        warnings.push(
+          `"${file.name}" çok büyük (${(file.size / 1024).toFixed(0)} KB; üst sınır ${Math.round(MAX_UPLOAD_FILE_BYTES / 1024)} KB).`
+        );
+        continue;
+      }
+      const rawText = await file.text();
+      const { text: safeText, redactedCount } = redactUploadedSecrets(
+        rawText.slice(0, MAX_UPLOAD_CHARS)
+      );
+      totalRedacted += redactedCount;
+      chunks.push(`### Dosya: ${file.name}\n${safeText}`);
+    }
+
+    if (totalRedacted > 0) {
+      warnings.push(
+        `Eklenen dosyalarda tespit edilen ${totalRedacted} hassas anahtar/token otomatik maskelendi.`
+      );
+    }
+
+    if (chunks.length > 0) {
+      setContextText((prev) =>
+        prev.trim() ? `${prev.trim()}\n\n${chunks.join('\n\n')}` : chunks.join('\n\n')
+      );
+      setShowExtras(true);
+    }
+
+    setError(warnings.length > 0 ? warnings.join(' ') : null);
     e.target.value = '';
   };
 

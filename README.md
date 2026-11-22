@@ -1,43 +1,46 @@
 # CONCEPTUS
 
-**Turn a 2-sentence raw app idea into a battle-tested, agent-ready `.md` blueprint pack — powered 100% by your own local AI CLI subscriptions (zero extra API fees).**
+**Turn a raw app idea — or an existing repository upgrade — into a battle-tested, agent-ready `.md` blueprint pack, powered by your own local AI CLI subscriptions (zero extra CONCEPTUS API fees).**
 
-> **Türkçe Özet:** CONCEPTUS; ham bir uygulama fikrini bilgisayarında zaten kurulu olan yapay zekâ CLI araçlarıyla (**Antigravity**, **Claude Code**, **Codex**, **Gemini**) kör analiz → çapraz tartışma → İnsan Kararı Kilidi → paralel 5'li uygulama `.md` paketi süzgecinden geçiren, **%100 yerel ve ek API ücretsiz** fikir evrim & proje mimarisi stüdyosudur.
+> **Türkçe Özet:** CONCEPTUS; ham bir uygulama fikrini (veya mevcut projeye eklenecek yeni özelliği) bilgisayarında zaten kurulu olan yapay zekâ CLI araçlarıyla (**Antigravity**, **Claude Code**, **Codex**, **Gemini**) kör analiz → çapraz delta tartışma → İnsan Kararı Kilidi → **Dalga 0 Sözleşmeli (`PROJECT_CONTRACT.json`)** üretim kalitesi `.md` paketi süzgecinden geçiren, **yerel çalışan (CONCEPTUS bulutu/telemetrisi olmayan)** fikir evrim & mimari stüdyosudur.
 
 ---
 
 ## Why CONCEPTUS?
 
-Most people jump straight into an AI coding tool with a vague 2-line prompt — and get fragile, half-baked apps full of guesswork.
+Most people jump straight into an AI coding tool with a vague 2-line prompt — and get fragile, half-baked code full of guesswork and cross-file drift.
 
-**CONCEPTUS** puts multiple AI brains at the same table **before** a single line of code is written:
+**CONCEPTUS (`v5.3`)** puts multiple AI specialists at the same table **before** a single line of code is written:
 
-1. **Smart Idea Clarifier (`Fikri Netleştir`) + Design & Platform Guardrails** — Sharpens raw thoughts in 3–4 clickable questions and locks target platform, budget, and visual design language.
-2. **Blind Round 1 → Anonymous Cross-Debate Round 2** — Agents analyze independently first (preventing groupthink), then critique each other anonymously (`Ajan A`, `Ajan B`, `Ajan C`).
-3. **Master Decision + Evolution Summary + Human Decision Gates** — Extracts what the debate improved and locks final trade-offs with 1-click user choices before generating specs.
-4. **5-File App-Build `.md` Standard (Single-Wave Parallel, ~55s):**
-   - `01_PRODUCT_VISION.md` — Problem, core user loop, MVP boundaries & non-goals
-   - `02_UX_SCREENS_AND_DESIGN.md` — Screens, live Mermaid UX flow, locked design tokens, empty/error states
-   - `03_ARCHITECTURE_AND_DATA.md` — Stack, folder layout, data schema, Mermaid architecture diagram, security & cost limits
-   - `04_BUILD_ROADMAP.md` — Step-by-step build phases (`Step 1 → N`), "Done" criteria & tests
-   - `05_AGENTS_START_HERE.md` — Reading order, Hard Invariants & copy-paste starter prompt + auto-generated `AGENTS.md` bridge
-5. **Cross-Agent QA Consistency Audit + 1-Click Surgical Fix** — A separate model audits all `.md` files for contradictions and patches only broken sections.
-6. **Quality-Protected Quota Circuit Breaker (`Kalite / Özel / Sor`)** — Tracks quota pools independently (`antigravity:claude`, `antigravity:gemini`, `codex:all`, `claude:all`), never silently downgrades flagship work to weak models, and lets you choose your exact backup agent.
+1. **Deep Problem Analysis + Missing-Spec Radar (`Hızlı Netleştir`)** — Scans your brief instantaneously (0 tokens) for complexity (`S/M/L/XL`) and missing architectural dimensions (platform, persistence, auth/RBAC, budget, visual language), then asks 3–4 decisive Principal Architect questions.
+2. **Target Coding Tool Adaptation (`Antigravity` · `Claude Code` · `Cursor` · `Codex`)** — Pick one or more target tools upfront. Prompts, syntax (`@file` refs for Claude Code/Cursor, sandbox verification gates for Codex, workspace rules for Antigravity), and exported bridge files (`.agents/rules`, `CLAUDE.md`, `.cursor/rules`, `AGENTS.md`) are generated **exclusively** for the tools you chose.
+3. **Live Quota & Agent Readiness Bar** — Displays real CLI auth/plan status (`Claude Pro`, `ChatGPT`, `Antigravity`) and active quota cooldowns upfront, with a 1-click **Probe Quotas** ping and 1-click **Switch to Healthy Agents**.
+4. **Blind Round 1 → Anonymous Delta Cross-Debate → Master Decision + Human Decision Gates** — Prevents groupthink, summarizes every round in a 0-token verdict strip, and lets you lock strategic forks with 1 click before writing specs.
+5. **Wave 0 Contract (`PROJECT_CONTRACT.json`) + 2-Wave Production MD Engine:**
+   - **New App (5 MDs, or 6 MDs for `L`/`XL` complex systems):**
+     - `01_PRODUCT_VISION.md` — Problem, personas, Given/When/Then acceptance criteria, MVP vs v2 scope & non-goals
+     - `02_UX_SCREENS_AND_DESIGN.md` — Screens, Mermaid flow, canonical `sharedComponents`, design tokens & 5-state edge matrix (`Loading | Empty | Error & Retry | Validation | Offline`)
+     - `03_ARCHITECTURE_AND_DATA.md` — Stack, folder tree, Mermaid data/system diagram, runnable TypeScript/SQL schema, API/service contracts & canonical `sharedConstants`
+     - `04_BUILD_ROADMAP.md` — Locked build phases (`Phase 1 → N`), exact file lists, executable verification commands & definition of done
+     - `04B_API_AND_SECURITY_SPEC.md` *(auto-added for `L`/`XL` complex systems)* — Full API/IPC contracts, RBAC matrix, rate limits, concurrency & threat model
+     - `05_AGENTS_START_HERE.md` *(Wave 2 — aligned with Wave 1 outputs)* — Tool-tailored read order, single-source Hard Invariants, anti-patterns & copy-paste Phase 1/2 prompts
+   - **Existing Repo Feature Mode (3 MDs):** `01_CHANGE_PROPOSAL.md`, `02_MIGRATION_AND_ARCH_DIFF.md`, `03_AGENTS_EXECUTION_GUIDE.md` — regression-safe evolution for live codebases.
+6. **`00 · Visual Architectural Overview` + 1-Click IDE Handoff** — View your contract, Mermaid diagrams, 0-token engineering linter score, and Phase 1/2/3 prompt tabs in one screen, save cleanly to a single folder, and launch **Antigravity**, **Cursor**, or **VS Code** directly.
 
 ---
 
 ## Quick Start
 
 ### Option 1 — Native Desktop App (Recommended · No Node.js Required)
-Download and run the Windows installer from the **[Official Website (Vercel)](https://conceptus-ivory.vercel.app/download)** or **[GitHub Releases](https://github.com/Mehmet274634/CONCEPTUS/releases/latest)**:
-- **[CONCEPTUS-Setup-4.2.0.exe](https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-4.2.0.exe)** — Full Windows 10/11 installer (Desktop & Start Menu shortcuts, frameless dark window, zero terminal)
-- **[CONCEPTUS-4.2.0-Portable.exe](https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-4.2.0-Portable.exe)** — Standalone portable `.exe` (zero install)
-- **[SHA256SUMS.txt](https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/SHA256SUMS.txt)** — Integrity verification checksums
+Download the latest release from the **[Official Download Page](https://conceptus-ivory.vercel.app/download)** or **[GitHub Releases (Latest)](https://github.com/Mehmet274634/CONCEPTUS/releases/latest)**:
+- **Windows Installer (`CONCEPTUS-Setup-5.3.1.exe`)** — Silent in-app updates, frameless dark window, native OS folder picker, zero terminal
+- **Windows Portable (`CONCEPTUS-5.3.1-Portable.exe`)** — Standalone `.exe` (zero install)
+- **macOS (`.dmg`) & Linux (`.AppImage`)** — Available on every tagged GitHub Release alongside **`SHA256SUMS.txt`**
 
-Build the desktop installers from source:
+Build the Windows desktop installer from source:
 ```bash
 npm install
-npm run desktop:build   # Outputs release/CONCEPTUS-Setup-4.2.0.exe & Portable.exe
+npm run desktop:build   # Outputs release/CONCEPTUS-Setup-<version>.exe & Portable.exe
 ```
 
 ### Option 2 — CLI / Local Browser Mode (Developers)
@@ -68,23 +71,27 @@ node bin/conceptus.mjs --no-open            # Start server without opening brows
 ```bash
 npm run dev        # Concurrent Express API (3847) + Vite HMR (5173)
 npm run typecheck  # Strict TypeScript check (tsc --noEmit)
-npm test           # Vitest automated unit & security test suite
+npm test           # Vitest unit, security & HTTP API integration test suite
 npm run check      # Full verification pipeline (typecheck + test + production build)
 ```
 
 ---
 
-## Local-First Security & Privacy
+## Security & Privacy Boundaries (Transparent Scope)
 
-- **100% Localhost Bound:** Express listens strictly on `127.0.0.1`, with CORS & `Origin` protection blocking cross-site browser API calls (`403`).
-- **Zero Cloud Sync / Zero Telemetry:** Sessions (`data/sessions/*.json`), quota policies, and exported blueprints stay exclusively on your machine.
-- **Read-Only Secret-Filtered Repo Scanner:** When attaching a local project folder, `.env*`, private keys, credentials, `node_modules`, and `.git` are strictly excluded from ever reaching any model prompt.
+CONCEPTUS is designed as a **local-first desktop & localhost studio**, with clear and honest data boundaries:
+
+- **What stays strictly on your machine:** All session histories (`data/sessions/*.json`, written atomically), exported `.md` packs, cooldown state, and preferences stay exclusively on your local disk. CONCEPTUS operates **no backend cloud database and collects zero telemetry**.
+- **What is sent externally:** When you run a debate, clarify an idea, probe quotas, or generate blueprints, your prompt and attached context are passed to the **local AI CLI tools you choose** (`agy`, `claude`, `codex`, `gemini`), which communicate with their respective model providers under your own account and privacy terms.
+- **Localhost & Desktop Isolation:** Express binds exclusively to `127.0.0.1` with CORS and `Origin` checks blocking cross-site browser calls (`403`). Electron enables `contextIsolation`, `sandbox`, and `nodeIntegration: false`, and verifies HTTPS host allowlists + `SHA256SUMS.txt` on updates. Local API endpoints are unauthenticated for single-user local usage (trust boundary = local processes on your machine).
+- **CLI Read-Only / Sandbox Guardrails:** CLI runs use separate argument arrays (`shell: false`) with provider restrictions (`codex exec -s read-only`, `claude --safe-mode --tools ""`, `agy --disable-slash-commands --sandbox`, `gemini --approval-mode plan`).
+- **Best-Effort Secret Filtering (Not a Guarantee):** Both the local repo scanner and manual file uploader enforce file size limits, skip sensitive filenames (`.env*`, `.pem`, `.key`, `id_rsa`, `*secret*`, `*credential*`, `service-account*.json`), and redact common key/token formats (`sk-*`, `AIza*`, `ghp_*`, `github_pat_*`, `AKIA*`, `xox*`, PEM private keys, `Bearer` tokens). Pattern-based filtering is **best-effort** and cannot catch every custom secret format — never paste production credentials directly into prompts.
 
 ---
 
 ## Architecture Docs
 
-Full living documentation lives in [`docs/`](./docs):
+Living architecture documentation lives in [`docs/`](./docs):
 - [`docs/PRODUCT_VISION.md`](./docs/PRODUCT_VISION.md)
 - [`docs/DESIGN_SYSTEM.md`](./docs/DESIGN_SYSTEM.md)
 - [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
@@ -93,4 +100,4 @@ Full living documentation lives in [`docs/`](./docs):
 
 ## License
 
-MIT © 2026 CONCEPTUS Contributors
+MIT

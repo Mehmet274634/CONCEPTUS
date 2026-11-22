@@ -3,6 +3,7 @@ import path from 'node:path';
 import { runCliSeat, type RunCliOptions, type RunCliResult } from './adapters.ts';
 import { discoverProviders } from './discovery.ts';
 import { getCooldownsPath, getFallbackPolicyPath } from './paths.ts';
+import { writeFileAtomic } from './storage.ts';
 import type {
   BlueprintDepth,
   FallbackPolicy,
@@ -63,7 +64,7 @@ function loadCooldownsFromDisk() {
 function saveCooldownsToDisk() {
   try {
     ensureDataDir();
-    fs.writeFileSync(getCooldownsPath(), JSON.stringify(listActiveCooldowns(), null, 2), 'utf8');
+    writeFileAtomic(getCooldownsPath(), JSON.stringify(listActiveCooldowns(), null, 2));
   } catch {
     // ignore
   }
@@ -91,7 +92,7 @@ function loadPolicyFromDisk() {
 function savePolicyToDisk() {
   try {
     ensureDataDir();
-    fs.writeFileSync(getFallbackPolicyPath(), JSON.stringify(fallbackPolicy, null, 2), 'utf8');
+    writeFileAtomic(getFallbackPolicyPath(), JSON.stringify(fallbackPolicy, null, 2));
   } catch {
     // ignore
   }

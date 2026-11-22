@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
@@ -7,6 +8,30 @@ import type { DebateSession, SessionSummary } from './types.ts';
 function ensureDir(dir: string) {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+/**
+ * Crash-safe atomic JSON/text write (write temp file in same directory -> atomic rename).
+ * Prevents half-written/corrupt session files on abrupt power loss or process termination.
+ */
+export function writeFileAtomic(targetPath: string, data: string): void {
+  const dir = path.dirname(targetPath);
+  ensureDir(dir);
+  const tmpPath = path.join(
+    dir,
+    `.${path.basename(targetPath)}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`
+  );
+  try {
+    fs.writeFileSync(tmpPath, data, 'utf8');
+    fs.renameSync(tmpPath, targetPath);
+  } catch (err) {
+    try {
+      if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+    } catch {
+      // ignore cleanup error
+    }
+    throw err;
   }
 }
 
@@ -33,7 +58,7 @@ export function slugifyProjectName(title: string): string {
 export function saveSession(session: DebateSession): void {
   ensureDir(getSessionsDir());
   session.updatedAt = Date.now();
-  fs.writeFileSync(sessionPath(session.id), JSON.stringify(session, null, 2), 'utf8');
+  writeFileAtomic(sessionPath(session.id), JSON.stringify(session, null, 2));
 }
 
 export function loadSession(id: string): DebateSession | null {
