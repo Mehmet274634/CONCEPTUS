@@ -514,11 +514,11 @@ a {
   }
 }
 
-/* Hero + Interactive CONCEPTUS Evolution Forge */
+/* Hero — Pure Editorial Visual Arrival (Zero Panel Clutter) */
 .hero-section {
   position: relative;
-  padding-top: clamp(64px, 9vh, 108px);
-  padding-bottom: clamp(56px, 7vw, 96px);
+  padding-top: clamp(72px, 11vh, 128px);
+  padding-bottom: clamp(48px, 6vw, 84px);
   overflow: hidden;
 }
 
@@ -535,40 +535,82 @@ a {
 
 .hero-rays svg {
   width: min(1600px, 140vw);
-  height: 760px;
-  opacity: 0.5;
+  height: 820px;
+  opacity: 0.62;
+}
+
+/* Upward-rising kinetic light streaks across the hero horizon */
+.hero-beams {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  -webkit-mask-image: radial-gradient(76% 78% at 50% 62%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(76% 78% at 50% 62%, #000 35%, transparent 100%);
+}
+
+.hero-beams svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.beam-line {
+  stroke-dasharray: 110 240;
+  animation: beam-rise 6.5s linear infinite;
+}
+
+.beam-line.slow {
+  animation-duration: 9.2s;
+  stroke-dasharray: 150 280;
+}
+
+.beam-line.fast {
+  animation-duration: 4.8s;
+  stroke-dasharray: 85 210;
+}
+
+@keyframes beam-rise {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 350;
+  }
 }
 
 .hero-glow {
   position: absolute;
   left: 50%;
-  top: 220px;
+  top: 260px;
   transform: translateX(-50%);
-  width: min(960px, 110vw);
-  height: 360px;
+  width: min(1040px, 115vw);
+  height: 440px;
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(48% 60% at 42% 50%, #7c74ff2c 0%, transparent 72%),
-    radial-gradient(44% 55% at 62% 55%, #3fd0c922 0%, transparent 74%);
-  filter: blur(28px);
+    radial-gradient(45% 58% at 38% 55%, #7c74ff34 0%, transparent 70%),
+    radial-gradient(42% 52% at 64% 58%, #3fd0c928 0%, transparent 72%),
+    radial-gradient(30% 42% at 50% 72%, #f0b44c18 0%, transparent 74%);
+  filter: blur(34px);
 }
 
 .hero-head {
   position: relative;
   z-index: 2;
   text-align: center;
-  max-width: 880px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
 .hero-head .lead {
-  max-width: 670px;
+  max-width: 620px;
   margin: 22px auto 0;
 }
 
 .hero-actions {
-  margin-top: 30px;
+  margin-top: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -576,11 +618,110 @@ a {
   flex-wrap: wrap;
 }
 
-/* Interactive 3-Stage Evolution Forge Showcase (Signature CONCEPTUS Visual!) */
+/* Signature Hero Centerpiece: CONCEPTUS 3-AI Convergence Prism -> 5 Blueprint Planes */
+.hero-visual-stage {
+  position: relative;
+  z-index: 2;
+  margin-top: clamp(44px, 6vw, 68px);
+  border-radius: 26px;
+  padding: clamp(18px, 3vw, 34px);
+  border: 1px solid #ffffff16;
+  background:
+    radial-gradient(70% 60% at 50% 100%, #7c74ff22, transparent 68%),
+    radial-gradient(50% 45% at 50% 42%, #3fd0c914, transparent 70%),
+    linear-gradient(180deg, #101116d9 0%, #090a0de8 100%);
+  box-shadow:
+    inset 0 1px #ffffff1a,
+    0 50px 120px -36px #000000f5;
+  overflow: hidden;
+}
+
+.hero-visual-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, #ffffff07 1px, transparent 1px),
+    linear-gradient(to bottom, #ffffff07 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(75% 75% at 50% 50%, #000, transparent 85%);
+  mask-image: radial-gradient(75% 75% at 50% 50%, #000, transparent 85%);
+}
+
+.prism-svg {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.stream-pulse {
+  stroke-dasharray: 18 140;
+  animation: stream-flow 3.4s linear infinite;
+}
+
+.stream-pulse.d2 {
+  animation-delay: -1.1s;
+  animation-duration: 3.8s;
+}
+
+.stream-pulse.d3 {
+  animation-delay: -2.2s;
+  animation-duration: 3.1s;
+}
+
+.stream-out {
+  stroke-dasharray: 12 110;
+  animation: stream-flow 2.8s linear infinite;
+}
+
+@keyframes stream-flow {
+  from {
+    stroke-dashoffset: 160;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.prism-core-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: prism-spin 22s linear infinite;
+}
+
+.prism-core-ring-rev {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: prism-spin 16s linear infinite reverse;
+}
+
+@keyframes prism-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.prism-breathe {
+  animation: prism-pulse 4s ease-in-out infinite;
+}
+
+@keyframes prism-pulse {
+  0%, 100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Interactive 3-Stage Evolution Forge Showcase (Section 2) */
 .forge-shell {
   position: relative;
   z-index: 2;
-  margin-top: 52px;
+  margin-top: 38px;
   border-radius: 22px;
   background:
     radial-gradient(80% 50% at 50% 0%, #7c74ff16, transparent 60%),
@@ -1730,6 +1871,212 @@ a {
   display: block;
 }
 
+/* Editorial visual-first components */
+.section-head.center {
+  text-align: center;
+  margin-inline: auto;
+}
+
+.cmp-svg-box {
+  border-radius: 14px;
+  background: #08090c;
+  border: 1px solid #ffffff10;
+  padding: 18px 14px;
+  margin-bottom: 6px;
+}
+
+.cmp-svg-box svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.cmp-caption {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Blueprint visual internals */
+.scope-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.scope-box {
+  border-radius: 14px;
+  padding: 16px;
+  background: #08090c;
+  border: 1px solid var(--border);
+}
+
+.scope-box.in {
+  border-color: #4cc58a40;
+  background: radial-gradient(80% 70% at 0% 0%, #4cc58a14, #08090c 70%);
+}
+
+.scope-box h4 {
+  font-size: 12px;
+  font-family: var(--mono);
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+
+.scope-box.in h4 {
+  color: var(--ok);
+}
+
+.scope-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.token-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #0c0d11;
+  border: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #c5c9d4;
+}
+
+.swatch i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.roadmap-track {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.roadmap-node {
+  border-radius: 14px;
+  padding: 16px;
+  background: #08090c;
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.roadmap-node.active {
+  border-color: #7c74ff55;
+  background: linear-gradient(180deg, #7c74ff12, #08090c);
+}
+
+.roadmap-node .phase-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--cyan);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.roadmap-node strong {
+  display: block;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+}
+
+.roadmap-node small {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* Visual capability meters inside Sade/Pro */
+.meter-track {
+  width: 92px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ffffff10;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+}
+
+/* Visual Quota Circuit-Breaker Graphic */
+.circuit-stage {
+  border-radius: 14px;
+  background: #08090c;
+  border: 1px solid #ffffff12;
+  padding: 14px;
+}
+
+.circuit-stage svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* CLI geometric emblems & Download step glyphs */
+.cli-emblem,
+.step-glyph {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: radial-gradient(100% 100% at 0% 0%, #7c74ff26, #ffffff06);
+  border: 1px solid #ffffff18;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  color: var(--text);
+}
+
+.cli-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px;
+}
+
+.cli-tile .mono {
+  font-size: 11.5px;
+  color: var(--cyan);
+}
+
+/* Full-width Local-First Security Vault Diagram */
+.vault-stage {
+  margin-top: 34px;
+  border-radius: 22px;
+  padding: clamp(18px, 3vw, 30px);
+  background:
+    radial-gradient(60% 80% at 50% 0%, #3fd0c914, transparent 68%),
+    linear-gradient(#111318, #0a0b0e);
+  border: 1px solid #ffffff16;
+  box-shadow: inset 0 1px #ffffff12;
+}
+
+.vault-stage svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* Responsive */
 @media (max-width: 1080px) {
   .links {
@@ -1773,7 +2120,9 @@ a {
   .grid-4,
   .os-row,
   .stats,
-  .foot-cols {
+  .foot-cols,
+  .scope-cols,
+  .roadmap-track {
     grid-template-columns: 1fr;
   }
   .nav-right .btn-primary {

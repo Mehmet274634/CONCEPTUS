@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CONCEPTUS — Masaüstü Stüdyosunu İndir (Windows · macOS · Linux)</title>
-  <meta name="description" content="CONCEPTUS v4.2.0 masaüstü uygulamasını Windows için tek tıkla indir veya macOS/Linux'ta açık kaynaklı olarak kur. Sıfır ekstra API maliyeti, SHA-256 doğrulamalı." />
+  <meta name="description" content="CONCEPTUS v4.2.0 masaüstü uygulamasını Windows için tek tıkla indir veya macOS/Linux'ta açık kaynaklı olarak kur." />
   <link rel="icon" type="image/png" href="icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,8 +21,8 @@
       </a>
 
       <div class="links">
-        <a class="nav-link" href="index.html#flow" data-tr="Evrim Akışı" data-en="Evolution Flow">Evrim Akışı</a>
-        <a class="nav-link" href="index.html#blueprint" data-tr="5'li MD Standardı" data-en="5-File Blueprint">5'li MD Standardı</a>
+        <a class="nav-link" href="index.html#flow" data-tr="Evrim Masası" data-en="Evolution Desk">Evrim Masası</a>
+        <a class="nav-link" href="index.html#blueprint" data-tr="5'li MD" data-en="5-File MD">5'li MD</a>
         <a class="nav-link" href="index.html#studio" data-tr="Sade &amp; Pro" data-en="Simple &amp; Pro">Sade &amp; Pro</a>
         <a class="nav-link" href="index.html#security" data-tr="Güvenlik" data-en="Security">Güvenlik</a>
         <a class="nav-link active" href="download.html" data-tr="İndir" data-en="Download">İndir</a>
@@ -46,8 +46,8 @@
           <summary class="nav-link" data-tr="Menü" data-en="Menu">Menü</summary>
           <div class="sheet">
             <a href="index.html" data-tr="Ana Sayfa" data-en="Home">Ana Sayfa</a>
-            <a href="index.html#flow" data-tr="Evrim Akışı" data-en="Evolution Flow">Evrim Akışı</a>
-            <a href="index.html#blueprint" data-tr="5'li MD Standardı" data-en="5-File Blueprint">5'li MD Standardı</a>
+            <a href="index.html#flow" data-tr="Evrim Masası" data-en="Evolution Desk">Evrim Masası</a>
+            <a href="index.html#blueprint" data-tr="5'li MD" data-en="5-File MD">5'li MD</a>
             <a href="index.html#security" data-tr="Güvenlik" data-en="Security">Güvenlik</a>
             <a data-href="repo" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener">GitHub</a>
           </div>
@@ -57,64 +57,56 @@
   </header>
 
   <main>
-    <!-- Sub-Hero -->
+    <!-- Sub-Hero (Clean, Zero Green-Dot Eyebrow, Upward Kinetic Beams) -->
     <section class="sub-hero">
-      <div class="hero-rays" aria-hidden="true">
-        <svg viewBox="0 0 1600 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div class="hero-beams" aria-hidden="true">
+        <svg viewBox="0 0 1440 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <radialGradient id="rayFadeDl" cx="50%" cy="0%" r="72%">
-              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22" />
-              <stop offset="55%" stop-color="#7c74ff" stop-opacity="0.08" />
-              <stop offset="100%" stop-color="#08090a" stop-opacity="0" />
-            </radialGradient>
+            <linearGradient id="dlBeamV" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#7c74ff" stop-opacity="0" />
+              <stop offset="50%" stop-color="#7c74ff" stop-opacity="0.48" />
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+            </linearGradient>
+            <linearGradient id="dlBeamC" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#3fd0c9" stop-opacity="0" />
+              <stop offset="50%" stop-color="#3fd0c9" stop-opacity="0.45" />
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+            </linearGradient>
           </defs>
-          <g stroke="url(#rayFadeDl)" stroke-width="1">
-            <line x1="800" y1="0" x2="120" y2="760" />
-            <line x1="800" y1="0" x2="310" y2="760" />
-            <line x1="800" y1="0" x2="500" y2="760" />
-            <line x1="800" y1="0" x2="650" y2="760" />
-            <line x1="800" y1="0" x2="800" y2="760" />
-            <line x1="800" y1="0" x2="950" y2="760" />
-            <line x1="800" y1="0" x2="1100" y2="760" />
-            <line x1="800" y1="0" x2="1290" y2="760" />
-            <line x1="800" y1="0" x2="1480" y2="760" />
+          <g stroke="#ffffff0b" stroke-width="1">
+            <line x1="220" y1="0" x2="220" y2="480" />
+            <line x1="460" y1="0" x2="460" y2="480" />
+            <line x1="720" y1="0" x2="720" y2="480" />
+            <line x1="980" y1="0" x2="980" y2="480" />
+            <line x1="1220" y1="0" x2="1220" y2="480" />
           </g>
+          <line class="beam-line slow" x1="220" y1="480" x2="220" y2="0" stroke="url(#dlBeamV)" stroke-width="1.3" />
+          <line class="beam-line fast" x1="460" y1="480" x2="460" y2="0" stroke="url(#dlBeamC)" stroke-width="1.4" />
+          <line class="beam-line" x1="720" y1="480" x2="720" y2="0" stroke="url(#dlBeamV)" stroke-width="1.6" />
+          <line class="beam-line fast" x1="980" y1="480" x2="980" y2="0" stroke="url(#dlBeamC)" stroke-width="1.4" />
+          <line class="beam-line slow" x1="1220" y1="480" x2="1220" y2="0" stroke="url(#dlBeamV)" stroke-width="1.3" />
         </svg>
       </div>
 
       <div class="wrap" style="position: relative; z-index: 2;">
-        <div class="eyebrow enter">
-          <span class="dot"></span>
-          <span data-tr="CONCEPTUS v4.2.0 · Ücretsiz &amp; MIT Açık Kaynak" data-en="CONCEPTUS v4.2.0 · Free &amp; MIT Open Source">CONCEPTUS v4.2.0 · Ücretsiz &amp; MIT Açık Kaynak</span>
-        </div>
-
-        <h1 class="display enter enter-d1" data-tr="Masaüstü Stüdyosunu İndir." data-en="Download Desktop Studio.">
+        <h1 class="display enter" data-tr="Masaüstü Stüdyosunu İndir." data-en="Download Desktop Studio.">
           Masaüstü Stüdyosunu İndir.
         </h1>
 
-        <p class="lead enter enter-d2" style="max-width: 650px; margin: 18px auto 0;" data-tr="Windows için sıfır bağımlılıklı tek tık yerel kurulum (.exe); macOS ve Linux için açık kaynaklı yerel masaüstü kurulumu." data-en="Zero-dependency one-click installer (.exe) for Windows, plus open-source local desktop builds for macOS and Linux.">
-          Windows için sıfır bağımlılıklı tek tık yerel kurulum (.exe); macOS ve Linux için açık kaynaklı yerel masaüstü kurulumu.
+        <p class="lead enter enter-d1" style="max-width: 560px; margin: 16px auto 0;" data-tr="Windows tek tık .exe · macOS &amp; Linux açık kaynak." data-en="1-click Windows .exe · Open-source macOS &amp; Linux.">
+          Windows tek tık .exe · macOS &amp; Linux açık kaynak.
         </p>
 
-        <div class="req-pills enter enter-d3">
-          <span class="req-pill">
-            <span class="dot-ok" aria-hidden="true"></span>
-            <span data-tr="Windows'ta Node.js gerekmez" data-en="No Node.js needed on Windows">Windows'ta Node.js gerekmez</span>
-          </span>
-          <span class="req-pill">
-            <span class="dot-ok" aria-hidden="true"></span>
-            <span data-tr="En az 1 kurulu AI CLI (Antigravity / Claude / Codex / Gemini)" data-en="At least 1 installed AI CLI (Antigravity / Claude / Codex / Gemini)">En az 1 kurulu AI CLI (Antigravity / Claude / Codex / Gemini)</span>
-          </span>
-          <span class="req-pill">
-            <span class="dot-ok" aria-hidden="true"></span>
-            <span data-tr="SHA-256 Doğrulamalı · %100 Yerel" data-en="SHA-256 Verified · 100% Local">SHA-256 Doğrulamalı · %100 Yerel</span>
-          </span>
+        <div class="req-pills enter enter-d2">
+          <span class="req-pill" data-tr="Windows'ta Node.js gerekmez" data-en="No Node.js on Windows">Windows'ta Node.js gerekmez</span>
+          <span class="req-pill" data-tr="En az 1 kurulu AI CLI" data-en="1+ installed AI CLI">En az 1 kurulu AI CLI</span>
+          <span class="req-pill" data-tr="SHA-256 · MIT Açık Kaynak" data-en="SHA-256 · MIT Open Source">SHA-256 · MIT Açık Kaynak</span>
         </div>
       </div>
     </section>
 
     <!-- OS Selector + Install Steps -->
-    <section class="section" style="padding-top: 24px;">
+    <section class="section" style="padding-top: 20px;">
       <div class="wrap">
         <div class="os-row" role="tablist" aria-label="Operating System">
           <button type="button" class="os-card active" role="tab" aria-selected="true" data-os-tab="windows">
@@ -124,7 +116,7 @@
               </svg>
             </div>
             <strong>Windows</strong>
-            <span data-tr="Windows 10 / 11 · Tek Tık .exe &amp; Portable" data-en="Windows 10 / 11 · 1-Click .exe &amp; Portable">Windows 10 / 11 · Tek Tık .exe &amp; Portable</span>
+            <span data-tr="Setup &amp; Portable (.exe)" data-en="Setup &amp; Portable (.exe)">Setup &amp; Portable (.exe)</span>
           </button>
 
           <button type="button" class="os-card" role="tab" aria-selected="false" data-os-tab="macos">
@@ -134,7 +126,7 @@
               </svg>
             </div>
             <strong>macOS</strong>
-            <span data-tr="Apple Silicon &amp; Intel · Kaynak / Masaüstü" data-en="Apple Silicon &amp; Intel · Source / Desktop">Apple Silicon &amp; Intel · Kaynak / Masaüstü</span>
+            <span data-tr="Apple Silicon &amp; Intel" data-en="Apple Silicon &amp; Intel">Apple Silicon &amp; Intel</span>
           </button>
 
           <button type="button" class="os-card" role="tab" aria-selected="false" data-os-tab="linux">
@@ -146,7 +138,7 @@
               </svg>
             </div>
             <strong>Linux</strong>
-            <span data-tr="Ubuntu · Arch · Fedora · Masaüstü / CLI" data-en="Ubuntu · Arch · Fedora · Desktop / CLI">Ubuntu · Arch · Fedora · Masaüstü / CLI</span>
+            <span data-tr="Ubuntu · Arch · Fedora" data-en="Ubuntu · Arch · Fedora">Ubuntu · Arch · Fedora</span>
           </button>
         </div>
 
@@ -155,9 +147,9 @@
           <div class="install-step">
             <div class="install-step-num">01</div>
             <div class="install-step-copy">
-              <h3 data-tr="Tek tıkla Windows kurulumunu indir" data-en="Download the 1-click Windows installer">Tek tıkla Windows kurulumunu indir</h3>
-              <p data-tr="Standart Setup (.exe) Başlat Menüsü ve masaüstü kısayolu oluşturur. Taşınabilir (Portable) sürüm kurulum yapmadan tek tıkla doğrudan çalışır." data-en="Standard Setup (.exe) adds Start Menu &amp; desktop shortcuts. Portable runs immediately with zero installation.">
-                Standart Setup (.exe) Başlat Menüsü ve masaüstü kısayolu oluşturur. Taşınabilir (Portable) sürüm kurulum yapmadan tek tıkla doğrudan çalışır.
+              <h3 data-tr="İndir" data-en="Download">İndir</h3>
+              <p data-tr="Standart kurulum veya kurulumsuz taşınabilir .exe." data-en="Standard installer or zero-install portable .exe.">
+                Standart kurulum veya kurulumsuz taşınabilir .exe.
               </p>
             </div>
             <div class="dl-box">
@@ -171,7 +163,7 @@
                 </a>
               </div>
               <div class="dl-meta">
-                <span>GitHub Releases v4.2.0 · </span>
+                <span>v4.2.0 · </span>
                 <a data-href="sums" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/SHA256SUMS.txt" target="_blank" rel="noopener">SHA256SUMS.txt</a>
               </div>
             </div>
@@ -180,9 +172,9 @@
           <div class="install-step">
             <div class="install-step-num">02</div>
             <div class="install-step-copy">
-              <h3 data-tr="İsteğe bağlı: SHA-256 bütünlüğünü doğrula" data-en="Optional: Verify SHA-256 checksum">İsteğe bağlı: SHA-256 bütünlüğünü doğrula</h3>
-              <p data-tr="İndirdiğin kurulum dosyasının GitHub Releases'taki özgün derleme ile birebir eşleştiğini PowerShell'den tek komutla kontrol edebilirsin." data-en="Confirm your downloaded installer matches the official GitHub Release hash byte-for-byte in PowerShell.">
-                İndirdiğin kurulum dosyasının GitHub Releases'taki özgün derleme ile birebir eşleştiğini PowerShell'den tek komutla kontrol edebilirsin.
+              <h3 data-tr="SHA-256 Doğrula" data-en="Verify SHA-256">SHA-256 Doğrula</h3>
+              <p data-tr="İsteğe bağlı bütünlük kontrolü." data-en="Optional integrity check in PowerShell.">
+                İsteğe bağlı bütünlük kontrolü.
               </p>
             </div>
             <div class="terminal">
@@ -198,9 +190,9 @@
           <div class="install-step">
             <div class="install-step-num">03</div>
             <div class="install-step-copy">
-              <h3 data-tr="Çift tıkla aç — yerel stüdyo hazır" data-en="Double-click to launch — studio ready">Çift tıkla aç — yerel stüdyo hazır</h3>
-              <p data-tr="CONCEPTUS çerçevesiz tam ekran masaüstü uygulaması olarak açılır, kurulu CLI'larını otomatik tarar ve oturumlarını %APPDATA%\CONCEPTUS\data klasöründe saklar." data-en="CONCEPTUS opens as a frameless desktop studio, auto-detects installed CLIs, and stores sessions locally in %APPDATA%\CONCEPTUS\data.">
-                CONCEPTUS çerçevesiz tam ekran masaüstü uygulaması olarak açılır, kurulu CLI'larını otomatik tarar ve oturumlarını %APPDATA%\CONCEPTUS\data klasöründe saklar.
+              <h3 data-tr="Aç ve Başla" data-en="Launch">Aç ve Başla</h3>
+              <p data-tr="Kurulu CLI'ları otomatik algılar; veriler yalnızca diskinde kalır." data-en="Auto-detects installed CLIs; data stays strictly local.">
+                Kurulu CLI'ları otomatik algılar; veriler yalnızca diskinde kalır.
               </p>
             </div>
             <div class="terminal">
@@ -208,17 +200,16 @@
                 <span>Local Runtime</span>
                 <span class="mono ok">127.0.0.1</span>
               </div>
-              <pre class="terminal-pre"><span class="ok">✓</span> Frameless Electron Shell (sandbox + CSP)
-<span class="ok">✓</span> Data dir: <span class="ac">%APPDATA%\CONCEPTUS\data</span>
-<span class="ok">✓</span> Zero telemetry · Zero cloud sync</pre>
+              <pre class="terminal-pre"><span class="ok">✓</span> Electron Sandbox + CSP
+<span class="ok">✓</span> Data: <span class="ac">%APPDATA%\CONCEPTUS\data</span></pre>
             </div>
           </div>
 
           <div class="tip-box">
-            <strong data-tr="Windows SmartScreen Notu: " data-en="Windows SmartScreen Note: ">Windows SmartScreen Notu: </strong>
-            <span data-tr="CONCEPTUS açık kaynaklı topluluk sürümüdür ve henüz ücretli kurumsal EV kod imzalama sertifikası içermez. Windows ilk açılışta 'Bilinmeyen yayıncı' uyarısı gösterirse 'Ek bilgi → Yine de çalıştır' adımıyla açabilir veya yukarıdaki SHA-256 özetini " data-en="CONCEPTUS is an independent open-source release without a paid EV code-signing certificate yet. If Windows shows SmartScreen on first run, verify the SHA-256 hash above or inspect the full source on ">CONCEPTUS açık kaynaklı topluluk sürümüdür ve henüz ücretli kurumsal EV kod imzalama sertifikası içermez. Windows ilk açılışta 'Bilinmeyen yayıncı' uyarısı gösterirse 'Ek bilgi → Yine de çalıştır' adımıyla açabilir veya yukarıdaki SHA-256 özetini </span>
+            <strong data-tr="SmartScreen: " data-en="SmartScreen: ">SmartScreen: </strong>
+            <span data-tr="Açık kaynak topluluk derlemesi olduğu için ilk açılışta 'Ek bilgi → Yine de çalıştır' diyebilir veya SHA-256 özetini " data-en="Independent open-source build — click 'More info → Run anyway' after verifying SHA-256 via ">Açık kaynak topluluk derlemesi olduğu için ilk açılışta 'Ek bilgi → Yine de çalıştır' diyebilir veya SHA-256 özetini </span>
             <a data-href="security" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a>
-            <span data-tr=" üzerinden doğrulayabilirsin." data-en=" and click 'More info → Run anyway'."> üzerinden doğrulayabilirsin.</span>
+            <span data-tr=" ile doğrulayabilirsin." data-en="."> ile doğrulayabilirsin.</span>
           </div>
         </div>
 
@@ -227,28 +218,23 @@
           <div class="install-step">
             <div class="install-step-num">01</div>
             <div class="install-step-copy">
-              <h3 data-tr="GitHub deposunu klonla" data-en="Clone the repository">GitHub deposunu klonla</h3>
-              <p data-tr="macOS (Apple Silicon &amp; Intel) üzerinde Node.js 20+ kuruluysa 30 saniyede yerel masaüstü stüdyosunu ayağa kaldırabilirsin." data-en="With Node.js 20+ installed on Apple Silicon or Intel macOS, spin up the local desktop studio in 30 seconds.">
-                macOS (Apple Silicon &amp; Intel) üzerinde Node.js 20+ kuruluysa 30 saniyede yerel masaüstü stüdyosunu ayağa kaldırabilirsin.
-              </p>
+              <h3 data-tr="Klonla" data-en="Clone">Klonla</h3>
+              <p data-tr="Node.js 20+ ile 30 saniyede kurulum." data-en="Ready in 30s with Node.js 20+.">Node.js 20+ ile 30 saniyede kurulum.</p>
             </div>
             <div class="terminal">
               <div class="terminal-bar">
                 <span>zsh</span>
                 <button type="button" class="copy" data-copy="git clone https://github.com/Mehmet274634/CONCEPTUS.git && cd CONCEPTUS" data-tr="Kopyala" data-en="Copy">Kopyala</button>
               </div>
-              <pre class="terminal-pre"><span class="p">$</span> git clone https://github.com/Mehmet274634/CONCEPTUS.git
-<span class="p">$</span> cd CONCEPTUS</pre>
+              <pre class="terminal-pre"><span class="p">$</span> git clone https://github.com/Mehmet274634/CONCEPTUS.git &amp;&amp; cd CONCEPTUS</pre>
             </div>
           </div>
 
           <div class="install-step">
             <div class="install-step-num">02</div>
             <div class="install-step-copy">
-              <h3 data-tr="Bağımlılıkları kur ve derle" data-en="Install dependencies and build">Bağımlılıkları kur ve derle</h3>
-              <p data-tr="Arayüz ve Electron masaüstü katmanını tek komutla hazırlar." data-en="Installs packages and compiles the UI and desktop bridge.">
-                Arayüz ve Electron masaüstü katmanını tek komutla hazırlar.
-              </p>
+              <h3 data-tr="Kur &amp; Derle" data-en="Install &amp; Build">Kur &amp; Derle</h3>
+              <p data-tr="Arayüz ve masaüstü kabuğunu derler." data-en="Compiles UI and desktop shell.">Arayüz ve masaüstü kabuğunu derler.</p>
             </div>
             <div class="terminal">
               <div class="terminal-bar">
@@ -262,19 +248,15 @@
           <div class="install-step">
             <div class="install-step-num">03</div>
             <div class="install-step-copy">
-              <h3 data-tr="Masaüstü uygulamasını başlat" data-en="Launch the desktop studio">Masaüstü uygulamasını başlat</h3>
-              <p data-tr="Yerel Electron penceresini başlatır; istersen npm start ile yalnızca tarayıcı stüdyosu olarak da çalıştırabilirsin." data-en="Starts the native Electron desktop window, or run npm start for browser-only local mode.">
-                Yerel Electron penceresini başlatır; istersen npm start ile yalnızca tarayıcı stüdyosu olarak da çalıştırabilirsin.
-              </p>
+              <h3 data-tr="Başlat" data-en="Launch">Başlat</h3>
+              <p data-tr="Masaüstü veya tarayıcı stüdyosu." data-en="Desktop app or local browser mode.">Masaüstü veya tarayıcı stüdyosu.</p>
             </div>
             <div class="terminal">
               <div class="terminal-bar">
                 <span>zsh</span>
                 <button type="button" class="copy" data-copy="npm run desktop:dev" data-tr="Kopyala" data-en="Copy">Kopyala</button>
               </div>
-              <pre class="terminal-pre"><span class="p">$</span> npm run desktop:dev
-<span class="c"># or local browser mode:</span>
-<span class="p">$</span> npm start</pre>
+              <pre class="terminal-pre"><span class="p">$</span> npm run desktop:dev</pre>
             </div>
           </div>
         </div>
@@ -284,28 +266,23 @@
           <div class="install-step">
             <div class="install-step-num">01</div>
             <div class="install-step-copy">
-              <h3 data-tr="Depoyu klonla (Node.js 20+)" data-en="Clone repository (Node.js 20+)">Depoyu klonla (Node.js 20+)</h3>
-              <p data-tr="Ubuntu, Debian, Arch ve Fedora üzerinde yerel CLI aboneliklerinle doğrudan çalışır." data-en="Works natively on Ubuntu, Debian, Arch, and Fedora with your local CLI sign-ins.">
-                Ubuntu, Debian, Arch ve Fedora üzerinde yerel CLI aboneliklerinle doğrudan çalışır.
-              </p>
+              <h3 data-tr="Klonla" data-en="Clone">Klonla</h3>
+              <p data-tr="Node.js 20+ gereklidir." data-en="Requires Node.js 20+.">Node.js 20+ gereklidir.</p>
             </div>
             <div class="terminal">
               <div class="terminal-bar">
                 <span>bash</span>
                 <button type="button" class="copy" data-copy="git clone https://github.com/Mehmet274634/CONCEPTUS.git && cd CONCEPTUS" data-tr="Kopyala" data-en="Copy">Kopyala</button>
               </div>
-              <pre class="terminal-pre"><span class="p">$</span> git clone https://github.com/Mehmet274634/CONCEPTUS.git
-<span class="p">$</span> cd CONCEPTUS</pre>
+              <pre class="terminal-pre"><span class="p">$</span> git clone https://github.com/Mehmet274634/CONCEPTUS.git &amp;&amp; cd CONCEPTUS</pre>
             </div>
           </div>
 
           <div class="install-step">
             <div class="install-step-num">02</div>
             <div class="install-step-copy">
-              <h3 data-tr="Kur ve test et" data-en="Install and verify">Kur ve test et</h3>
-              <p data-tr="Paketleri kurar ve 14 otomatik güvenlik/kota testini doğrulayabilirsin." data-en="Installs packages and optionally verifies all 14 security &amp; quota unit tests.">
-                Paketleri kurar ve 14 otomatik güvenlik/kota testini doğrulayabilirsin.
-              </p>
+              <h3 data-tr="Kur &amp; Doğrula" data-en="Install &amp; Test">Kur &amp; Doğrula</h3>
+              <p data-tr="14 otomatik birim testi dahil." data-en="Includes 14 automated unit tests.">14 otomatik birim testi dahil.</p>
             </div>
             <div class="terminal">
               <div class="terminal-bar">
@@ -319,60 +296,69 @@
           <div class="install-step">
             <div class="install-step-num">03</div>
             <div class="install-step-copy">
-              <h3 data-tr="Yerel stüdyoyu başlat" data-en="Launch local studio">Yerel stüdyoyu başlat</h3>
-              <p data-tr="Electron masaüstü penceresini veya 127.0.0.1 üzerinde tarayıcı arayüzünü aç." data-en="Launch the Electron desktop window or open the local 127.0.0.1 studio in your browser.">
-                Electron masaüstü penceresini veya 127.0.0.1 üzerinde tarayıcı arayüzünü aç.
-              </p>
+              <h3 data-tr="Başlat" data-en="Launch">Başlat</h3>
+              <p data-tr="Yerel Electron veya 127.0.0.1 sunucu." data-en="Native Electron or 127.0.0.1 server.">Yerel Electron veya 127.0.0.1 sunucu.</p>
             </div>
             <div class="terminal">
               <div class="terminal-bar">
                 <span>bash</span>
                 <button type="button" class="copy" data-copy="npm run desktop:dev" data-tr="Kopyala" data-en="Copy">Kopyala</button>
               </div>
-              <pre class="terminal-pre"><span class="p">$</span> npm run desktop:dev
-<span class="c"># or headless loopback server:</span>
-<span class="p">$</span> npm start</pre>
+              <pre class="terminal-pre"><span class="p">$</span> npm run desktop:dev</pre>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Band: First 3 Minutes After Installing -->
+    <!-- Band: Visual First 3 Minutes (Bespoke SVG Glyphs + Concise Copy) -->
     <section class="section band">
       <div class="wrap">
-        <div class="section-head reveal">
-          <div class="eyebrow">
-            <span class="dot"></span>
-            <span data-tr="Kurduktan Sonra İlk 3 Dakika" data-en="Your First 3 Minutes">Kurduktan Sonra İlk 3 Dakika</span>
-          </div>
-          <h2 class="h2" data-tr="Uygulamayı açtıktan hemen sonra ne yapacaksın?" data-en="What happens the moment you open CONCEPTUS.">
-            Uygulamayı açtıktan hemen sonra ne yapacaksın?
+        <div class="section-head center reveal">
+          <h2 class="h2" data-tr="Kurduktan sonra ilk 3 dakika." data-en="Your first 3 minutes.">
+            Kurduktan sonra ilk 3 dakika.
           </h2>
         </div>
 
         <div class="steps-3 reveal">
           <article class="card">
-            <div class="card-kicker">01 · AUTO-DETECT</div>
-            <h3 class="h3" data-tr="Bağlı CLI'larını Otomatik Gör" data-en="See Your Connected CLIs">Bağlı CLI'larını Otomatik Gör</h3>
-            <p class="card-p" data-tr="Sağ panel bilgisayarındaki Antigravity, Claude Code, Codex ve Gemini CLI kurulumlarını anında algılar. Ekstra API anahtarı girmen gerekmez." data-en="The right sidebar detects Antigravity, Claude Code, Codex, and Gemini CLI automatically — zero API keys to paste.">
-              Sağ panel bilgisayarındaki Antigravity, Claude Code, Codex ve Gemini CLI kurulumlarını anında algılar. Ekstra API anahtarı girmen gerekmez.
+            <div class="step-glyph" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3fd0c9" stroke-width="1.8">
+                <circle cx="12" cy="12" r="9" stroke-opacity="0.35" />
+                <circle cx="12" cy="12" r="5" stroke-opacity="0.65" />
+                <circle cx="12" cy="12" r="2" fill="#3fd0c9" stroke="none" />
+              </svg>
+            </div>
+            <h3 class="h3" data-tr="01 · Otomatik CLI Tarama" data-en="01 · Auto-Detect CLIs">01 · Otomatik CLI Tarama</h3>
+            <p class="card-p" data-tr="Bilgisayarındaki CLI abonelikleri anında bağlanır." data-en="Your installed CLI sign-ins connect automatically.">
+              Bilgisayarındaki CLI abonelikleri anında bağlanır.
             </p>
           </article>
 
           <article class="card">
-            <div class="card-kicker">02 · DEBATE &amp; LOCK</div>
-            <h3 class="h3" data-tr="Fikrini Netleştir &amp; Tartıştır" data-en="Clarify &amp; Stress-Test Your Idea">Fikrini Netleştir &amp; Tartıştır</h3>
-            <p class="card-p" data-tr="İki cümlelik fikrini yaz, Tasarım &amp; Hedef çiplerini kilitle, Oto-Pilot ile kör üretim ve anonim çapraz eleştiriyi izle." data-en="Type a 2-sentence idea, lock Design &amp; Target chips, and watch Auto-Pilot run blind generation and cross-critique.">
-              İki cümlelik fikrini yaz, Tasarım &amp; Hedef çiplerini kilitle, Oto-Pilot ile kör üretim ve anonim çapraz eleştiriyi izle.
+            <div class="step-glyph" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#958fff" stroke-width="1.8">
+                <polygon points="12 3 21 19 3 19" />
+                <circle cx="12" cy="14" r="2" fill="#f0b44c" stroke="none" />
+              </svg>
+            </div>
+            <h3 class="h3" data-tr="02 · Masada Çarpıştır" data-en="02 · Cross-Debate">02 · Masada Çarpıştır</h3>
+            <p class="card-p" data-tr="2 cümlelik fikrini yaz, ajanlar kör noktaları çıkarsın." data-en="Enter a 2-sentence idea and let models challenge it.">
+              2 cümlelik fikrini yaz, ajanlar kör noktaları çıkarsın.
             </p>
           </article>
 
           <article class="card">
-            <div class="card-kicker">03 · EXPORT &amp; BUILD</div>
-            <h3 class="h3" data-tr="5'li MD Paketini Kaydet &amp; İnşa Et" data-en="Export 5-File Pack &amp; Build">5'li MD Paketini Kaydet &amp; İnşa Et</h3>
-            <p class="card-p" data-tr="Karar kapılarını onayla, 5'li MD + AGENTS.md paketini proje klasörüne yaz ve Başlangıç Promptuyla kodlama ajanını başlat." data-en="Lock your Decision Gates, write the 5 MD files + AGENTS.md to your repo, and hand the Starter Prompt to your coding agent.">
-              Karar kapılarını onayla, 5'li MD + AGENTS.md paketini proje klasörüne yaz ve Başlangıç Promptuyla kodlama ajanını başlat.
+            <div class="step-glyph" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4cc58a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 7l8-4 8 4-8 4-8-4Z" />
+                <path d="M4 12l8 4 8-4" />
+                <path d="M4 17l8 4 8-4" />
+              </svg>
+            </div>
+            <h3 class="h3" data-tr="03 · 5'li MD'yi Klasöre Yaz" data-en="03 · Export 5-File Pack">03 · 5'li MD'yi Klasöre Yaz</h3>
+            <p class="card-p" data-tr="AGENTS.md ile kodlama ajanını tek tıkla başlat." data-en="Write AGENTS.md + 01..05 and start coding.">
+              AGENTS.md ile kodlama ajanını tek tıkla başlat.
             </p>
           </article>
         </div>
@@ -389,9 +375,6 @@
             <h2 class="display" data-tr="Açık kaynak, yerel ve ücretsiz." data-en="Open source, local, and free.">
               Açık kaynak, yerel ve ücretsiz.
             </h2>
-            <p class="lead" style="margin-top: 18px;" data-tr="Kaynak kodu incele, yeni sürümleri takip et veya doğrudan Windows kurulumunu başlat." data-en="Audit the source code, track releases, or download the Windows installer now.">
-              Kaynak kodu incele, yeni sürümleri takip et veya doğrudan Windows kurulumunu başlat.
-            </p>
             <div class="hero-actions">
               <a class="btn btn-primary btn-lg" data-href="setup" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/CONCEPTUS-Setup-4.2.0.exe">
                 <span data-tr="Windows Setup 4.2.0 İndir" data-en="Download Windows Setup 4.2.0">Windows Setup 4.2.0 İndir</span>
@@ -418,26 +401,26 @@
             <img class="brand-icon" src="icon.png" alt="CONCEPTUS" width="24" height="24" />
             <span>CONCEPTUS</span>
           </a>
-          <p class="card-p" style="max-width: 300px;" data-tr="%100 yerel çoklu-AI fikir evrim ve 5'li Markdown Blueprint masaüstü stüdyosu." data-en="100% local multi-AI idea evolution &amp; 5-file Markdown Blueprint desktop studio.">
-            %100 yerel çoklu-AI fikir evrim ve 5'li Markdown Blueprint masaüstü stüdyosu.
+          <p class="card-p" style="max-width: 260px;" data-tr="Yerel çoklu-AI fikir evrim &amp; MD Blueprint stüdyosu." data-en="Local multi-AI idea evolution &amp; MD Blueprint studio.">
+            Yerel çoklu-AI fikir evrim &amp; MD Blueprint stüdyosu.
           </p>
         </div>
 
         <div class="foot-col">
           <h4 data-tr="Ürün" data-en="Product">Ürün</h4>
           <ul>
-            <li><a href="index.html#flow" data-tr="Evrim Akışı" data-en="Evolution Flow">Evrim Akışı</a></li>
-            <li><a href="index.html#blueprint" data-tr="5'li MD Standardı" data-en="5-File Blueprint">5'li MD Standardı</a></li>
-            <li><a href="index.html#studio" data-tr="Sade &amp; Pro Mod" data-en="Simple &amp; Pro Mode">Sade &amp; Pro Mod</a></li>
-            <li><a href="download.html" data-tr="İndir (v4.2.0)" data-en="Download (v4.2.0)">İndir (v4.2.0)</a></li>
+            <li><a href="index.html#flow" data-tr="Evrim Masası" data-en="Evolution Desk">Evrim Masası</a></li>
+            <li><a href="index.html#blueprint" data-tr="5'li MD" data-en="5-File MD">5'li MD</a></li>
+            <li><a href="index.html#studio" data-tr="Sade &amp; Pro" data-en="Simple &amp; Pro">Sade &amp; Pro</a></li>
+            <li><a href="download.html" data-tr="İndir" data-en="Download">İndir</a></li>
           </ul>
         </div>
 
         <div class="foot-col">
           <h4 data-tr="Kaynaklar" data-en="Resources">Kaynaklar</h4>
           <ul>
-            <li><a data-href="repo" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener" data-tr="GitHub Deposu" data-en="GitHub Repository">GitHub Deposu</a></li>
-            <li><a data-href="releases" href="https://github.com/Mehmet274634/CONCEPTUS/releases" target="_blank" rel="noopener" data-tr="Sürümler (Releases)" data-en="Releases">Sürümler (Releases)</a></li>
+            <li><a data-href="repo" href="https://github.com/Mehmet274634/CONCEPTUS" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a data-href="releases" href="https://github.com/Mehmet274634/CONCEPTUS/releases" target="_blank" rel="noopener" data-tr="Sürümler" data-en="Releases">Sürümler</a></li>
             <li><a data-href="sums" href="https://github.com/Mehmet274634/CONCEPTUS/releases/latest/download/SHA256SUMS.txt" target="_blank" rel="noopener">SHA256SUMS.txt</a></li>
           </ul>
         </div>
@@ -445,9 +428,9 @@
         <div class="foot-col">
           <h4 data-tr="Güvenlik" data-en="Security">Güvenlik</h4>
           <ul>
-            <li><a href="index.html#security" data-tr="Yerel-Öncelikli Mimari" data-en="Local-First Architecture">Yerel-Öncelikli Mimari</a></li>
+            <li><a href="index.html#security" data-tr="Yerel Mimari" data-en="Local Architecture">Yerel Mimari</a></li>
             <li><a data-href="security" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a></li>
-            <li><a data-href="license" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/LICENSE" target="_blank" rel="noopener" data-tr="MIT Lisansı" data-en="MIT License">MIT Lisansı</a></li>
+            <li><a data-href="license" href="https://github.com/Mehmet274634/CONCEPTUS/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a></li>
           </ul>
         </div>
       </div>
