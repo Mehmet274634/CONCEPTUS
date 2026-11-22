@@ -25,7 +25,7 @@ export interface ConceptusDesktopBridge {
 const bridge: ConceptusDesktopBridge = {
   isDesktop: true,
   platform: process.platform,
-  version: '5.1.0',
+  version: '5.1.1',
   pickFolder: (title?: string) => ipcRenderer.invoke('conceptus:pick-folder', title),
   openFolderInExplorer: (folderPath: string) =>
     ipcRenderer.invoke('conceptus:open-folder', folderPath),

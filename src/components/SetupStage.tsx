@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
-  Brain,
   Check,
   ChevronDown,
   ChevronUp,
@@ -12,8 +11,8 @@ import {
   Loader2,
   Palette,
   Paperclip,
+  Plus,
   RefreshCw,
-  Scale,
   SlidersHorizontal,
   Sparkles,
   Terminal,
@@ -81,38 +80,6 @@ const SAMPLE_IDEAS: { label: string; title: string; domain: DomainMode; text: st
   },
 ];
 
-const SIMPLE_PRESETS: {
-  id: SimplePresetId;
-  title: string;
-  time: string;
-  desc: string;
-  icon: typeof Zap;
-  badge?: string;
-}[] = [
-  {
-    id: 'fast',
-    title: 'Hızlı Beyin Fırtınası',
-    time: '~45 sn',
-    desc: 'Hızlı modellerle anında ilk analiz ve çözüm',
-    icon: Zap,
-  },
-  {
-    id: 'balanced',
-    title: 'Dengeli Uzman Kurulu',
-    time: '~1.5 dk',
-    desc: 'Mimar + Risk Denetçisi + MVP Lideri dengesi',
-    icon: Scale,
-    badge: 'Önerilen',
-  },
-  {
-    id: 'deep',
-    title: 'Maksimum Kalite',
-    time: '~2.5 dk',
-    desc: 'En güçlü modellerle en derin stratejik analiz',
-    icon: Brain,
-  },
-];
-
 const PLATFORM_CHIPS = [
   { id: 'web', label: 'Web Uygulaması', spec: 'Web Uygulaması (Tarayıcı / Responsive)' },
   { id: 'mobile', label: 'Mobil (iOS & Android)', spec: 'Mobil Uygulama (iOS & Android)' },
@@ -176,6 +143,8 @@ export function SetupStage({
   const [contextText, setContextText] = useState('');
   const [showExtras, setShowExtras] = useState(false);
   const [showDesignBar, setShowDesignBar] = useState(false);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [showAgentsDrawer, setShowAgentsDrawer] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const [selectedDesign, setSelectedDesign] = useState<string | null>(null);
@@ -399,17 +368,24 @@ export function SetupStage({
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-4xl mx-auto px-5 sm:px-8 py-8 space-y-6">
-        {/* Minimal Hero */}
-        <div>
+        {/* Minimal Hero + Clear 3-Step Flow */}
+        <div className="space-y-2">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] leading-[1.15] text-[#f7f8f8]">
             {t('Fikrini masaya koy.', 'Put your idea on the table.')}{' '}
             <span className="text-[#7d828b]">
               {t(
-                'Ajanlar çarpıştırıp en iyi hâline taşısın.',
-                'Let multiple AI minds debate and forge the ultimate spec.'
+                'Üretim kalitesinde MD paketini çıkar.',
+                'Forge a production-grade MD blueprint.'
               )}
             </span>
           </h1>
+          <div className="flex items-center gap-2 text-[11.5px] text-zinc-500 flex-wrap">
+            <span className="text-zinc-300 font-medium">{t('1. Fikrini Yaz', '1. Describe Idea')}</span>
+            <span>→</span>
+            <span>{t('2. Kararı Kilitle', '2. Lock Decision')}</span>
+            <span>→</span>
+            <span>{t('3. Hazır MD Paketini Al', '3. Export Ready MDs')}</span>
+          </div>
         </div>
 
         {/* 0-CLI First-Time User Onboarding Guide (only shown if zero AI CLIs detected) */}
@@ -552,12 +528,13 @@ export function SetupStage({
               </div>
             )}
 
-            {/* Live 0-Token Complexity & Smart Caliber Advisor Bar */}
-            {complexity && (
-              <div className="rounded-2xl bg-white/[0.025] border border-white/[0.08] px-3.5 py-2.5 flex flex-col gap-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
+            {/* Unified Single-Line Quality Caliber & Live Complexity Strip */}
+            <div className="flex items-center justify-between flex-wrap gap-2.5 pt-2 border-t border-white/[0.06]">
+              <div className="flex items-center gap-2 flex-wrap text-[11px] text-zinc-400">
+                {complexity ? (
+                  <>
                     <span
+                      title={lang === 'en' ? complexity.reasonEn : complexity.reasonTr}
                       className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
                         complexity.level === 'XL' || complexity.level === 'L'
                           ? 'bg-[#7c74ff]/15 text-[#cbc7ff] border-[#7c74ff]/40'
@@ -569,57 +546,49 @@ export function SetupStage({
                       <Cpu className="w-3 h-3" />
                       {lang === 'en' ? complexity.labelEn : complexity.labelTr}
                     </span>
-                    {complexity.signals.map((sig) => (
-                      <span
-                        key={sig}
-                        className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-400 border border-white/[0.06]"
-                      >
-                        {sig}
+                    {budget && (
+                      <span className="font-mono text-[10.5px] text-zinc-500">
+                        {t(
+                          `~${budget.totalCalls} çağrı · %${budget.deltaSavingsPct} tasarruf`,
+                          `~${budget.totalCalls} calls · ${budget.deltaSavingsPct}% saved`
+                        )}
                       </span>
-                    ))}
-                  </div>
-
-                  {/* 1-Click Caliber Switcher (Flagship | Hybrid | Economy) */}
-                  <div className="inline-flex items-center gap-1 rounded-full bg-black/40 border border-white/[0.08] p-0.5">
-                    {(
-                      [
-                        { id: 'flagship', tr: 'Amiral (En İyi)', en: 'Flagship (Best)' },
-                        { id: 'hybrid', tr: 'Hibrit Akıllı', en: 'Smart Hybrid' },
-                        { id: 'economy', tr: 'Ekonomik', en: 'Economy' },
-                      ] as const
-                    ).map((opt) => {
-                      const active = caliber === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => handleSelectCaliber(opt.id)}
-                          className={`px-2.5 py-1 rounded-full text-[10.5px] font-medium transition cursor-pointer ${
-                            active
-                              ? 'bg-[#f7f8f8] text-[#060709] font-semibold'
-                              : 'text-zinc-400 hover:text-zinc-100'
-                          }`}
-                        >
-                          {lang === 'en' ? opt.en : opt.tr}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between flex-wrap gap-2 text-[11px] text-zinc-400">
-                  <span>{lang === 'en' ? complexity.reasonEn : complexity.reasonTr}</span>
-                  {budget && (
-                    <span className="font-mono text-[10.5px] text-[#88ece7] shrink-0">
-                      {t(
-                        `~${budget.totalCalls} çağrı · %${budget.deltaSavingsPct} Delta tasarrufu`,
-                        `~${budget.totalCalls} calls · ${budget.deltaSavingsPct}% Delta savings`
-                      )}
-                    </span>
-                  )}
-                </div>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-zinc-500">
+                    {t('Ajan Kalitesi (En iyi modeller otomatik seçilir)', 'Agent Caliber (Best models auto-assigned)')}
+                  </span>
+                )}
               </div>
-            )}
+
+              <div className="inline-flex items-center gap-0.5 rounded-full bg-black/40 border border-white/[0.08] p-0.5">
+                {(
+                  [
+                    { id: 'flagship', tr: 'Amiral', en: 'Flagship', hint: 'En güçlü modeller (maksimum derinlik)' },
+                    { id: 'hybrid', tr: 'Hibrit', en: 'Hybrid', hint: 'Önerilen kalite / hız dengesi' },
+                    { id: 'economy', tr: 'Ekonomik', en: 'Economy', hint: 'Basit fikirler için %65 kota tasarrufu' },
+                  ] as const
+                ).map((opt) => {
+                  const active = caliber === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      title={opt.hint}
+                      onClick={() => handleSelectCaliber(opt.id)}
+                      className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                        active
+                          ? 'bg-[#f7f8f8] text-[#060709] font-semibold'
+                          : 'text-zinc-400 hover:text-zinc-100'
+                      }`}
+                    >
+                      {lang === 'en' ? opt.en : opt.tr}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             {/* Inline Smart Idea Clarifier Panel (3-4 Fast Clickable Questions) */}
             {clarifyQuestions.length > 0 && (
@@ -751,15 +720,15 @@ export function SetupStage({
               </div>
             )}
 
-            {/* Composer Footer Actions */}
+            {/* Clean Composer Footer Actions (Only 3 Calm Left Triggers + 1 Crisp CTA) */}
             <div className="pt-3 border-t border-white/[0.07] flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2 flex-wrap">
-                {/* Smart Clarifier Trigger */}
+                {/* 1. Smart Clarifier Trigger */}
                 <button
                   type="button"
                   onClick={handleClarifyIdea}
                   disabled={clarifying || idea.trim().length < 10}
-                  title="Ham fikrindeki eksikleri 3–4 kısa soruyla 5 saniyede netleştirir"
+                  title="Ham fikrindeki eksikleri 3–4 kısa soruyla netleştirir"
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition cursor-pointer disabled:opacity-35 ${
                     clarifyQuestions.length > 0
                       ? 'bg-[#7c74ff]/20 text-[#d4d1ff] border-[#7c74ff]/45'
@@ -772,41 +741,14 @@ export function SetupStage({
                     <Wand2 className="w-3 h-3" />
                   )}
                   {clarifying
-                    ? t('Sorular hazırlanıyor...', 'Generating questions...')
-                    : t('Fikri Netleştir', 'Clarify Idea')}
+                    ? t('Hazırlanıyor...', 'Clarifying...')
+                    : t('Fikri Netleştir', 'Clarify')}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleNativePickFolder}
-                  disabled={pickingFolder || scanningRepo}
-                  title={t(
-                    "Proje klasörünü seç (ajanlar kodunu görür ve sonunda MD'leri doğrudan bu klasöre kaydedebilirsin)",
-                    'Link a local project folder (agents read context & can save final MDs straight into it)'
-                  )}
-                  className={`glass-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer disabled:opacity-40 ${
-                    repoMeta
-                      ? 'text-[#88ece7] border-[#3fd0c9]/35'
-                      : 'text-zinc-300 hover:text-white'
-                  }`}
-                >
-                  {pickingFolder || scanningRepo ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <FolderOpen className="w-3 h-3" />
-                  )}
-                  {repoMeta
-                    ? t('Klasörü Değiştir', 'Change Folder')
-                    : t('Proje Klasörü', 'Project Folder')}
-                </button>
-
+                {/* 2. Platform & Visual Design Presets */}
                 <button
                   type="button"
                   onClick={() => setShowDesignBar((v) => !v)}
-                  title={t(
-                    'Hedef platform, bütçe ve görsel tasarım dilini tek tıkla kilitle',
-                    'Lock target platform, budget, and visual design language in 1 click'
-                  )}
                   className={`glass-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer ${
                     designLockCount > 0 || showDesignBar
                       ? 'text-[#cbc7ff] border-[#7c74ff]/40'
@@ -816,37 +758,74 @@ export function SetupStage({
                   <Palette className="w-3 h-3" />
                   {t('Tasarım & Hedef', 'Design & Target')}
                   {designLockCount > 0 && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-[#7c74ff]/25 text-white">
+                    <span className="text-[10px] font-mono px-1.5 rounded-full bg-[#7c74ff]/25 text-white">
                       {designLockCount}
                     </span>
                   )}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setShowExtras(!showExtras)}
-                  className="glass-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-zinc-300 hover:text-white cursor-pointer"
-                >
-                  <SlidersHorizontal className="w-3 h-3 text-zinc-400" />
-                  {t('Kısıtlar', 'Constraints')}
-                  {showExtras ? (
-                    <ChevronUp className="w-3 h-3" />
-                  ) : (
-                    <ChevronDown className="w-3 h-3" />
-                  )}
-                  {(constraints.trim() || contextText.trim()) && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#3fd0c9]" />
-                  )}
-                </button>
+                {/* 3. Unified Attach / Constraints Popover */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setAttachMenuOpen((v) => !v)}
+                    className={`glass-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer ${
+                      repoMeta || constraints.trim() || contextText.trim()
+                        ? 'text-[#88ece7] border-[#3fd0c9]/35'
+                        : 'text-zinc-300 hover:text-white'
+                    }`}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    {t('Ekle', 'Attach')}
+                    <ChevronDown className="w-3 h-3 text-zinc-500" />
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="glass-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-zinc-300 hover:text-white cursor-pointer"
-                >
-                  <Paperclip className="w-3 h-3 text-zinc-400" />
-                  {t('Dosya', 'Attach')}
-                </button>
+                  {attachMenuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-30"
+                        onClick={() => setAttachMenuOpen(false)}
+                      />
+                      <div className="absolute left-0 mt-2 w-60 rounded-2xl border border-white/[0.12] bg-[#101218] shadow-2xl p-1.5 z-40 space-y-0.5">
+                        <button
+                          type="button"
+                          disabled={pickingFolder || scanningRepo}
+                          onClick={() => {
+                            setAttachMenuOpen(false);
+                            void handleNativePickFolder();
+                          }}
+                          className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-zinc-200 hover:bg-white/[0.06] cursor-pointer"
+                        >
+                          <FolderOpen className="w-3.5 h-3.5 text-[#3fd0c9]" />
+                          <span>{repoMeta ? t('Proje Klasörünü Değiştir', 'Change Project Folder') : t('Proje Klasörü Bağla', 'Link Project Folder')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAttachMenuOpen(false);
+                            fileRef.current?.click();
+                          }}
+                          className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-zinc-200 hover:bg-white/[0.06] cursor-pointer"
+                        >
+                          <Paperclip className="w-3.5 h-3.5 text-zinc-400" />
+                          <span>{t('Dosya / Doküman Yükle', 'Attach File / Doc')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAttachMenuOpen(false);
+                            setShowExtras((v) => !v);
+                          }}
+                          className="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-zinc-200 hover:bg-white/[0.06] cursor-pointer"
+                        >
+                          <SlidersHorizontal className="w-3.5 h-3.5 text-[#958fff]" />
+                          <span>{t('Özel Kısıt & Not Yaz', 'Add Constraints / Notes')}</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+
                 <input
                   ref={fileRef}
                   type="file"
@@ -863,10 +842,10 @@ export function SetupStage({
                   <button
                     type="button"
                     onClick={() => setAutoPilot((v) => !v)}
-                    title="Oto-Pilot: Tek tıkla Tur 1 → Tur 2 Çapraz Tartışma → Master Karar otomatik akar"
+                    title="Oto-Pilot: Tek tıkla Tur 1 → Delta Tartışma → Master Karar otomatik akar"
                     className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium border transition cursor-pointer ${
                       autoPilot
-                        ? 'bg-[#7c74ff]/20 text-[#d1ceff] border-[#7c74ff]/45 shadow-[0_0_20px_-6px_rgba(124,116,255,0.6)]'
+                        ? 'bg-[#7c74ff]/20 text-[#d1ceff] border-[#7c74ff]/45'
                         : 'glass-pill text-zinc-400 hover:text-zinc-100'
                     }`}
                   >
@@ -882,11 +861,7 @@ export function SetupStage({
                 >
                   {submitting
                     ? t('Başlatılıyor...', 'Starting...')
-                    : uiMode === 'simple'
-                      ? t('Fikri Geliştir & Karara Bağla', 'Evolve Idea & Decide')
-                      : autoPilot
-                        ? t(`Oto-Pilot Başlat (${activeSeatCount})`, `Start Auto-Pilot (${activeSeatCount})`)
-                        : t(`Tartışmayı Başlat (${activeSeatCount})`, `Start Debate (${activeSeatCount})`)}
+                    : t('Başlat', 'Start')}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -1010,67 +985,33 @@ export function SetupStage({
             </div>
           )}
 
-          {/* SADE MOD: 3 Clean Quality Presets | PRO MOD: Full Agent & Model Table */}
-          {uiMode === 'simple' ? (
+          {/* PRO MOD: Clean Collapsible Agent Table (Never clutters the screen unless opened!) */}
+          {uiMode === 'pro' && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400">
-                  Çalışma Kalitesi Seç
-                </h3>
-                <span className="text-[11px] text-zinc-500">
-                  En uygun modeller & roller otomatik atanır
+              <button
+                type="button"
+                onClick={() => setShowAgentsDrawer((v) => !v)}
+                className="w-full glass-panel rounded-2xl px-4 py-3 flex items-center justify-between text-xs text-zinc-300 hover:text-white transition cursor-pointer"
+              >
+                <span className="inline-flex items-center gap-2 font-medium">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#958fff]" />
+                  {t(`Ajan Masasını Özelleştir (${activeSeatCount} aktif ajan)`, `Customize Agent Desk (${activeSeatCount} active)`)}
                 </span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {SIMPLE_PRESETS.map((preset) => {
-                  const Icon = preset.icon;
-                  const selected = activePreset === preset.id;
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => onApplySimplePreset(preset.id)}
-                      className={`text-left rounded-2xl p-4 border transition cursor-pointer glass-card ${
-                        selected
-                          ? 'border-[#7c74ff]/60 bg-[#7c74ff]/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
-                          : 'border-white/[0.08]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Icon
-                            className={`w-4 h-4 ${
-                              selected ? 'text-[#b9b4ff]' : 'text-zinc-400'
-                            }`}
-                          />
-                          <span className="text-xs font-semibold text-white">
-                            {preset.title}
-                          </span>
-                        </div>
-                        {preset.badge ? (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#4cc58a]/15 text-[#8ae3b7]">
-                            {preset.badge}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-mono text-zinc-500">
-                            {preset.time}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-zinc-400 mt-2 leading-relaxed">
-                        {preset.desc}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
+                {showAgentsDrawer ? (
+                  <ChevronUp className="w-4 h-4 text-zinc-400" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-zinc-400" />
+                )}
+              </button>
+
+              {showAgentsDrawer && (
+                <SeatEditorList
+                  seats={seats}
+                  providers={providers}
+                  onChange={onSeatsChange}
+                />
+              )}
             </div>
-          ) : (
-            <SeatEditorList
-              seats={seats}
-              providers={providers}
-              onChange={onSeatsChange}
-            />
           )}
         </form>
       </div>

@@ -215,11 +215,14 @@ export default function App() {
   const [activePreset, setActivePreset] = useState<SimplePresetId>('balanced');
   const [uiMode, setUiMode] = useState<UiMode>(() => {
     const saved = localStorage.getItem('conceptus_ui_mode');
-    return saved === 'simple' ? 'simple' : 'pro';
+    return saved === 'pro' ? 'pro' : 'simple';
   });
   const [submitting, setSubmitting] = useState(false);
   const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [rightOpen, setRightOpen] = useState(() => {
+    const saved = localStorage.getItem('conceptus_right_open');
+    return saved === '1';
+  });
   const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
@@ -947,7 +950,13 @@ export default function App() {
           leftOpen={leftOpen}
           onToggleLeft={() => setLeftOpen((v) => !v)}
           rightOpen={rightOpen}
-          onToggleRight={() => setRightOpen((v) => !v)}
+          onToggleRight={() =>
+            setRightOpen((v) => {
+              const next = !v;
+              localStorage.setItem('conceptus_right_open', next ? '1' : '0');
+              return next;
+            })
+          }
           installedCount={installedCount}
           totalProviders={providers.length}
           updateInfo={updateInfo}
