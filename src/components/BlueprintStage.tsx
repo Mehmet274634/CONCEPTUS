@@ -529,41 +529,24 @@ export function BlueprintStage({
    */
   const handleSaveAndCopyPrompt = async (promptText: string) => {
     setError(null);
-    try {
-      await navigator.clipboard.writeText(promptText);
-    } catch {
-      // clipboard non-fatal
-    }
-
-    if (savedFolder) return;
-
     setSavingFolder(true);
     try {
-      if (session.repoMeta) {
-        const res = await saveBlueprintToLocalFolder(session.id, {
-          useLinkedRepo: true,
-          subfolder: 'docs',
-          includeAntigravityRules,
-          includeClaudeMd,
-          includeCursorRules,
-        });
-        setSavedFolder(res.folderPath);
-      } else {
-        const picked = await pickLocalFolder(
-          'CONCEPTUS — MD Paketinin Kaydedileceği Proje Klasörünü Seç'
-        );
-        if (picked.folderPath) {
-          const res = await saveBlueprintToLocalFolder(session.id, {
-            folderPath: picked.folderPath,
-            includeAntigravityRules,
-            includeClaudeMd,
-            includeCursorRules,
-          });
-          setSavedFolder(res.folderPath);
-        }
+      const useLinkedRepo = Boolean(session.repoMeta && !savedFolder);
+      let folderPath: string | undefined;
+      if (!savedFolder && !useLinkedRepo) {
+        const picked = await pickLocalFolder('CONCEPTUS — MD Paketi');
+        if (!picked.folderPath) return false;
+        folderPath = picked.folderPath;
       }
+      const result = await saveBlueprintToLocalFolder(session.id, {
+        folderPath, useLinkedRepo, includeAntigravityRules, includeClaudeMd, includeCursorRules,
+      });
+      setSavedFolder(result.folderPath);
+      await navigator.clipboard.writeText(`${result.folderPath}\n\n${promptText}`);
+      return true;
     } catch (err: any) {
-      setError(err?.message || 'Klasöre kaydedilemedi.');
+      setError(err?.message || 'Devir tamamlanamadı.');
+      return false;
     } finally {
       setSavingFolder(false);
     }

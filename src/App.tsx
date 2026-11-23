@@ -725,6 +725,10 @@ export default function App() {
     await loadSessionsList();
   };
 
+  const sessionProviders = activeSession?.allowedProviders
+    ? providers.filter(p => activeSession.allowedProviders!.includes(p.id))
+    : providers;
+
   const handleStartNewDebate = async (payload: {
     title: string;
     idea: string;
@@ -737,6 +741,7 @@ export default function App() {
     repoMeta?: RepoSnapshotMeta;
     seats: SeatConfig[];
     autoPilot: boolean;
+    limitProviders?: boolean;
   }) => {
     setSubmitting(true);
     try {
@@ -750,6 +755,7 @@ export default function App() {
         caliber: payload.caliber,
         constraints: payload.constraints,
         contextText: payload.contextText,
+        limitProviders: payload.limitProviders,
         repoMeta: payload.repoMeta,
         seats: payload.seats,
       });
@@ -758,13 +764,16 @@ export default function App() {
       setActiveRun(true);
 
       if (payload.autoPilot) {
-        const judge = pickDefaultJudge(providers, payload.seats);
+        const judge = pickDefaultJudge(providers.filter(p => !created.allowedProviders || created.allowedProviders.includes(p.id)), payload.seats);
         setAutopilotStage('Oto-Pilot başlatılıyor...');
         await triggerAutoPilot(created.id, { seats: payload.seats, judge });
       } else {
         await triggerRound(created.id, undefined, payload.seats);
       }
       await loadSessionsList();
+    } catch (err) {
+      setActiveRun(false);
+      throw err;
     } finally {
       setSubmitting(false);
     }
@@ -795,20 +804,29 @@ export default function App() {
     }
   };
 
+  const decisionWrites = useRef(Promise.resolve());
   const handleUpdateDecisionGates = (gates: DecisionGate[]) => {
     if (!activeSession?.synthesis) return;
     setActiveSession({
       ...activeSession,
       synthesis: { ...activeSession.synthesis, decisionGates: gates },
     });
-    void saveDecisionGates(activeSession.id, gates);
+    const id = activeSession.id;
+    decisionWrites.current = decisionWrites.current.then(async () => {
+      try { await saveDecisionGates(id, gates); }
+      catch (err) {
+        const persisted = await fetchSession(id).catch(() => null);
+        if (persisted) setActiveSession(prev => prev?.id === id ? persisted.session : prev);
+        window.alert(err instanceof Error ? err.message : 'Kararlar kaydedilemedi.');
+      }
+    });
   };
 
   const handleExtractGates = async () => {
     if (!activeSession) return;
     setExtractingGates(true);
     try {
-      const agy = providers.find((p) => p.id === 'antigravity' && p.installed);
+      const agy = sessionProviders.find((p) => p.id === 'antigravity' && p.installed);
       const extractor = agy
         ? {
             provider: 'antigravity' as ProviderId,
@@ -817,7 +835,7 @@ export default function App() {
               agy.models[1]?.id ||
               'auto',
           }
-        : pickDefaultJudge(providers, activeSession.seats);
+        : pickDefaultJudge(sessionProviders, activeSession.seats);
       const updated = await extractSessionDecisionGates(
         activeSession.id,
         extractor
@@ -1030,7 +1048,7 @@ export default function App() {
             {activeSession ? (
               <DebateStage
                 session={activeSession}
-                providers={providers}
+                providers={sessionProviders}
                 detectedIdes={detectedIdes}
                 cooldowns={cooldowns}
                 fallbackPolicy={fallbackPolicy}
@@ -1059,7 +1077,7 @@ export default function App() {
               />
             ) : (
               <SetupStage
-                providers={providers}
+                providers={sessionProviders}
                 poolHealth={poolHealth}
                 probingPools={probingPools}
                 onProbePools={handleProbePools}

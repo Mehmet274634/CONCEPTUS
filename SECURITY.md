@@ -1,23 +1,13 @@
 # Security Policy — CONCEPTUS
 
-CONCEPTUS is engineered with a **local-first, zero-telemetry, defense-in-depth** security model so your raw startup ideas, source code, and AI subscriptions never leave your machine to third-party intermediaries.
+Sessions are stored on the user's machine. Prompts and attached context are processed by the configured AI providers. In setup, users can preview attached context and restrict a new session to the providers of its enabled seats. That restriction applies to fallback as well.
 
-## Security Architecture
+## Security architecture
 
-1. **Strict Localhost Isolation (`127.0.0.1`):**
-   - The embedded Express server binds exclusively to `127.0.0.1` (never `0.0.0.0`), making it unreachable from external network interfaces.
-   - Cross-origin API requests (`Origin` header outside `localhost` / `127.0.0.1`) are rejected immediately with `403 Forbidden` (CSRF & DNS-rebinding defense).
-2. **Hardened HTTP Headers:**
-   - Every response includes `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`.
-3. **Electron Desktop Sandbox:**
-   - Renderer runs with `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, and `webSecurity: true`.
-   - Only 2 tightly scoped IPC channels are exposed via `contextBridge`: `conceptus:pick-folder` (OS directory chooser) and `conceptus:open-folder` (strictly validates `fs.statSync(path).isDirectory()` before calling `shell.openPath`, preventing arbitrary file execution).
-   - External URLs are blocked from navigating inside the app frame and open strictly in the user's system browser.
-4. **Read-Only, Secret-Filtered Repo Scanner (`server/repoContext.ts`):**
-   - Strictly excludes `.env*`, `*.pem`, `*.key`, `id_rsa*`, `*secret*`, `*credential*`, `node_modules/`, `.git/`, and binary files before building any prompt context. Verified by automated Vitest security tests (`tests/repoContext.test.ts`).
-5. **Zero Extra API Keys / Zero Cloud Sync:**
-   - CONCEPTUS executes only the official AI CLIs already installed and signed in on your machine (`agy`, `claude`, `codex`, `gemini`) with read-only / no-tool flags.
-   - All sessions (`%APPDATA%\CONCEPTUS\data` on Windows) remain strictly on your local disk.
+- The server listens on IPv4 loopback. API calls validate the Host and browser Origin. Except for health checks, callers must hold a per-process credential. Streams and export links use a separate read credential. Treat launch URLs and export links as private.
+- The Electron renderer runs in a sandbox with context isolation and Node integration disabled. Privileged IPC validates the main frame and exact origin. The updater resolves the official repository and release in the main process, checks SHA-256, and requires the same valid Windows publisher certificate as the running binary. Unsigned installations and certificate changes require a manual update.
+- Repo scanning excludes common credential filenames and masks recognized secret patterns. Inspect the sharing preview before sending private source material.
+- Folder exports publish a fresh snapshot under the chosen directory. Existing files are preserved.
 
 ## Reporting a Vulnerability
 

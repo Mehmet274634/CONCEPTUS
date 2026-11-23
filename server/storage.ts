@@ -58,6 +58,7 @@ export function slugifyProjectName(title: string): string {
 export function saveSession(session: DebateSession): void {
   ensureDir(getSessionsDir());
   session.updatedAt = Date.now();
+  summaryCache.delete(sessionPath(session.id));
   writeFileAtomic(sessionPath(session.id), JSON.stringify(session, null, 2));
 }
 
@@ -76,8 +77,11 @@ export function deleteSession(id: string): boolean {
   const file = sessionPath(id);
   if (!fs.existsSync(file)) return false;
   fs.unlinkSync(file);
+  summaryCache.delete(file);
   return true;
 }
+
+const summaryCache = new Map<string, { mtime: number; size: number; summary: SessionSummary }>();
 
 export function listSessions(): SessionSummary[] {
   const sessionsDir = getSessionsDir();
@@ -87,10 +91,17 @@ export function listSessions(): SessionSummary[] {
 
   for (const file of files) {
     try {
+      const filename = path.join(sessionsDir, file);
+      const stat = fs.statSync(filename);
+      const cached = summaryCache.get(filename);
+      if (cached && cached.mtime === stat.mtimeMs && cached.size === stat.size) {
+        summaries.push(cached.summary);
+        continue;
+      }
       const session = JSON.parse(
-        fs.readFileSync(path.join(sessionsDir, file), 'utf8')
+        fs.readFileSync(filename, 'utf8')
       ) as DebateSession;
-      summaries.push({
+      const summary: SessionSummary = {
         id: session.id,
         title: session.title,
         domain: session.domain,
@@ -101,7 +112,9 @@ export function listSessions(): SessionSummary[] {
         seatCount: session.seats?.filter((s) => s.enabled).length || 0,
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
-      });
+      };
+      summaryCache.set(filename, { mtime: stat.mtimeMs, size: stat.size, summary });
+      summaries.push(summary);
     } catch {
       // ignore corrupt files
     }
@@ -343,140 +356,85 @@ function resolveExportToolFlags(session: DebateSession, options?: BlueprintExpor
   return { includeClaude, includeCursor, includeAntigravity };
 }
 
-export async function buildBlueprintZipBuffer(
+function exportEntries(
   session: DebateSession,
   options?: BlueprintExportOptions
-): Promise<Buffer> {
+): Map<string, string> {
   if (!session.blueprint || session.blueprint.files.length === 0) {
     throw new Error('Henüz üretilmiş MD paketi yok.');
   }
 
   // Only include tool-specific bridge files matching the user's chosen coding tools (or explicit export flags)
   const { includeClaude, includeCursor, includeAntigravity } = resolveExportToolFlags(session, options);
-  const zip = new JSZip();
-  const folderName = slugifyProjectName(session.title);
-  const root = zip.folder(folderName)!;
-
-  root.file('README.md', buildBlueprintIndexReadme(session));
-  root.file('AGENTS.md', buildAgentBridgeMarkdown(session));
+  const entries = new Map<string, string>();
+  const names = new Set<string>();
+  function add(name: string, content: string) {
+    const canonical = name.toLowerCase();
+    if (names.has(canonical)) throw new Error('Çakışan çıktı dosyası: ' + name);
+    names.add(canonical);
+    entries.set(name, content);
+  }
+  add('README.md', buildBlueprintIndexReadme(session));
+  add('AGENTS.md', buildAgentBridgeMarkdown(session));
 
   if (includeAntigravity) {
-    root.file('.agents/rules/conceptus-blueprint.md', buildAntigravityRuleMarkdown(session));
+    add('.agents/rules/conceptus-blueprint.md', buildAntigravityRuleMarkdown(session));
   }
   if (includeClaude) {
-    root.file('CLAUDE.md', buildClaudeBridgeMarkdown(session));
+    add('CLAUDE.md', buildClaudeBridgeMarkdown(session));
   }
   if (includeCursor) {
-    root.file('.cursor/rules/conceptus-architecture.mdc', buildCursorRuleMdc(session));
+    add('.cursor/rules/conceptus-architecture.mdc', buildCursorRuleMdc(session));
   }
 
   if (session.blueprint.contract?.rawJson) {
-    root.file('PROJECT_CONTRACT.json', session.blueprint.contract.rawJson);
+    add('PROJECT_CONTRACT.json', session.blueprint.contract.rawJson);
   }
 
   if (session.synthesis?.content) {
-    root.file('MASTER_DECISION.md', session.synthesis.content);
+    add('MASTER_DECISION.md', session.synthesis.content);
   }
 
   for (const file of session.blueprint.files) {
     if (file.content.trim()) {
-      root.file(file.filename, file.content);
+      if (!/^[a-zA-Z0-9._-]{1,180}\.md$/i.test(file.filename) ||
+          /^(con|prn|aux|nul|com[1-9]|lpt[1-9])\./i.test(file.filename))
+        throw new Error('Geçersiz belge adı: ' + file.filename);
+      add(file.filename, file.content);
     }
   }
 
+  return entries;
+}
+
+export async function buildBlueprintZipBuffer(session: DebateSession, options?: BlueprintExportOptions) {
+  const zip = new JSZip();
+  const root = zip.folder(slugifyProjectName(session.title))!;
+  for (const [name, content] of exportEntries(session, options)) root.file(name, content);
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
 }
 
-export function saveBlueprintToFolder(
-  session: DebateSession,
-  customDir?: string,
-  options?: BlueprintExportOptions
-): { folderPath: string; fileCount: number } {
-  if (!session.blueprint || session.blueprint.files.length === 0) {
-    throw new Error('Kaydedilecek MD paketi bulunamadı.');
-  }
-
-  // Only include tool-specific bridge files matching the user's chosen coding tools (or explicit export flags)
-  const { includeClaude, includeCursor, includeAntigravity } = resolveExportToolFlags(session, options);
-  const folderName = slugifyProjectName(session.title);
-  const targetDir = customDir?.trim()
-    ? path.resolve(customDir.trim())
-    : path.join(getExportsDir(), folderName);
-
-  ensureDir(targetDir);
-
-  let count = 0;
-  fs.writeFileSync(
-    path.join(targetDir, 'README.md'),
-    buildBlueprintIndexReadme(session),
-    'utf8'
-  );
-  count++;
-
-  fs.writeFileSync(
-    path.join(targetDir, 'AGENTS.md'),
-    buildAgentBridgeMarkdown(session),
-    'utf8'
-  );
-  count++;
-
-  if (includeAntigravity) {
-    const agyRulesDir = path.join(targetDir, '.agents', 'rules');
-    ensureDir(agyRulesDir);
-    fs.writeFileSync(
-      path.join(agyRulesDir, 'conceptus-blueprint.md'),
-      buildAntigravityRuleMarkdown(session),
-      'utf8'
-    );
-    count++;
-  }
-
-  if (includeClaude) {
-    fs.writeFileSync(
-      path.join(targetDir, 'CLAUDE.md'),
-      buildClaudeBridgeMarkdown(session),
-      'utf8'
-    );
-    count++;
-  }
-
-  if (includeCursor) {
-    const cursorDir = path.join(targetDir, '.cursor', 'rules');
-    ensureDir(cursorDir);
-    fs.writeFileSync(
-      path.join(cursorDir, 'conceptus-architecture.mdc'),
-      buildCursorRuleMdc(session),
-      'utf8'
-    );
-    count++;
-  }
-
-  if (session.blueprint.contract?.rawJson) {
-    fs.writeFileSync(
-      path.join(targetDir, 'PROJECT_CONTRACT.json'),
-      session.blueprint.contract.rawJson,
-      'utf8'
-    );
-    count++;
-  }
-
-  if (session.synthesis?.content) {
-    fs.writeFileSync(
-      path.join(targetDir, 'MASTER_DECISION.md'),
-      session.synthesis.content,
-      'utf8'
-    );
-    count++;
-  }
-
-  for (const file of session.blueprint.files) {
-    if (file.content.trim()) {
-      fs.writeFileSync(path.join(targetDir, file.filename), file.content, 'utf8');
-      count++;
+export function saveBlueprintToFolder(session: DebateSession, customDir?: string, options?: BlueprintExportOptions) {
+  const entries = exportEntries(session, options);
+  const pack = session.blueprint!;
+  const base = path.resolve(customDir || pack.exportBasePath || getExportsDir());
+  ensureDir(base);
+  const staging = fs.mkdtempSync(path.join(base, '.conceptus-'));
+  const target = path.join(base, slugifyProjectName(session.title) + '-' + crypto.randomUUID());
+  try {
+    for (const [name, content] of entries) {
+      const file = path.join(staging, name);
+      ensureDir(path.dirname(file));
+      fs.writeFileSync(file, content, { encoding: 'utf8', flag: 'wx' });
     }
+    fs.renameSync(staging, target);
+  } catch (err) {
+    fs.rmSync(staging, { recursive: true, force: true });
+    throw err;
   }
 
-  session.blueprint.savedFolderPath = targetDir;
+  pack.exportBasePath = base;
+  pack.savedFolderPath = target;
   saveSession(session);
-  return { folderPath: targetDir, fileCount: count };
+  return { folderPath: target, fileCount: entries.size };
 }

@@ -30,7 +30,7 @@ interface BlueprintOverviewProps {
   detectedIdes: DetectedIde[];
   savedFolder: string | null;
   savingFolder: boolean;
-  onSaveAndCopyPrompt: (promptText: string, label: string) => Promise<void>;
+  onSaveAndCopyPrompt: (promptText: string, label: string) => Promise<boolean>;
   onOpenInIde: (ide: IdeId | 'explorer') => Promise<void>;
   onSelectFile: (fileId: string) => void;
 }
@@ -74,7 +74,7 @@ export function BlueprintOverview({
 
   async function handlePrimaryHandoff() {
     if (!activePhase) return;
-    await onSaveAndCopyPrompt(activePhase.prompt, activePhase.label);
+    if (!await onSaveAndCopyPrompt(activePhase.prompt, activePhase.label)) return;
     setCopiedId(activePhase.id);
     setTimeout(() => setCopiedId(null), 2400);
   }

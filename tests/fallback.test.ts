@@ -1,3 +1,4 @@
+import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -14,26 +15,18 @@ import {
   setFallbackPolicy,
 } from '../server/fallback.ts';
 
-const COOLDOWN_PATH = path.resolve(process.cwd(), 'data', 'quota-cooldowns.json');
-const POLICY_PATH = path.resolve(process.cwd(), 'data', 'fallback-policy.json');
-
 describe('Quota Circuit Breaker & Quality-Matched Fallback Engine', () => {
-  let prevCooldownsRaw: string | null = null;
-  let prevPolicyRaw: string | null = null;
-
+  const originalDir = process.env.CONCEPTUS_DATA_DIR;
+  let dir: string;
   beforeAll(() => {
-    if (fs.existsSync(COOLDOWN_PATH)) prevCooldownsRaw = fs.readFileSync(COOLDOWN_PATH, 'utf8');
-    if (fs.existsSync(POLICY_PATH)) prevPolicyRaw = fs.readFileSync(POLICY_PATH, 'utf8');
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'conceptus-fallback-'));
+    process.env.CONCEPTUS_DATA_DIR = dir;
   });
-
   afterAll(() => {
-    if (prevCooldownsRaw !== null) fs.writeFileSync(COOLDOWN_PATH, prevCooldownsRaw, 'utf8');
-    else if (fs.existsSync(COOLDOWN_PATH)) fs.unlinkSync(COOLDOWN_PATH);
-
-    if (prevPolicyRaw !== null) fs.writeFileSync(POLICY_PATH, prevPolicyRaw, 'utf8');
-    else if (fs.existsSync(POLICY_PATH)) fs.unlinkSync(POLICY_PATH);
+    if (originalDir === undefined) delete process.env.CONCEPTUS_DATA_DIR;
+    else process.env.CONCEPTUS_DATA_DIR = originalDir;
+    fs.rmSync(dir, { recursive: true, force: true });
   });
-
   it('separates quota pools cleanly across providers and Antigravity sub-pools', () => {
     expect(getQuotaPoolKey('antigravity', 'claude-sonnet-5-5-low')).toBe('antigravity:claude');
     expect(getQuotaPoolKey('antigravity', 'claude-opus-5-5-high')).toBe('antigravity:claude');

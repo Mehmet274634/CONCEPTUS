@@ -10,7 +10,7 @@
 
 Most people jump straight into an AI coding tool with a vague 2-line prompt — and get fragile, half-baked code full of guesswork and cross-file drift.
 
-**CONCEPTUS (`v5.3.3`)** puts multiple AI specialists at the same table **before** a single line of code is written:
+**CONCEPTUS (`v5.3.4`)** puts multiple AI specialists at the same table **before** a single line of code is written:
 
 1. **Deep Problem Analysis + Missing-Spec Radar (`Hızlı Netleştir`)** — Scans your brief instantaneously (0 tokens) for complexity (`S/M/L/XL`) and missing architectural dimensions (platform, persistence, auth/RBAC, budget, visual language), then asks 3–4 decisive Principal Architect questions.
 2. **Target Coding Tool Adaptation (`Antigravity` · `Claude Code` · `Cursor` · `Codex`)** — Pick one or more target tools upfront. Prompts, syntax (`@file` refs for Claude Code/Cursor, sandbox verification gates for Codex, workspace rules for Antigravity), and exported bridge files (`.agents/rules`, `CLAUDE.md`, `.cursor/rules`, `AGENTS.md`) are generated **exclusively** for the tools you chose.
@@ -32,9 +32,9 @@ Most people jump straight into an AI coding tool with a vague 2-line prompt — 
 ## Quick Start
 
 ### Option 1 — Native Desktop App (Recommended · No Node.js Required)
-Download the latest release from the **[Official Download Page](https://conceptus-ivory.vercel.app/download)** or **[GitHub Releases (Latest)](https://github.com/Mehmet274634/CONCEPTUS/releases/latest)**:
-- **Windows Installer (`CONCEPTUS-Setup-5.3.3.exe`)** — Silent in-app updates (fail-closed SHA-256 verified), frameless dark window, native OS folder picker, zero terminal
-- **Windows Portable (`CONCEPTUS-5.3.3-Portable.exe`)** — Standalone `.exe` (zero install)
+Download the latest release from the **[Official Download Page](https://conceptus-ivory.vercel.app/download)** or **[GitHub Releases (Latest)](https://github.com/MehmetKoyun0/CONCEPTUS/releases/latest)**:
+- **Windows Installer (`CONCEPTUS-Setup-5.3.4.exe`)** — Silent in-app updates (SHA-256 and matching Authenticode publisher verified), frameless dark window, native OS folder picker, zero terminal
+- **Windows Portable (`CONCEPTUS-5.3.4-Portable.exe`)** — Standalone `.exe` (zero install)
 - **macOS (`.dmg`) & Linux (`.AppImage`)** — Available on every tagged GitHub Release alongside **`SHA256SUMS.txt`**
 
 Build the Windows desktop installer from source:
@@ -56,7 +56,9 @@ npm install
 npm run build
 npm run cli
 ```
-CONCEPTUS opens at **`http://127.0.0.1:3847`**.
+The launcher opens a local URL with a private access key. For another browser, use the full link printed in the terminal. In development, use the printed link on port 5173. Keep that link private.
+
+Folder exports create a new snapshot directory and return its exact path. Linked projects store snapshots under `docs/conceptus/`. Windows automatic installation requires a valid Authenticode signature matching the running app. For unsigned builds or certificate rotation, use the official release page.
 
 ### CLI Options
 ```bash

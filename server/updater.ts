@@ -10,8 +10,8 @@ import type {
 
 const execFileAsync = promisify(execFile);
 
-export const APP_VERSION = '5.3.3';
-export const GITHUB_REPO = 'Mehmet274634/CONCEPTUS';
+export const APP_VERSION = '5.3.4';
+export const GITHUB_REPO = 'MehmetKoyun0/CONCEPTUS';
 const RELEASE_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 const RELEASE_WEB_LATEST_URL = `https://github.com/${GITHUB_REPO}/releases/latest`;
 const CACHE_TTL_MS = 30 * 60 * 1000;
@@ -299,7 +299,14 @@ export async function checkForUpdates(force = false): Promise<UpdateCheckResult>
  * Safe 1-click self-updater for local Web / CLI users running from a clean Git clone.
  * Refuses to overwrite uncommitted local changes.
  */
-export async function runLocalGitSelfUpdate(): Promise<SelfUpdateResult> {
+let updating: Promise<SelfUpdateResult> | undefined;
+
+export function runLocalGitSelfUpdate(): Promise<SelfUpdateResult> {
+  updating ??= applyLocalGitUpdate().finally(() => { updating = undefined; });
+  return updating;
+}
+
+async function applyLocalGitUpdate(): Promise<SelfUpdateResult> {
   const { isDesktop, isGitRepo } = getRuntimeFlags();
   if (isDesktop) {
     return {
@@ -339,6 +346,10 @@ export async function runLocalGitSelfUpdate(): Promise<SelfUpdateResult> {
       await execFileAsync('git', ['rev-parse', '--short', 'HEAD'], { cwd, timeout: 10_000 })
     ).stdout.trim();
 
+    const markerResult = await execFileAsync('git', ['rev-parse', '--git-path', 'conceptus-pending-build'], { cwd });
+    const marker = path.resolve(cwd, markerResult.stdout.trim());
+    const pending = fs.existsSync(marker);
+    if (!pending) fs.writeFileSync(marker, beforeHead, { flag: 'wx' });
     const pull = await execFileAsync('git', ['pull', '--ff-only', 'origin', 'main'], {
       cwd,
       timeout: 60_000,
@@ -349,7 +360,8 @@ export async function runLocalGitSelfUpdate(): Promise<SelfUpdateResult> {
       await execFileAsync('git', ['rev-parse', '--short', 'HEAD'], { cwd, timeout: 10_000 })
     ).stdout.trim();
 
-    if (beforeHead === afterHead) {
+    if (beforeHead === afterHead && !pending) {
+      fs.unlinkSync(marker);
       return {
         ok: true,
         restartRequired: false,
@@ -359,27 +371,31 @@ export async function runLocalGitSelfUpdate(): Promise<SelfUpdateResult> {
     }
 
     const diffFiles = (
-      await execFileAsync('git', ['diff', '--name-only', `${beforeHead}..${afterHead}`], {
+      await execFileAsync('git', ['diff', '--name-only', `${fs.readFileSync(marker, 'utf8').trim()}..${afterHead}`], {
         cwd,
         timeout: 10_000,
       })
     ).stdout;
 
-    const npmBin = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    const nodeNpm = process.env.npm_execpath || path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+    const useNodeNpm = fs.existsSync(nodeNpm);
+    const npmBin = useNodeNpm ? process.execPath : 'npm';
+    const npmArgs = (args: string[]) => useNodeNpm ? [nodeNpm, ...args] : args;
     if (/package(-lock)?\.json/i.test(diffFiles)) {
-      const inst = await execFileAsync(npmBin, ['install', '--no-audit', '--no-fund'], {
+      const inst = await execFileAsync(npmBin, npmArgs(['ci', '--no-audit', '--no-fund']), {
         cwd,
         timeout: 180_000,
       });
-      logs.push(`$ npm install\n${(inst.stdout || '').slice(-800).trim()}`);
+      logs.push(`$ npm ci\n${(inst.stdout || '').slice(-800).trim()}`);
     }
 
-    const build = await execFileAsync(npmBin, ['run', 'build'], {
+    const build = await execFileAsync(npmBin, npmArgs(['run', 'build']), {
       cwd,
       timeout: 120_000,
     });
     logs.push(`$ npm run build\n${(build.stdout || '').slice(-800).trim()}`);
 
+    fs.unlinkSync(marker);
     cachedCheck = null;
 
     let newVersion = APP_VERSION;

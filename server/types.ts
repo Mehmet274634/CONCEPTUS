@@ -273,6 +273,7 @@ export interface BlueprintPack {
   startedAt: number;
   finishedAt?: number;
   savedFolderPath?: string;
+  exportBasePath?: string;
   contract?: ProjectContract;
   lint?: BlueprintLintReport;
   files: GeneratedMdFile[];
@@ -303,6 +304,7 @@ export interface RepoSnapshotMeta {
 export type AppLang = 'tr' | 'en';
 
 export interface DebateSession {
+  allowedProviders?: ProviderId[];
   id: string;
   title: string;
   idea: string;

@@ -1,6 +1,7 @@
 process.env.CONCEPTUS_EMBEDDED = '1';
 
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
+import { promisify } from 'node:util';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import type { Server } from 'node:http';
@@ -10,7 +11,7 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, shell } from 'e
 import { openFolderInIde } from '../server/ideLauncher.ts';
 import { startConceptusServer } from '../server/index.ts';
 import type { IdeId } from '../server/types.ts';
-import { extractSha256ForFile, isAllowedUpdateHost } from '../server/updater.ts';
+import { checkForUpdates, GITHUB_REPO, extractSha256ForFile, isAllowedUpdateHost } from '../server/updater.ts';
 
 let mainWindow: BrowserWindow | null = null;
 let localServer: Server | null = null;
@@ -32,8 +33,8 @@ function configureUserDataPaths() {
     process.env.CONCEPTUS_EXPORTS_DIR = exportsDir;
   } else {
     const root = app.getAppPath();
-    process.env.CONCEPTUS_DATA_DIR = path.join(root, 'data');
-    process.env.CONCEPTUS_EXPORTS_DIR = path.join(root, 'exports');
+    process.env.CONCEPTUS_DATA_DIR ??= path.join(root, 'data');
+    process.env.CONCEPTUS_EXPORTS_DIR ??= path.join(root, 'exports');
   }
 }
 
@@ -44,6 +45,34 @@ function resolveIconPath(): string | undefined {
     path.join(process.resourcesPath || '', 'icon.ico'),
   ];
   return candidates.find((p) => p && fs.existsSync(p));
+}
+
+function isAppOrigin(rawUrl: string): boolean {
+  try { return new URL(rawUrl).origin === localUrl; } catch { return false; }
+}
+
+function requireMainFrame(event: Electron.IpcMainInvokeEvent) {
+  if (!mainWindow || event.sender !== mainWindow.webContents ||
+      !event.senderFrame || event.senderFrame !== mainWindow.webContents.mainFrame ||
+      !isAppOrigin(event.senderFrame.url)) throw new Error('Yetkisiz masaüstü çağrısı.');
+}
+
+async function verifyInstallerPublisher(installer: string) {
+  const script = [
+    '$ErrorActionPreference = "Stop"',
+    '$appSig = Get-AuthenticodeSignature -LiteralPath $env:CONCEPTUS_CURRENT_EXE',
+    '$newSig = Get-AuthenticodeSignature -LiteralPath $env:CONCEPTUS_UPDATE_EXE',
+    'if ($appSig.Status -ne "Valid" -or $newSig.Status -ne "Valid" -or $appSig.SignerCertificate.Thumbprint -ne $newSig.SignerCertificate.Thumbprint) { exit 1 }',
+  ].join('\n');
+  try {
+    await promisify(execFile)(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
+      ['-NoProfile', '-NonInteractive', '-Command', script], {
+        timeout: 30000, windowsHide: true,
+        env: { ...process.env, CONCEPTUS_CURRENT_EXE: process.execPath, CONCEPTUS_UPDATE_EXE: installer },
+      });
+  } catch {
+    throw new Error('Yayıncı imzası doğrulanamadı. Resmî sürüm sayfasından elle güncelleyin.');
+  }
 }
 
 function createMainWindow(url: string) {
@@ -92,9 +121,7 @@ function createMainWindow(url: string) {
 
   // Security: never allow external sites to open inside the Electron frame
   win.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
-    if (localUrl && targetUrl.startsWith(localUrl)) {
-      return { action: 'allow' };
-    }
+    if (isAppOrigin(targetUrl)) return { action: 'deny' };
     if (/^https?:\/\//i.test(targetUrl)) {
       void shell.openExternal(targetUrl);
     }
@@ -102,7 +129,7 @@ function createMainWindow(url: string) {
   });
 
   win.webContents.on('will-navigate', (event, targetUrl) => {
-    if (localUrl && !targetUrl.startsWith(localUrl)) {
+    if (!isAppOrigin(targetUrl)) {
       event.preventDefault();
       if (/^https?:\/\//i.test(targetUrl)) {
         void shell.openExternal(targetUrl);
@@ -119,6 +146,7 @@ function createMainWindow(url: string) {
 }
 
 ipcMain.handle('conceptus:pick-folder', async (_event, title?: string) => {
+  requireMainFrame(_event);
   const safeTitle = typeof title === 'string' ? title.slice(0, 120) : 'CONCEPTUS — Klasör Seç';
   const opts: Electron.OpenDialogOptions = {
     title: safeTitle,
@@ -136,6 +164,7 @@ ipcMain.handle('conceptus:pick-folder', async (_event, title?: string) => {
 
 // Security: strictly validate path is an existing directory before opening in OS Explorer (never execute files!)
 ipcMain.handle('conceptus:open-folder', async (_event, folderPath: string) => {
+  requireMainFrame(_event);
   if (typeof folderPath !== 'string' || !folderPath.trim()) return;
   try {
     const resolved = path.resolve(folderPath.trim());
@@ -152,6 +181,7 @@ ipcMain.handle('conceptus:open-folder', async (_event, folderPath: string) => {
 ipcMain.handle(
   'conceptus:open-ide',
   async (_event, folderPath: string, ide: IdeId | 'explorer') => {
+    requireMainFrame(_event);
     return openFolderInIde(String(folderPath || ''), ide);
   }
 );
@@ -170,7 +200,7 @@ function downloadHttpsToFile(
 
     const req = https.get(
       urlStr,
-      { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.3' } },
+      { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.4' } },
       (res) => {
         const status = res.statusCode || 0;
         if (status >= 300 && status < 400 && res.headers.location) {
@@ -199,6 +229,7 @@ function downloadHttpsToFile(
           downloaded += chunk.length;
           onProgress(downloaded, total);
         });
+        res.once('error', (error) => out.destroy(error));
         res.pipe(out);
         out.on('finish', () => {
           out.close(() => resolve());
@@ -227,8 +258,7 @@ function fetchHttpsText(urlStr: string, redirectsLeft = 4): Promise<string> {
       reject(new Error('İzin verilmeyen adres.'));
       return;
     }
-    https
-      .get(urlStr, { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.3' } }, (res) => {
+    const request = https.get(urlStr, { headers: { 'User-Agent': 'CONCEPTUS-Desktop-Updater/5.3.4' } }, (res) => {
         const status = res.statusCode || 0;
         if (status >= 300 && status < 400 && res.headers.location && redirectsLeft > 0) {
           res.resume();
@@ -244,9 +274,14 @@ function fetchHttpsText(urlStr: string, redirectsLeft = 4): Promise<string> {
         }
         let body = '';
         res.setEncoding('utf8');
-        res.on('data', (c) => (body += c));
+        res.on('error', reject);
+        res.on('data', (c) => {
+          body += c;
+          if (body.length > 256 * 1024) res.destroy(new Error('Özet listesi çok büyük.'));
+        });
         res.on('end', () => resolve(body));
       })
+      .setTimeout(30_000, () => request.destroy(new Error('Özet listesi zaman aşımı.')))
       .on('error', reject);
   });
 }
@@ -265,9 +300,9 @@ function computeFileSha256(filePath: string): Promise<string> {
 ipcMain.handle(
   'conceptus:download-update',
   async (
-    _event,
-    options: { url?: string; filename?: string; checksumsUrl?: string }
+    _event
   ) => {
+    requireMainFrame(_event);
     const emit = (payload: {
       stage: 'downloading' | 'verifying' | 'launching' | 'error';
       percent: number;
@@ -279,18 +314,19 @@ ipcMain.handle(
     };
 
     try {
-      const urlStr = String(options?.url || '').trim();
-      const rawName = path.basename(String(options?.filename || '').trim());
-      if (!isAllowedUpdateHost(urlStr)) {
-        throw new Error('Yalnızca resmi GitHub Releases indirme bağlantısı kabul edilir.');
-      }
-      if (!/^CONCEPTUS-Setup-[\d.]+\.exe$/i.test(rawName)) {
-        throw new Error('Geçersiz kurulum dosyası adı.');
-      }
-
+      if (process.platform !== 'win32') throw new Error('Windows kurulumu bu platformda kullanılamaz.');
+      const release = await checkForUpdates(true);
+      const version = release.latestVersion;
+      if (!release.updateAvailable || !/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Doğrulanmış yeni sürüm bulunamadı.');
+      const rawName = `CONCEPTUS-Setup-${version}.exe`;
+      const base = `https://github.com/${GITHUB_REPO}/releases/download/v${version}`;
+      const urlStr = base + '/' + rawName;
+      const checksumsUrl = base + '/SHA256SUMS.txt';
+      if (release.setupAsset?.url !== urlStr || release.checksumsUrl !== checksumsUrl)
+        throw new Error('Paket adresi resmî sürüm kaydıyla eşleşmiyor.');
       const updatesDir = path.join(app.getPath('temp'), 'conceptus-updates');
       fs.mkdirSync(updatesDir, { recursive: true });
-      const destPath = path.join(updatesDir, rawName);
+      const destPath = path.join(fs.mkdtempSync(path.join(updatesDir, 'install-')), rawName);
 
       emit({ stage: 'downloading', percent: 1, message: `${rawName} indiriliyor...` });
 
@@ -319,7 +355,6 @@ ipcMain.handle(
       };
 
       // Fail-closed SHA-256 integrity enforcement: NEVER launch an unverified binary!
-      const checksumsUrl = String(options?.checksumsUrl || '').trim();
       if (!checksumsUrl || !isAllowedUpdateHost(checksumsUrl)) {
         removeUnverifiedFile();
         throw new Error(
@@ -353,6 +388,9 @@ ipcMain.handle(
         );
       }
 
+      try { await verifyInstallerPublisher(destPath); }
+      catch (err) { removeUnverifiedFile(); throw err; }
+
       emit({
         stage: 'launching',
         percent: 100,
@@ -372,6 +410,10 @@ ipcMain.handle(
           windowsHide: true,
         }
       );
+      await new Promise<void>((resolve, reject) => {
+        installer.once('spawn', resolve);
+        installer.once('error', reject);
+      });
       installer.unref();
 
       setTimeout(() => {
@@ -415,11 +457,11 @@ app.whenReady().then(async () => {
     localServer = started.server;
     localUrl = started.url;
 
-    createMainWindow(started.url);
+    createMainWindow(started.launchUrl);
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0 && localUrl) {
-        createMainWindow(localUrl);
+        createMainWindow(started.launchUrl);
       }
     });
   } catch (err: any) {

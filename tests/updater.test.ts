@@ -16,12 +16,12 @@ describe('CONCEPTUS v5.0 — Auto-Updater Engine & Security Guards', () => {
   });
 
   it('strictly enforces HTTPS and official GitHub release hosts', () => {
-    expect(isAllowedUpdateHost('https://github.com/Mehmet274634/CONCEPTUS/releases/latest')).toBe(true);
+    expect(isAllowedUpdateHost('https://github.com/MehmetKoyun0/CONCEPTUS/releases/latest')).toBe(true);
     expect(isAllowedUpdateHost('https://objects.githubusercontent.com/some/file.exe')).toBe(true);
     expect(isAllowedUpdateHost('https://release-assets.githubusercontent.com/a/b.exe')).toBe(true);
 
     // Reject HTTP, spoofed subdomains, arbitrary domains
-    expect(isAllowedUpdateHost('http://github.com/Mehmet274634/CONCEPTUS')).toBe(false);
+    expect(isAllowedUpdateHost('http://github.com/MehmetKoyun0/CONCEPTUS')).toBe(false);
     expect(isAllowedUpdateHost('https://github.com.evil.example/file.exe')).toBe(false);
     expect(isAllowedUpdateHost('https://evil.example/CONCEPTUS-Setup-5.0.0.exe')).toBe(false);
     expect(isAllowedUpdateHost('file:///C:/Windows/calc.exe')).toBe(false);
@@ -45,7 +45,7 @@ describe('CONCEPTUS v5.0 — Auto-Updater Engine & Security Guards', () => {
     const payload = {
       tag_name: 'v5.1.0',
       name: 'CONCEPTUS v5.1.0',
-      html_url: 'https://github.com/Mehmet274634/CONCEPTUS/releases/tag/v5.1.0',
+      html_url: 'https://github.com/MehmetKoyun0/CONCEPTUS/releases/tag/v5.1.0',
       published_at: '2026-11-25T12:00:00Z',
       body: '## Yenilikler\n- Otomatik güncelleme motoru.',
       assets: [
@@ -53,19 +53,19 @@ describe('CONCEPTUS v5.0 — Auto-Updater Engine & Security Guards', () => {
           name: 'CONCEPTUS-Setup-5.1.0.exe',
           size: 118_000_000,
           browser_download_url:
-            'https://github.com/Mehmet274634/CONCEPTUS/releases/download/v5.1.0/CONCEPTUS-Setup-5.1.0.exe',
+            'https://github.com/MehmetKoyun0/CONCEPTUS/releases/download/v5.1.0/CONCEPTUS-Setup-5.1.0.exe',
         },
         {
           name: 'CONCEPTUS-5.1.0-Portable.exe',
           size: 108_000_000,
           browser_download_url:
-            'https://github.com/Mehmet274634/CONCEPTUS/releases/download/v5.1.0/CONCEPTUS-5.1.0-Portable.exe',
+            'https://github.com/MehmetKoyun0/CONCEPTUS/releases/download/v5.1.0/CONCEPTUS-5.1.0-Portable.exe',
         },
         {
           name: 'SHA256SUMS.txt',
           size: 256,
           browser_download_url:
-            'https://github.com/Mehmet274634/CONCEPTUS/releases/download/v5.1.0/SHA256SUMS.txt',
+            'https://github.com/MehmetKoyun0/CONCEPTUS/releases/download/v5.1.0/SHA256SUMS.txt',
         },
       ],
     };
@@ -90,10 +90,10 @@ describe('CONCEPTUS v5.0 — Auto-Updater Engine & Security Guards', () => {
     expect(fb.latestVersion).toBe('5.3.2');
     expect(fb.setupAsset?.name).toBe('CONCEPTUS-Setup-5.3.2.exe');
     expect(fb.setupAsset?.url).toBe(
-      'https://github.com/Mehmet274634/CONCEPTUS/releases/download/v5.3.2/CONCEPTUS-Setup-5.3.2.exe'
+      'https://github.com/MehmetKoyun0/CONCEPTUS/releases/download/v5.3.2/CONCEPTUS-Setup-5.3.2.exe'
     );
     expect(fb.checksumsUrl).toBe(
-      'https://github.com/Mehmet274634/CONCEPTUS/releases/download/v5.3.2/SHA256SUMS.txt'
+      'https://github.com/MehmetKoyun0/CONCEPTUS/releases/download/v5.3.2/SHA256SUMS.txt'
     );
     expect(isAllowedUpdateHost(fb.setupAsset!.url)).toBe(true);
   });

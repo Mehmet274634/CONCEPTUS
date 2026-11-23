@@ -45,6 +45,7 @@ interface ActiveRun {
   controller: AbortController;
   startedAt: number;
   session?: DebateSession;
+  onFinished?: () => void;
 }
 
 const activeRuns = new Map<string, ActiveRun>();
@@ -91,11 +92,21 @@ function broadcast(sessionId: string, event: StreamEvent) {
   }
 }
 
-export function abortSessionRun(sessionId: string): boolean {
+function finishRun(id: string, controller: AbortController) {
+  const run = activeRuns.get(id);
+  if (run?.controller !== controller) return;
+  activeRuns.delete(id);
+  run.onFinished?.();
+}
+
+export async function abortAndWait(sessionId: string): Promise<boolean> {
   const run = activeRuns.get(sessionId);
   if (!run) return false;
-  run.controller.abort();
-  activeRuns.delete(sessionId);
+  await new Promise<void>((resolve) => {
+    const previous = run.onFinished;
+    run.onFinished = () => { previous?.(); resolve(); };
+    run.controller.abort();
+  });
   broadcast(sessionId, { type: 'run_aborted' });
   return true;
 }
@@ -118,7 +129,7 @@ async function runWithConcurrency<T>(
 ): Promise<void> {
   const maxWorkers = Math.max(1, Math.min(limit, items.length));
   let cursor = 0;
-  await Promise.all(
+  const results = await Promise.allSettled(
     Array.from({ length: maxWorkers }, async () => {
       while (cursor < items.length) {
         const idx = cursor++;
@@ -126,6 +137,9 @@ async function runWithConcurrency<T>(
       }
     })
   );
+  const failure = results.find((result) => result.status === 'rejected');
+  if (failure?.status === 'rejected') throw failure.reason;
+
 }
 
 function getAnonymousLabel(index: number): string {
@@ -291,6 +305,7 @@ async function executeRoundInternal(
 
       try {
         const result = await runCliSeatWithFallback({
+          allowedProviders: session.allowedProviders,
           provider: seat.provider,
           model: seat.model,
           effort: seat.effort,
@@ -391,6 +406,7 @@ async function executeSynthesisInternal(
   try {
     const prompt = buildMasterSynthesisPrompt(session);
     const result = await runCliSeatWithFallback({
+      allowedProviders: session.allowedProviders,
       provider: judge.provider,
       model: judge.model,
       effort: judge.effort || 'default',
@@ -476,7 +492,7 @@ export async function startNextRound(
         message: err?.message || 'Tur yürütülürken hata oluştu.',
       });
     } finally {
-      activeRuns.delete(sessionId);
+      finishRun(sessionId, controller);
     }
   })();
 
@@ -545,7 +561,7 @@ export async function startAutoPilot(
         message: err?.message || 'Oto-Pilot sırasında hata oluştu.',
       });
     } finally {
-      activeRuns.delete(sessionId);
+      finishRun(sessionId, controller);
     }
   })();
 
@@ -583,7 +599,7 @@ export async function startMasterSynthesis(
         message: err?.message || 'Master Karar sırasında hata oluştu.',
       });
     } finally {
-      activeRuns.delete(sessionId);
+      finishRun(sessionId, controller);
     }
   })();
 
@@ -647,40 +663,47 @@ export async function extractDecisionGates(
   sessionId: string,
   extractor: { provider: ProviderId; model: string }
 ): Promise<SynthesisResult> {
+  if (activeRuns.has(sessionId)) throw new Error('Oturumda işlem devam ediyor.');
   const session = loadSession(sessionId);
   if (!session || !session.synthesis?.content) {
     throw new Error('Önce Master Karar oluşturulmalıdır.');
   }
 
-  const prompt = buildExtractGatesPrompt(session);
   const ctrl = new AbortController();
-  const res = await runCliSeatWithFallback({
-    provider: extractor.provider,
-    model: extractor.model,
-    effort: 'low',
-    tier: 'concise',
-    prompt,
-    signal: ctrl.signal,
-    onDelta: () => {},
-  });
+  activeRuns.set(sessionId, { controller: ctrl, startedAt: Date.now(), session });
+  try {
+    const prompt = buildExtractGatesPrompt(session);
+    const res = await runCliSeatWithFallback({
+      allowedProviders: session.allowedProviders,
+      provider: extractor.provider,
+      model: extractor.model,
+      effort: 'low',
+      tier: 'concise',
+      prompt,
+      signal: ctrl.signal,
+      onDelta: () => {},
+    });
 
-  const jsonMatch = res.content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Karar kapıları çıkarılamadı.');
-  const parsed = JSON.parse(jsonMatch[0]);
+    const jsonMatch = res.content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Karar kapıları çıkarılamadı.');
+    const parsed = JSON.parse(jsonMatch[0]);
 
-  if (Array.isArray(parsed?.evolutionHighlights)) {
-    session.synthesis.evolutionHighlights = parsed.evolutionHighlights
-      .map((x: any) => String(x).trim())
-      .filter(Boolean)
-      .slice(0, 5);
+    if (Array.isArray(parsed?.evolutionHighlights)) {
+      session.synthesis.evolutionHighlights = parsed.evolutionHighlights
+        .map((x: any) => String(x).trim())
+        .filter(Boolean)
+        .slice(0, 5);
+    }
+    const gates = sanitizeGates(parsed?.decisionGates);
+    if (gates.length > 0) {
+      session.synthesis.decisionGates = gates;
+    }
+
+    saveSession(session);
+    return session.synthesis;
+  } finally {
+    finishRun(sessionId, ctrl);
   }
-  const gates = sanitizeGates(parsed?.decisionGates);
-  if (gates.length > 0) {
-    session.synthesis.decisionGates = gates;
-  }
-
-  saveSession(session);
-  return session.synthesis;
 }
 
 function sanitizeMdFilename(raw: string): string {
@@ -703,42 +726,49 @@ export async function suggestBlueprintPlan(
   sessionId: string,
   planner: { provider: ProviderId; model: string }
 ): Promise<BlueprintFileSpec[]> {
+  if (activeRuns.has(sessionId)) throw new Error('Oturumda işlem devam ediyor.');
   const session = loadSession(sessionId);
   if (!session) throw new Error('Oturum bulunamadı.');
   if (session.rounds.length === 0 && !session.synthesis) {
     throw new Error('Öneri için önce tartışma veya Master Karar üretilmelidir.');
   }
 
-  const prompt = buildBlueprintPlannerPrompt(session);
   const controller = new AbortController();
-  const res = await runCliSeatWithFallback({
-    provider: planner.provider,
-    model: planner.model,
-    effort: 'low',
-    tier: 'concise',
-    prompt,
-    signal: controller.signal,
-    onDelta: () => {},
-  });
+  activeRuns.set(sessionId, { controller: controller, startedAt: Date.now(), session });
+  try {
+    const prompt = buildBlueprintPlannerPrompt(session);
+    const res = await runCliSeatWithFallback({
+      allowedProviders: session.allowedProviders,
+      provider: planner.provider,
+      model: planner.model,
+      effort: 'low',
+      tier: 'concise',
+      prompt,
+      signal: controller.signal,
+      onDelta: () => {},
+    });
 
-  const text = res.content.trim();
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) {
-    throw new Error('Model geçerli bir dosya listesi JSON döndüremedi.');
+    const text = res.content.trim();
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error('Model geçerli bir dosya listesi JSON döndüremedi.');
+    }
+
+    const rawList = JSON.parse(jsonMatch[0]);
+    if (!Array.isArray(rawList) || rawList.length === 0) {
+      throw new Error('Boş dosya listesi döndü.');
+    }
+
+    return rawList.slice(0, 8).map((item: any, idx: number) => ({
+      id: `md_ai_${Date.now().toString(36)}_${idx}`,
+      filename: sanitizeMdFilename(String(item.filename || `DOC_${idx + 1}.md`)),
+      title: String(item.title || item.filename || `Doküman ${idx + 1}`).trim(),
+      purpose: String(item.purpose || 'Master Karar doğrultusunda doküman.').trim(),
+      selected: true,
+    }));
+  } finally {
+    finishRun(sessionId, controller);
   }
-
-  const rawList = JSON.parse(jsonMatch[0]);
-  if (!Array.isArray(rawList) || rawList.length === 0) {
-    throw new Error('Boş dosya listesi döndü.');
-  }
-
-  return rawList.slice(0, 8).map((item: any, idx: number) => ({
-    id: `md_ai_${Date.now().toString(36)}_${idx}`,
-    filename: sanitizeMdFilename(String(item.filename || `DOC_${idx + 1}.md`)),
-    title: String(item.title || item.filename || `Doküman ${idx + 1}`).trim(),
-    purpose: String(item.purpose || 'Master Karar doğrultusunda doküman.').trim(),
-    selected: true,
-  }));
 }
 
 function sanitizeContract(raw: any, fallbackTitle: string): ProjectContract | undefined {
@@ -794,6 +824,7 @@ async function generateProjectContractInternal(
   try {
     const prompt = buildProjectContractPrompt(session);
     const res = await runCliSeatWithFallback({
+      allowedProviders: session.allowedProviders,
       provider: options.provider,
       model: options.model,
       effort: 'low',
@@ -834,7 +865,8 @@ export async function startBlueprintGeneration(
   const session = loadSession(sessionId);
   if (!session) throw new Error('Oturum bulunamadı.');
 
-  const selected = options.files.filter((f) => f.selected);
+  if (options.files.length > 32) throw new Error('En fazla 32 belge üretilebilir.');
+  const selected = options.files.filter((f) => f?.selected);
   if (selected.length === 0) {
     throw new Error('Üretmek için en az 1 Markdown dosyası seçmelisin.');
   }
@@ -849,6 +881,10 @@ export async function startBlueprintGeneration(
     id: f.id || `md_${i}_${Date.now().toString(36)}`,
     filename: sanitizeMdFilename(f.filename),
   }));
+
+  const names = normalizedSpecs.map((f) => f.filename.toLowerCase());
+  if (new Set(names).size !== names.length || new Set(normalizedSpecs.map((f) => f.id)).size !== names.length)
+    throw new Error('Dosya adları ve kimlikleri benzersiz olmalıdır.');
 
   const files: GeneratedMdFile[] = normalizedSpecs.map((spec) => ({
     id: spec.id,
@@ -917,6 +953,7 @@ export async function startBlueprintGeneration(
         );
         try {
           const result = await runCliSeatWithFallback({
+            allowedProviders: session.allowedProviders,
             provider: target.provider,
             model: target.model,
             effort: effectiveEffort,
@@ -1005,7 +1042,7 @@ export async function startBlueprintGeneration(
         message: err?.message || 'MD paketi üretilirken hata oluştu.',
       });
     } finally {
-      activeRuns.delete(sessionId);
+      finishRun(sessionId, controller);
     }
   })();
 
@@ -1077,6 +1114,7 @@ export async function regenerateBlueprintFile(
         digest
       );
       const result = await runCliSeatWithFallback({
+        allowedProviders: session.allowedProviders,
         provider: options.provider,
         model: options.model,
         effort: options.effort || 'low',
@@ -1132,7 +1170,7 @@ export async function regenerateBlueprintFile(
         broadcast(sessionId, { type: 'blueprint_lint_completed', lint });
       }
       saveSession(session);
-      activeRuns.delete(sessionId);
+      finishRun(sessionId, controller);
       broadcast(sessionId, { type: 'blueprint_file_completed', file: target });
       broadcast(sessionId, { type: 'blueprint_completed', finishedAt: Date.now() });
     }
@@ -1145,58 +1183,65 @@ export async function runBlueprintAudit(
   sessionId: string,
   auditor: { provider: ProviderId; model: string }
 ): Promise<BlueprintAudit> {
+  if (activeRuns.has(sessionId)) throw new Error('Oturumda işlem devam ediyor.');
   const session = loadSession(sessionId);
   if (!session || !session.blueprint) {
     throw new Error('Denetlenecek MD paketi bulunamadı.');
   }
 
-  const prompt = buildBlueprintAuditPrompt(session);
   const ctrl = new AbortController();
-  const res = await runCliSeatWithFallback({
-    provider: auditor.provider,
-    model: auditor.model,
-    effort: 'low',
-    tier: 'concise',
-    prompt,
-    signal: ctrl.signal,
-    onDelta: () => {},
-  });
+  activeRuns.set(sessionId, { controller: ctrl, startedAt: Date.now(), session });
+  try {
+    const prompt = buildBlueprintAuditPrompt(session);
+    const res = await runCliSeatWithFallback({
+      allowedProviders: session.allowedProviders,
+      provider: auditor.provider,
+      model: auditor.model,
+      effort: 'low',
+      tier: 'concise',
+      prompt,
+      signal: ctrl.signal,
+      onDelta: () => {},
+    });
 
-  const jsonMatch = res.content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error('Denetçi geçerli JSON raporu döndüremedi.');
+    const jsonMatch = res.content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Denetçi geçerli JSON raporu döndüremedi.');
+    }
+    const parsed = JSON.parse(jsonMatch[0]);
+    const issues: BlueprintAuditIssue[] = Array.isArray(parsed?.issues)
+      ? parsed.issues.slice(0, 8).map((it: any, idx: number) => ({
+          id: String(it.id || `iss_${idx + 1}`),
+          severity:
+            it.severity === 'high' || it.severity === 'medium' || it.severity === 'low'
+              ? it.severity
+              : 'medium',
+          file: String(it.file || '').trim(),
+          conflictWith: it.conflictWith ? String(it.conflictWith).trim() : undefined,
+          description: String(it.description || '').trim(),
+          fixInstruction: String(it.fixInstruction || '').trim(),
+          fixed: false,
+        }))
+      : [];
+
+    const score = Math.max(0, Math.min(100, Number(parsed?.score ?? (issues.length === 0 ? 96 : 82))));
+    const audit: BlueprintAudit = {
+      score,
+      summary: String(parsed?.summary || 'Denetim tamamlandı.').trim(),
+      provider: res.usedProvider,
+      model: res.usedModel,
+      durationMs: res.durationMs,
+      checkedAt: Date.now(),
+      issues,
+    };
+
+    session.blueprint.audit = audit;
+    saveSession(session);
+    broadcast(sessionId, { type: 'blueprint_audit_completed', audit });
+    return audit;
+  } finally {
+    finishRun(sessionId, ctrl);
   }
-  const parsed = JSON.parse(jsonMatch[0]);
-  const issues: BlueprintAuditIssue[] = Array.isArray(parsed?.issues)
-    ? parsed.issues.slice(0, 8).map((it: any, idx: number) => ({
-        id: String(it.id || `iss_${idx + 1}`),
-        severity:
-          it.severity === 'high' || it.severity === 'medium' || it.severity === 'low'
-            ? it.severity
-            : 'medium',
-        file: String(it.file || '').trim(),
-        conflictWith: it.conflictWith ? String(it.conflictWith).trim() : undefined,
-        description: String(it.description || '').trim(),
-        fixInstruction: String(it.fixInstruction || '').trim(),
-        fixed: false,
-      }))
-    : [];
-
-  const score = Math.max(0, Math.min(100, Number(parsed?.score ?? (issues.length === 0 ? 96 : 82))));
-  const audit: BlueprintAudit = {
-    score,
-    summary: String(parsed?.summary || 'Denetim tamamlandı.').trim(),
-    provider: res.usedProvider,
-    model: res.usedModel,
-    durationMs: res.durationMs,
-    checkedAt: Date.now(),
-    issues,
-  };
-
-  session.blueprint.audit = audit;
-  saveSession(session);
-  broadcast(sessionId, { type: 'blueprint_audit_completed', audit });
-  return audit;
 }
 
 export async function startFixBlueprintIssues(
@@ -1261,6 +1306,7 @@ export async function startFixBlueprintIssues(
             issues
           );
           const result = await runCliSeatWithFallback({
+            allowedProviders: session.allowedProviders,
             provider: options.provider,
             model: options.model,
             effort: 'low',
@@ -1327,7 +1373,7 @@ export async function startFixBlueprintIssues(
       }
       broadcast(sessionId, { type: 'blueprint_completed', finishedAt: Date.now() });
     } finally {
-      activeRuns.delete(sessionId);
+      finishRun(sessionId, controller);
     }
   })();
 
@@ -1416,6 +1462,7 @@ export async function retryFailedBlueprintFiles(
             digest
           );
           const result = await runCliSeatWithFallback({
+            allowedProviders: session.allowedProviders,
             provider: target.provider,
             model: target.model,
             effort: effectiveEffort,
@@ -1490,7 +1537,7 @@ export async function retryFailedBlueprintFiles(
         message: err?.message || 'Eksik MD dosyaları tamamlanırken hata oluştu.',
       });
     } finally {
-      activeRuns.delete(sessionId);
+      finishRun(sessionId, controller);
     }
   })();
 
@@ -1566,6 +1613,7 @@ export async function startRedTeamRound(
       try {
         const prompt = buildRedTeamPrompt(session, attacker);
         const result = await runCliSeatWithFallback({
+          allowedProviders: session.allowedProviders,
           provider: attacker.provider,
           model: attacker.model,
           effort: attacker.effort === 'low' ? 'medium' : attacker.effort,
@@ -1600,7 +1648,7 @@ export async function startRedTeamRound(
       broadcast(sessionId, { type: 'seat_completed', roundNumber, response: resp });
       broadcast(sessionId, { type: 'round_completed', roundNumber, finishedAt: round.finishedAt });
     } finally {
-      activeRuns.delete(sessionId);
+      finishRun(sessionId, controller);
     }
   })();
 
@@ -1680,6 +1728,7 @@ export async function startTargetedChallenge(
           try {
             const prompt = buildTargetedChallengePrompt(session, seat, q);
             const result = await runCliSeatWithFallback({
+              allowedProviders: session.allowedProviders,
               provider: seat.provider,
               model: seat.model,
               effort: seat.effort,
@@ -1717,7 +1766,7 @@ export async function startTargetedChallenge(
       saveSession(session);
       broadcast(sessionId, { type: 'round_completed', roundNumber, finishedAt: round.finishedAt });
     } finally {
-      activeRuns.delete(sessionId);
+      finishRun(sessionId, controller);
     }
   })();
 

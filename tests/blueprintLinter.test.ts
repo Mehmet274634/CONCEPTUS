@@ -94,10 +94,15 @@ describe('CONCEPTUS v5.0 — 0-Token Deterministic Local Blueprint Linter', () =
       generatedAt: Date.now(),
     };
 
-    const report = lintBlueprintPack(makeCleanSession(contract));
+    const session = makeCleanSession(contract);
+    const report = lintBlueprintPack(session);
     expect(report.score).toBe(100);
     expect(report.issues).toHaveLength(0);
     expect(report.passedChecks).toBe(report.totalChecks);
+
+    // A custom pack may omit the optional handoff brief. The exporter still builds AGENTS.md.
+    session.blueprint!.files = session.blueprint!.files.filter(f => !f.filename.includes('AGENTS'));
+    expect(lintBlueprintPack(session).issues.some(issue => issue.file === '05_AGENTS_START_HERE.md')).toBe(false);
   });
 
   it('catches TBD/TODO prose leakage, broken Mermaid quotes, missing H1, stub files, and contract entity drift', () => {

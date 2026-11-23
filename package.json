@@ -1,6 +1,6 @@
 {
   "name": "conceptus",
-  "version": "5.3.3",
+  "version": "5.3.4",
   "private": false,
   "type": "module",
   "main": "dist-electron/main.cjs",
@@ -30,9 +30,9 @@
     "LICENSE"
   ],
   "scripts": {
-    "dev": "concurrently -n API,UI -c cyan,magenta \"tsx watch server/index.ts\" \"vite\"",
+    "dev": "concurrently -n API,UI -c cyan,magenta \"tsx watch server/start.ts --vite-dev\" \"vite\"",
     "build": "vite build",
-    "start": "tsx server/index.ts --serve",
+    "start": "tsx server/start.ts --serve",
     "cli": "node bin/conceptus.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -47,12 +47,15 @@
     "express": "^5.1.0",
     "jszip": "^3.10.2",
     "lucide-react": "^0.511.0",
-    "mermaid": "^11.12.3",
+    "mermaid": "^12.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "tsx": "^4.19.4"
+  },
+  "overrides": {
+    "minimatch@>=7 <11.0.1": "11.0.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.7",

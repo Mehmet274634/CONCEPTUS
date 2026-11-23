@@ -76,7 +76,15 @@ async function findExecutable(cmd: string): Promise<string | null> {
       const exe = lines.find((l) => /\.exe$/i.test(l));
       if (exe) return exe;
       const cmdShim = lines.find((l) => /\.(cmd|bat|com)$/i.test(l));
-      if (cmdShim) return cmdShim;
+      if (cmdShim) {
+        const name = ({ code: 'Code.exe', cursor: 'Cursor.exe', antigravity: 'Antigravity.exe' } as Record<string, string>)[cmd];
+        if (name) {
+          for (const up of ['..', '../../..']) {
+            const native = path.resolve(path.dirname(cmdShim), up, name);
+            if (fs.existsSync(native)) return native;
+          }
+        }
+      }
       return null;
     }
 
@@ -103,7 +111,7 @@ async function resolveIdeExecutable(spec: IdeSpec): Promise<string | null> {
 
   if (process.platform === 'win32') {
     for (const candidate of spec.winFallbackPaths()) {
-      if (fs.existsSync(candidate)) return candidate;
+      if (/\.exe$/i.test(candidate) && fs.existsSync(candidate)) return candidate;
     }
   }
 
@@ -163,8 +171,10 @@ export async function openFolderInIde(
       stdio: 'ignore',
       windowsHide: false,
     });
-    child.unref();
-    return { ok: true };
+    return await new Promise((resolve) => {
+      child.once('spawn', () => { child.unref(); resolve({ ok: true }); });
+      child.once('error', (err) => resolve({ ok: false, error: err.message }));
+    });
   }
 
   const allowedIds: IdeId[] = ['antigravity', 'cursor', 'vscode'];
@@ -178,24 +188,11 @@ export async function openFolderInIde(
     return { ok: false, error: `${ide} bu bilgisayarda kurulu bulunamadı.` };
   }
 
-  // On Windows, .cmd/.bat shims need cmd.exe /d /s /c with an outer quoted command line
-  const isWinCmd = process.platform === 'win32' && /\.(cmd|bat)$/i.test(match.command);
-  const child = isWinCmd
-    ? spawn(
-        'cmd.exe',
-        ['/d', '/s', '/c', `""${match.command.replace(/"/g, '')}" "${resolvedDir.replace(/"/g, '')}""`],
-        {
-          detached: true,
-          stdio: 'ignore',
-          windowsHide: true,
-          windowsVerbatimArguments: true,
-        }
-      )
-    : spawn(match.command, [resolvedDir], {
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: true,
-      });
-  child.unref();
-  return { ok: true };
+  const child = spawn(match.command, [resolvedDir], {
+    detached: true, stdio: 'ignore', windowsHide: true,
+  });
+  return await new Promise((resolve) => {
+    child.once('spawn', () => { child.unref(); resolve({ ok: true }); });
+    child.once('error', (err) => resolve({ ok: false, error: err.message }));
+  });
 }

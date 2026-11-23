@@ -43,8 +43,16 @@ Options:
 function checkHealth(port) {
   return new Promise((resolve) => {
     const req = http.get(`http://127.0.0.1:${port}/api/health`, { timeout: 1200 }, (res) => {
-      resolve(res.statusCode === 200);
-      res.resume();
+      let body = '';
+      res.on('data', (chunk) => {
+        body += chunk;
+        if (body.length > 1024) req.destroy();
+      });
+      res.on('error', () => resolve(false));
+      res.on('end', () => {
+        try { resolve(res.statusCode === 200 && JSON.parse(body).name === 'CONCEPTUS'); }
+        catch { resolve(false); }
+      });
     });
     req.on('error', () => resolve(false));
     req.on('timeout', () => {
@@ -56,7 +64,7 @@ function checkHealth(port) {
 
 function openUrl(url) {
   if (process.platform === 'win32') {
-    spawn('cmd.exe', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref();
+    spawn('rundll32.exe', ['url.dll,FileProtocolHandler', url], { detached: true, stdio: 'ignore' }).unref();
   } else if (process.platform === 'darwin') {
     spawn('open', [url], { detached: true, stdio: 'ignore' }).unref();
   } else {
@@ -68,9 +76,11 @@ async function main() {
   const { port, openBrowser } = parseArgs(process.argv.slice(2));
   const url = `http://127.0.0.1:${port}`;
 
+  process.chdir(ROOT_DIR);
   if (await checkHealth(port)) {
     console.log(`[CONCEPTUS] Zaten calisiyor: ${url}`);
     if (openBrowser) openUrl(url);
+    console.log('Yeni tarayıcı profili için çalışan başlatıcının özel bağlantısını kullanın.');
     return;
   }
 
@@ -80,42 +90,12 @@ async function main() {
     process.exit(1);
   }
 
-  const tsxBin = path.join(
-    ROOT_DIR,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx'
-  );
-  const serverEntry = path.join(ROOT_DIR, 'server', 'index.ts');
+  const { tsImport } = await import('tsx/esm/api');
+  const { startConceptusServer } = await tsImport('../server/index.ts', import.meta.url);
+  const { launchUrl } = await startConceptusServer({ port, distDir: path.dirname(distIndex) });
+  console.log(launchUrl);
+  if (openBrowser) openUrl(launchUrl);
 
-  const child = spawn(tsxBin, [serverEntry, '--serve'], {
-    cwd: ROOT_DIR,
-    env: { ...process.env, PORT: String(port) },
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  });
-
-  if (openBrowser) {
-    const start = Date.now();
-    const timer = setInterval(async () => {
-      if (Date.now() - start > 15_000) {
-        clearInterval(timer);
-        return;
-      }
-      if (await checkHealth(port)) {
-        clearInterval(timer);
-        openUrl(url);
-      }
-    }, 350);
-  }
-
-  const shutdown = () => {
-    child.kill('SIGTERM');
-  };
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
-
-  child.on('exit', (code) => process.exit(code ?? 0));
 }
 
 main().catch((err) => {

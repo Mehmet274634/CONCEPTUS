@@ -100,20 +100,30 @@ describe('Storage, ZIP Export & AGENTS.md Bridge Generation', () => {
     expect(zipPaths.some((p) => p.endsWith('/.cursor/rules/conceptus-architecture.mdc'))).toBe(false);
 
     // 2. Default Folder export writes only universal files (6 total: 2 MDs + README + AGENTS + MASTER_DECISION + PROJECT_CONTRACT)
+    fs.writeFileSync(path.join(tempExportDir, 'README.md'), 'Owner notes');
     const exported = saveBlueprintToFolder(session, tempExportDir);
+    expect(fs.readFileSync(path.join(tempExportDir, 'README.md'), 'utf8')).toBe('Owner notes');
     expect(exported.fileCount).toBe(6);
-    expect(fs.existsSync(path.join(tempExportDir, 'AGENTS.md'))).toBe(true);
-    expect(fs.existsSync(path.join(tempExportDir, 'PROJECT_CONTRACT.json'))).toBe(true);
-    expect(fs.existsSync(path.join(tempExportDir, '01_PRODUCT_VISION.md'))).toBe(true);
-    expect(fs.existsSync(path.join(tempExportDir, 'CLAUDE.md'))).toBe(false);
-    expect(fs.existsSync(path.join(tempExportDir, '.cursor', 'rules', 'conceptus-architecture.mdc'))).toBe(false);
+    expect(fs.existsSync(path.join(exported.folderPath, 'AGENTS.md'))).toBe(true);
+    expect(fs.existsSync(path.join(exported.folderPath, 'PROJECT_CONTRACT.json'))).toBe(true);
+    expect(fs.existsSync(path.join(exported.folderPath, '01_PRODUCT_VISION.md'))).toBe(true);
+    expect(fs.existsSync(path.join(exported.folderPath, 'CLAUDE.md'))).toBe(false);
+    expect(fs.existsSync(path.join(exported.folderPath, '.cursor', 'rules', 'conceptus-architecture.mdc'))).toBe(false);
 
-    const bridge = fs.readFileSync(path.join(tempExportDir, 'AGENTS.md'), 'utf8');
+    const bridge = fs.readFileSync(path.join(exported.folderPath, 'AGENTS.md'), 'utf8');
     expect(bridge).toContain('01_PRODUCT_VISION.md');
     expect(bridge).toContain('05_AGENTS_START_HERE.md');
     expect(bridge).toContain('Offline-first çalışmalı');
 
     // 3. Explicit opt-in writes CLAUDE.md and .cursor/rules/conceptus-architecture.mdc cleanly
+    session.blueprint!.files[0].content = 'Revised blueprint';
+    const updated = saveBlueprintToFolder(session);
+    expect(path.dirname(updated.folderPath)).toBe(tempExportDir);
+    expect(updated.folderPath).not.toBe(exported.folderPath);
+    const name = session.blueprint!.files[0].filename;
+    expect(fs.readFileSync(path.join(updated.folderPath, name), 'utf8')).toBe('Revised blueprint');
+    expect(fs.readFileSync(path.join(exported.folderPath, name), 'utf8')).not.toBe('Revised blueprint');
+
     const optInDir = fs.mkdtempSync(path.join(os.tmpdir(), 'conceptus-optin-test-'));
     try {
       const optInExport = saveBlueprintToFolder(session, optInDir, {
@@ -121,9 +131,9 @@ describe('Storage, ZIP Export & AGENTS.md Bridge Generation', () => {
         includeCursorRules: true,
       });
       expect(optInExport.fileCount).toBe(8);
-      expect(fs.existsSync(path.join(optInDir, 'CLAUDE.md'))).toBe(true);
+      expect(fs.existsSync(path.join(optInExport.folderPath, 'CLAUDE.md'))).toBe(true);
       const cursorRule = fs.readFileSync(
-        path.join(optInDir, '.cursor', 'rules', 'conceptus-architecture.mdc'),
+        path.join(optInExport.folderPath, '.cursor', 'rules', 'conceptus-architecture.mdc'),
         'utf8'
       );
       expect(cursorRule).toContain('alwaysApply: true');

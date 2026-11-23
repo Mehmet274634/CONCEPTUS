@@ -310,12 +310,12 @@ export function lintBlueprintPack(session: DebateSession): BlueprintLintReport {
       }
     }
 
-    if (contract.hardInvariants.length > 0) {
+    if (agentsFile && contract.hardInvariants.length > 0) {
       totalChecks++;
-      if (!agentsFile || !/invariant|kırmızı çizgi|değiştirilemez|kurallar|must not|never/i.test(agentsFile.content)) {
+      if (!/invariant|kırmızı çizgi|değiştirilemez|kurallar|must not|never/i.test(agentsFile.content)) {
         pushIssue({
           severity: 'medium',
-          file: agentsFile?.filename || '05_AGENTS_START_HERE.md',
+          file: agentsFile.filename,
           conflictWith: 'PROJECT_CONTRACT.json',
           description: 'Başlangıç talimatı dosyasında değiştirilemez kurallar (Hard Invariants) açıkça vurgulanmamış.',
           fixInstruction: '05_AGENTS_START_HERE.md içine PROJECT_CONTRACT içindeki tüm Hard Invariants kurallarını net madde listesi olarak ekle.',

@@ -369,6 +369,7 @@ export interface ResilientRunOptions extends RunCliOptions {
   jobType?: JobType;
   /** When true, bypasses auto-switch (e.g., user explicitly selected this exact model on manual retry) */
   strictSelection?: boolean;
+  allowedProviders?: ProviderId[];
   onFallback?: (notice: FallbackNotice) => void;
 }
 
@@ -389,7 +390,10 @@ export async function runCliSeatWithFallback(
     options.jobType
   );
   const providers = await discoverProviders(false);
-  const allCandidates = buildQualityMatchedCandidates(providers, requiredCaliber, policy);
+  const permitted = (id: ProviderId) => !options.allowedProviders || options.allowedProviders.includes(id);
+  if (!permitted(options.provider)) throw new Error('Bu sağlayıcı için oturum paylaşım izni yok.');
+  const allCandidates = buildQualityMatchedCandidates(providers, requiredCaliber, policy)
+    .filter((candidate) => permitted(candidate.provider));
 
   const allowAutoSwitch = !options.strictSelection && policy.mode !== 'ask';
 

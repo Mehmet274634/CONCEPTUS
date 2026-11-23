@@ -13,6 +13,10 @@ import {
 describe('v5.3.1 Hardening — Atomic Storage, Secret Redaction & HTTP API Integration', () => {
   let server: Server | null = null;
   let baseUrl = '';
+  let auth = '';
+  function apiFetch(url: string, init?: RequestInit) {
+    return fetch(url, { ...init, headers: { authorization: auth, ...init?.headers } });
+  }
   const createdSessionIds: string[] = [];
 
   beforeAll(async () => {
@@ -21,6 +25,7 @@ describe('v5.3.1 Hardening — Atomic Storage, Secret Redaction & HTTP API Integ
     const started = await startConceptusServer({ port: 0 });
     server = started.server;
     baseUrl = started.url;
+    auth = 'Bearer ' + new URLSearchParams(new URL(started.launchUrl).hash.slice(1)).get('access');
   });
 
   afterAll(async () => {
@@ -102,24 +107,26 @@ describe('v5.3.1 Hardening — Atomic Storage, Secret Redaction & HTTP API Integ
 
   it('rejects malformed non-string payloads with 400 and blocks cross-origin requests with 403', async () => {
     // 1. Cross-origin AND foreign localhost port requests must BOTH be blocked with 403 JSON
-    const crossOrigin = await fetch(`${baseUrl}/api/sessions`, {
+    const crossOrigin = await apiFetch(`${baseUrl}/api/sessions`, {
       headers: { Origin: 'https://evil.example.com' },
     });
     expect(crossOrigin.status).toBe(403);
 
-    const foreignLocalhost = await fetch(`${baseUrl}/api/sessions`, {
+    const foreignLocalhost = await apiFetch(`${baseUrl}/api/sessions`, {
       headers: { Origin: 'http://localhost:9999' },
     });
     expect(foreignLocalhost.status).toBe(403);
 
+    expect((await fetch(baseUrl + '/api/sessions')).status).toBe(401);
+
     // Own bound origin must be allowed
-    const ownOrigin = await fetch(`${baseUrl}/api/sessions`, {
+    const ownOrigin = await apiFetch(`${baseUrl}/api/sessions`, {
       headers: { Origin: baseUrl },
     });
     expect(ownOrigin.status).toBe(200);
 
     // 2. Non-string constraints / idea, >6 seats, or invalid seat provider must return clean 400
-    const badConstraints = await fetch(`${baseUrl}/api/sessions`, {
+    const badConstraints = await apiFetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -129,14 +136,14 @@ describe('v5.3.1 Hardening — Atomic Storage, Secret Redaction & HTTP API Integ
     });
     expect(badConstraints.status).toBe(400);
 
-    const badIdea = await fetch(`${baseUrl}/api/sessions`, {
+    const badIdea = await apiFetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ idea: 12345 }),
     });
     expect(badIdea.status).toBe(400);
 
-    const tooManySeats = await fetch(`${baseUrl}/api/sessions`, {
+    const tooManySeats = await apiFetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -155,7 +162,7 @@ describe('v5.3.1 Hardening — Atomic Storage, Secret Redaction & HTTP API Integ
     });
     expect(tooManySeats.status).toBe(400);
 
-    const badProviderSeat = await fetch(`${baseUrl}/api/sessions`, {
+    const badProviderSeat = await apiFetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -166,7 +173,7 @@ describe('v5.3.1 Hardening — Atomic Storage, Secret Redaction & HTTP API Integ
     expect(badProviderSeat.status).toBe(400);
 
     // 3. Valid session creation returns 201 and persists targetCodingTools + projectMode
-    const validRes = await fetch(`${baseUrl}/api/sessions`, {
+    const validRes = await apiFetch(`${baseUrl}/api/sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -185,10 +192,13 @@ describe('v5.3.1 Hardening — Atomic Storage, Secret Redaction & HTTP API Integ
     expect(createdJson.session.targetCodingTools).toEqual(['antigravity', 'codex']);
     createdSessionIds.push(createdJson.session.id);
 
-    // 4. Health & IDE detection endpoints return 200
-    const healthRes = await fetch(`${baseUrl}/api/providers/health`);
-    expect(healthRes.status).toBe(200);
-    const idesRes = await fetch(`${baseUrl}/api/system/ides`);
-    expect(idesRes.status).toBe(200);
   });
+
+  it('detects locally installed providers and IDEs', async () => {
+    // 4. Health & IDE detection endpoints return 200
+    const healthRes = await apiFetch(`${baseUrl}/api/providers/health`);
+    expect(healthRes.status).toBe(200);
+    const idesRes = await apiFetch(`${baseUrl}/api/system/ides`);
+    expect(idesRes.status).toBe(200);
+  }, 30_000);
 });

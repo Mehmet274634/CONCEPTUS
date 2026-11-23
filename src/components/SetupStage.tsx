@@ -75,6 +75,7 @@ interface SetupStageProps {
     repoMeta?: RepoSnapshotMeta;
     seats: SeatConfig[];
     autoPilot: boolean;
+    limitProviders?: boolean;
   }) => Promise<void>;
   submitting: boolean;
 }
@@ -174,6 +175,7 @@ export function SetupStage({
     return ['antigravity'];
   });
   const [constraints, setConstraints] = useState('');
+  const [limitProviders, setLimitProviders] = useState(true);
   const [contextText, setContextText] = useState('');
   const [showExtras, setShowExtras] = useState(false);
   const [showDesignBar, setShowDesignBar] = useState(false);
@@ -448,6 +450,7 @@ export function SetupStage({
         targetCodingTools,
         caliber,
         constraints: mergedConstraints,
+        limitProviders,
         contextText: mergedContext,
         repoMeta,
         seats,
@@ -1063,6 +1066,12 @@ export function SetupStage({
                   </button>
                 )}
 
+                <details className="text-xs">
+                  <summary>{t('Paylaşım önizlemesi', 'Sharing preview')}</summary>
+                  <label><input type="checkbox" checked={limitProviders} onChange={(e) => setLimitProviders(e.target.checked)} /> {t('Yalnızca seçili sağlayıcılar', 'Only selected providers')}</label>
+                  <p>{(limitProviders ? [...new Set(seats.filter(s => s.enabled).map(s => s.provider))] : providers.filter(p => p.installed).map(p => p.id)).join(', ')}</p>
+                  <pre className="max-h-48 max-w-sm overflow-auto whitespace-pre-wrap">{[repoSnapshot, contextText].filter(Boolean).join('\n\n') || t('Ek dosya yok', 'No attached files')}</pre>
+                </details>
                 <button
                   type="submit"
                   disabled={submitting || activeSeatCount === 0}

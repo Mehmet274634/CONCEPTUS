@@ -20,7 +20,7 @@ import {
 import { detectInstalledIdes, openFolderInIde } from './ideLauncher.ts';
 import { getProviderPoolsHealth, probeProviderPools } from './quotaProbe.ts';
 import {
-  abortSessionRun,
+  abortAndWait,
   clarifyRawIdea,
   extractDecisionGates,
   forkSessionScenario,
@@ -74,6 +74,9 @@ import type {
 } from './types.ts';
 
 const app = express();
+const accessKey = crypto.randomBytes(32).toString("hex");
+const downloadKey = crypto.randomBytes(32).toString('hex');
+let serverHostPort = 0;
 const PORT = Number(process.env.PORT || 3847);
 
 export const MAX_SEATS = 6;
@@ -98,7 +101,7 @@ function registerAllowedOriginsForPort(actualPort: number) {
   allowedOrigins.add(`http://127.0.0.1:${actualPort}`);
   allowedOrigins.add(`http://localhost:${actualPort}`);
   // Only allow Vite dev server origin during non-packaged local development
-  if (process.env.CONCEPTUS_EMBEDDED !== '1' && process.env.NODE_ENV !== 'production') {
+  if (process.env.CONCEPTUS_EMBEDDED !== '1' && process.argv.includes('--vite-dev')) {
     allowedOrigins.add('http://127.0.0.1:5173');
     allowedOrigins.add('http://localhost:5173');
   }
@@ -129,7 +132,7 @@ export function validateSeatsInput(
       return { ok: false, error: `Desteklenmeyen sağlayıcı: ${provider || 'boş'}` };
     }
     const model = String(obj.model || '').trim().slice(0, 120);
-    if (!model) {
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9._:/@+-]{0,119}$/.test(model)) {
       return { ok: false, error: `Ajan koltuğu #${i + 1} için geçerli model adı gerekli.` };
     }
     const roleRaw = String(obj.role || 'general').trim() as SeatRole;
@@ -161,6 +164,8 @@ export function validateSeatsInput(
       enabled: obj.enabled !== false,
     });
   }
+  if (new Set(clean.map((seat) => seat.id)).size !== clean.length)
+    return { ok: false, error: 'Koltuk kimlikleri benzersiz olmalıdır.' };
   return { ok: true, seats: clean };
 }
 
@@ -237,6 +242,18 @@ app.use('/api', (req, res, next) => {
     });
     return;
   }
+  const host = req.headers.host;
+  if (host !== '127.0.0.1:' + serverHostPort && host !== 'localhost:' + serverHostPort) {
+    res.status(403).json({ error: 'Geçersiz yerel sunucu adresi.' });
+    return;
+  }
+  const linkRequest = req.method === 'GET' && /^\/sessions\/[\w-]+\/(events|export|blueprint\.zip)$/.test(req.path);
+  if (req.path !== '/health' && req.get('authorization') !== 'Bearer ' + accessKey &&
+      !(linkRequest && req.query.access === downloadKey)) {
+    res.status(401).json({ error: 'Başlatıcıdaki erişim bağlantısını açın.' });
+    return;
+  }
+  res.setHeader('Cache-Control', 'no-store');
   next();
 });
 
@@ -457,7 +474,7 @@ app.post('/api/system/pick-folder', async (req, res) => {
     } else if (process.platform === 'darwin') {
       const { stdout } = await execFileAsync(
         'osascript',
-        ['-e', `POSIX path of (choose folder with prompt "${description}")`],
+        ['-e', 'on run argv', '-e', 'return POSIX path of (choose folder with prompt (item 1 of argv))', '-e', 'end run', '--', description],
         { timeout: 120_000 }
       );
       folderPath = stdout.trim() || null;
@@ -632,6 +649,9 @@ app.post('/api/sessions', (req, res) => {
       constraints: cleanConstraints,
       contextText: cleanContext,
       repoMeta: repoMeta as RepoSnapshotMeta | undefined,
+      allowedProviders: body.limitProviders === true
+        ? [...new Set(seatsCheck.seats.filter((seat) => seat.enabled).map((seat) => seat.provider))]
+        : undefined,
       seats: seatsCheck.seats,
       rounds: [],
       createdAt: Date.now(),
@@ -643,6 +663,18 @@ app.post('/api/sessions', (req, res) => {
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Oturum oluşturulamadı.' });
   }
+});
+
+app.use('/api/sessions/:id', (req, res, next) => {
+  if (!/^[\w-]+$/.test(req.params.id)) {
+    res.status(400).json({ error: 'Geçersiz oturum kimliği.' });
+    return;
+  }
+  if (isSessionRunning(req.params.id) && !['GET', 'HEAD', 'DELETE'].includes(req.method) && req.path !== '/abort') {
+    res.status(409).json({ error: 'Oturumda işlem sürüyor. Tamamlandığında yeniden deneyin.' });
+    return;
+  }
+  next();
 });
 
 // Get session (prefers live in-memory streaming session during an active run)
@@ -733,8 +765,8 @@ app.post('/api/sessions/:id/decisions/extract', async (req, res) => {
 });
 
 // Delete session
-app.delete('/api/sessions/:id', (req, res) => {
-  abortSessionRun(req.params.id);
+app.delete('/api/sessions/:id', async (req, res) => {
+  await abortAndWait(req.params.id);
   const ok = deleteSession(req.params.id);
   res.json({ ok });
 });
@@ -1056,10 +1088,13 @@ app.post('/api/sessions/:id/blueprint/save-folder', (req, res) => {
       ? String(req.body.folderPath).trim()
       : undefined;
     if (req.body?.useLinkedRepo && session.repoMeta?.folderPath) {
-      const sub = String(req.body?.subfolder || '').trim();
-      targetPath = sub
-        ? path.join(session.repoMeta.folderPath, sub)
-        : session.repoMeta.folderPath;
+      const root = fs.realpathSync(session.repoMeta.folderPath);
+      const docs = path.join(root, 'docs');
+      if (fs.existsSync(docs) && fs.realpathSync(docs) !== docs)
+        throw new Error('Bağlı projenin docs klasörü sembolik bağlantı içeriyor.');
+      targetPath = path.join(docs, 'conceptus');
+      if (fs.existsSync(targetPath) && fs.realpathSync(targetPath) !== targetPath)
+        throw new Error('Hedef klasör sembolik bağlantı içeriyor.');
     }
     const includeClaudeMd =
       req.body?.includeClaudeMd !== undefined
@@ -1089,8 +1124,8 @@ app.post('/api/sessions/:id/blueprint/save-folder', (req, res) => {
 });
 
 // Abort running round, synthesis, autopilot, or blueprint
-app.post('/api/sessions/:id/abort', (req, res) => {
-  const aborted = abortSessionRun(req.params.id);
+app.post('/api/sessions/:id/abort', async (req, res) => {
+  const aborted = await abortAndWait(req.params.id);
   res.json({ aborted });
 });
 
@@ -1128,7 +1163,7 @@ export function mountFrontendStatic(customDistDir?: string) {
 export async function startConceptusServer(options?: {
   port?: number;
   distDir?: string;
-}): Promise<{ server: Server; port: number; url: string }> {
+}): Promise<{ server: Server; port: number; url: string; launchUrl: string }> {
   reloadFallbackStateFromDisk();
   prewarmProviders();
 
@@ -1143,16 +1178,12 @@ export async function startConceptusServer(options?: {
       const addr = server.address();
       const actualPort =
         typeof addr === 'object' && addr ? addr.port : requestedPort;
+      serverHostPort = actualPort;
       registerAllowedOriginsForPort(actualPort);
       const url = `http://127.0.0.1:${actualPort}`;
-      console.log(`\n  CONCEPTUS v${APP_VERSION} hazir: ${url}\n`);
-      resolve({ server, port: actualPort, url });
+      console.log(`CONCEPTUS v${APP_VERSION} hazır.`);
+      resolve({ server, port: actualPort, url, launchUrl: url + "/#access=" + accessKey + "&read=" + downloadKey });
     });
     server.on('error', reject);
   });
-}
-
-// Auto-start when executed directly via CLI / npm start (skipped when embedded in Electron)
-if (process.env.CONCEPTUS_EMBEDDED !== '1') {
-  void startConceptusServer();
 }

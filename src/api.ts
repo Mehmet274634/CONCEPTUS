@@ -32,11 +32,30 @@ import type {
   UpdateCheckResult,
 } from './types.ts';
 
+function accessKey(): string {
+  const key = new URLSearchParams(location.hash.slice(1)).get('access');
+  if (key && /^[a-f0-9]{64}$/.test(key)) {
+    const read = new URLSearchParams(location.hash.slice(1)).get('read') || '';
+    localStorage.setItem('conceptus-read', read);
+    localStorage.setItem('conceptus-access', key);
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  return localStorage.getItem('conceptus-access') || '';
+}
+
+function authorizedLink(url: string): string {
+  const link = new URL(url, location.origin);
+  accessKey();
+  link.searchParams.set('access', localStorage.getItem('conceptus-read') || '');
+  return link.pathname + link.search;
+}
+
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + accessKey(),
       ...(init?.headers || {}),
     },
   });
@@ -243,6 +262,7 @@ export async function fetchSessions(): Promise<SessionSummary[]> {
 }
 
 export async function createSession(payload: {
+  limitProviders?: boolean;
   title?: string;
   idea: string;
   domain: DomainMode;
@@ -532,7 +552,7 @@ export function subscribeSessionStream(
   sessionId: string,
   onEvent: (event: StreamEvent) => void
 ): () => void {
-  const es = new EventSource(`/api/sessions/${sessionId}/events`);
+  const es = new EventSource(authorizedLink(`/api/sessions/${sessionId}/events`));
   es.onmessage = (msg) => {
     try {
       const parsed = JSON.parse(msg.data) as StreamEvent;
@@ -545,7 +565,7 @@ export function subscribeSessionStream(
 }
 
 export function getExportUrl(sessionId: string): string {
-  return `/api/sessions/${sessionId}/export`;
+  return authorizedLink(`/api/sessions/${sessionId}/export`);
 }
 
 export function getBlueprintZipUrl(
@@ -567,7 +587,7 @@ export function getBlueprintZipUrl(
     params.set('antigravity', options.includeAntigravityRules ? '1' : '0');
   }
   const qs = params.toString();
-  return `/api/sessions/${sessionId}/blueprint.zip${qs ? `?${qs}` : ''}`;
+  return authorizedLink(`/api/sessions/${sessionId}/blueprint.zip${qs ? `?${qs}` : ''}`);
 }
 
 export async function checkForAppUpdates(force = false): Promise<UpdateCheckResult> {
@@ -575,7 +595,7 @@ export async function checkForAppUpdates(force = false): Promise<UpdateCheckResu
 }
 
 export async function runWebSelfUpdate(): Promise<SelfUpdateResult> {
-  const res = await fetch('/api/update/self-update', { method: 'POST' });
+  const res = await fetch('/api/update/self-update', { method: 'POST', headers: { Authorization: 'Bearer ' + accessKey() } });
   const data = await res.json().catch(() => ({}));
   return {
     ok: Boolean(data?.ok),

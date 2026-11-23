@@ -1,3 +1,4 @@
+import { cliCommand } from './cliCommand.ts';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { getProviderById } from './discovery.ts';
 import type { EffortLevel, ProviderId } from './types.ts';
@@ -37,23 +38,15 @@ function killProcessTree(child: ChildProcess) {
 }
 
 function spawnResolved(resolvedPath: string, args: string[], cwd: string): ChildProcess {
+  const command = cliCommand(resolvedPath, args);
   const env = {
-    ...process.env,
+    ...command.env,
     NO_COLOR: '1',
     FORCE_COLOR: '0',
     GEMINI_CLI_TRUST_WORKSPACE: 'true',
   };
 
-  if (process.platform === 'win32' && /\.(cmd|bat)$/i.test(resolvedPath)) {
-    return spawn('cmd.exe', ['/d', '/s', '/c', resolvedPath, ...args], {
-      cwd,
-      env,
-      windowsHide: true,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-  }
-
-  return spawn(resolvedPath, args, {
+  return spawn(command.executable, command.args, {
     cwd,
     env,
     windowsHide: true,
@@ -66,6 +59,10 @@ function buildCliArgs(
   model: string,
   effort: EffortLevel
 ): string[] {
+  if (typeof model !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:/@+-]{0,119}$/.test(model.trim()))
+    throw new Error('Geçersiz CLI model adı.');
+  if (!['default', 'low', 'medium', 'high', 'max'].includes(effort))
+    throw new Error('Geçersiz model eforu.');
   const cleanModel = model.trim();
   const hasExplicitModel =
     cleanModel !== '' && cleanModel !== 'default' && cleanModel !== 'auto';
@@ -137,7 +134,7 @@ function buildCliArgs(
       const args = [
         '--skip-trust',
         '-p',
-        'Yukaridaki baglam ve talimatlara tam uyarak Turkce yanit ver.',
+        'Follow the instructions and language specified in the supplied prompt.',
         '-o',
         'stream-json',
         '--approval-mode',
@@ -382,6 +379,7 @@ export async function runCliSeat(options: RunCliOptions): Promise<RunCliResult> 
 
   const startedAt = Date.now();
   const args = buildCliArgs(options.provider, options.model, options.effort);
+  if (options.signal.aborted) throw new Error('ABORTED');
   const child = spawnResolved(providerInfo.resolvedPath, args, process.cwd());
 
   return new Promise<RunCliResult>((resolve, reject) => {
@@ -401,10 +399,6 @@ export async function runCliSeat(options: RunCliOptions): Promise<RunCliResult> 
       }
     };
 
-    if (options.signal.aborted) {
-      onAbort();
-      return;
-    }
     options.signal.addEventListener('abort', onAbort, { once: true });
 
     // Timeout safety (5 minutes per turn)
@@ -425,6 +419,7 @@ export async function runCliSeat(options: RunCliOptions): Promise<RunCliResult> 
     child.stderr?.setEncoding('utf8');
 
     child.stdout?.on('data', (chunk: string) => {
+      if (settled) return;
       stdoutBuf += chunk;
       const lines = stdoutBuf.split(/\r?\n/);
       stdoutBuf = lines.pop() ?? '';
@@ -434,7 +429,7 @@ export async function runCliSeat(options: RunCliOptions): Promise<RunCliResult> 
     });
 
     child.stderr?.on('data', (chunk: string) => {
-      stderrBuf += chunk;
+      stderrBuf = (stderrBuf + chunk).slice(-16000);
     });
 
     child.on('error', (err) => {
@@ -447,6 +442,7 @@ export async function runCliSeat(options: RunCliOptions): Promise<RunCliResult> 
 
     child.on('close', (code) => {
       cleanup();
+      if (settled) return;
       if (stdoutBuf.trim()) {
         parseJsonLine(options.provider, stdoutBuf, state, options.onDelta);
       }
@@ -483,6 +479,7 @@ export async function runCliSeat(options: RunCliOptions): Promise<RunCliResult> 
         options.provider === 'antigravity'
           ? JSON.stringify({ event: 'user', message: { content: options.prompt } }) + '\n'
           : options.prompt;
+      child.stdin?.on('error', () => { /* exit status supplies the CLI diagnostic */ });
       child.stdin?.write(payload, 'utf8');
       child.stdin?.end();
     } catch (err: any) {

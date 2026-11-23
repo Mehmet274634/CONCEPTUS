@@ -1,3 +1,4 @@
+import { cliCommand } from './cliCommand.ts';
 import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -85,12 +86,9 @@ async function runQuickCommand(
   args: string[],
   timeout = 7000
 ): Promise<string> {
-  const isCmd = process.platform === 'win32' && /\.(cmd|bat)$/i.test(resolvedPath);
-  const { stdout, stderr } = await execFileAsync(
-    isCmd ? 'cmd.exe' : resolvedPath,
-    isCmd ? ['/c', resolvedPath, ...args] : args,
-    { timeout, windowsHide: true }
-  );
+  const command = cliCommand(resolvedPath, args);
+  const { stdout, stderr } = await execFileAsync(command.executable, command.args,
+    { timeout, windowsHide: true, env: command.env });
   return (stdout || stderr || '').trim();
 }
 
